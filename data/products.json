@@ -1,0 +1,137 @@
+{
+  "products": [
+    {
+      "id": "carta-igienica-12-rotoli",
+      "name": "Carta igienica 2 veli",
+      "category": "Igiene",
+      "unit": "12 rotoli",
+      "price": 4.9,
+      "description": "Morbida e resistente, la scorta pratica per tutti i giorni.",
+      "image": "https://images.unsplash.com/photo-1631524254770-03abe3f42a0d?auto=format&fit=crop&w=900&q=82",
+      "images": [
+        "https://images.unsplash.com/photo-1620778864482-5f20e3d9745a?auto=format&fit=crop&w=900&q=82",
+        "https://images.unsplash.com/photo-1583496597467-d968d2fa33a8?auto=format&fit=crop&w=900&q=82"
+      ],
+      "specifications": [
+        { "label": "Confezione", "value": "12 rotoli" },
+        { "label": "Veli", "value": "2" }
+      ],
+      "featured": true,
+      "available": true
+    },
+    {
+      "id": "asciugatutto-2-rotoli",
+      "name": "Carta assorbente cucina",
+      "category": "Cucina",
+      "unit": "2 rotoli",
+      "price": 2.7,
+      "description": "Due rotoli resistenti per piccoli e grandi imprevisti in cucina.",
+      "image": "https://images.unsplash.com/photo-1650632783798-95d7d862c163?auto=format&fit=crop&w=900&q=82",
+      "images": [
+        "https://images.unsplash.com/photo-1608494133726-bb93324274c8?auto=format&fit=crop&w=900&q=82"
+      ],
+      "specifications": [
+        { "label": "Confezione", "value": "2 rotoli" },
+        { "label": "Utilizzo", "value": "Cucina" }
+      ],
+      "featured": true,
+      "available": true
+    },
+    {
+      "id": "carta-a4-500-fogli",
+      "name": "Carta per stampante A4",
+      "category": "Ufficio",
+      "unit": "500 fogli · 80 g/m²",
+      "price": 4.5,
+      "description": "Fogli bianchi per stampanti inkjet e laser, casa o ufficio.",
+      "image": "https://images.unsplash.com/photo-1562240020-ce31ccb0fa7d?auto=format&fit=crop&w=900&q=82",
+      "images": [
+        "https://images.unsplash.com/photo-1583521214690-73421a1829a9?auto=format&fit=crop&w=900&q=82",
+        "https://images.unsplash.com/photo-1586162481176-7abc53f1f7c2?auto=format&fit=crop&w=900&q=82"
+      ],
+      "specifications": [
+        { "label": "Formato", "value": "A4" },
+        { "label": "Fogli", "value": "500" },
+        { "label": "Grammatura", "value": "80 g/m²" },
+        { "label": "Compatibilità", "value": "Inkjet e laser" }
+      ],
+      "featured": true,
+      "available": true
+    },
+    {
+      "id": "fazzoletti-tascabili-10",
+      "name": "Fazzoletti tascabili",
+      "category": "Igiene",
+      "unit": "10 pacchetti",
+      "price": 1.8,
+      "description": "Una confezione da tenere sempre a portata di mano.",
+      "image": "https://images.unsplash.com/photo-1609840112990-4265448268d1?auto=format&fit=crop&w=900&q=82",
+      "specifications": [
+        { "label": "Confezione", "value": "10 pacchetti" },
+        { "label": "Formato", "value": "Tascabile" }
+      ],
+      "featured": false,
+      "available": true
+    },
+    {
+      "id": "tovaglioli-100",
+      "name": "Tovaglioli 2 veli",
+      "category": "Tavola",
+      "unit": "100 pezzi",
+      "price": 1.5,
+      "description": "Il formato essenziale per la tavola di ogni giorno.",
+      "image": "https://images.unsplash.com/photo-1580428456190-7348f304b927?auto=format&fit=crop&w=900&q=82",
+      "specifications": [
+        { "label": "Veli", "value": "2" },
+        { "label": "Quantità", "value": "100 pezzi" }
+      ],
+      "featured": false,
+      "available": true
+    },
+    {
+      "id": "rotolo-industriale-800",
+      "name": "Rotolone multiuso",
+      "category": "Casa e lavoro",
+      "unit": "800 strappi",
+      "price": 6.9,
+      "description": "Un rotolo capiente per pulizie e utilizzo frequente.",
+      "image": "https://images.unsplash.com/photo-1699377179823-d5975d237b4e?auto=format&fit=crop&w=900&q=82",
+      "specifications": [
+        { "label": "Capienza", "value": "800 strappi" },
+        { "label": "Utilizzo", "value": "Multiuso" }
+      ],
+      "featured": false,
+      "available": true
+    },
+    {
+      "id": "carta-forno-8m",
+      "name": "Carta forno antiaderente",
+      "category": "Cucina",
+      "unit": "8 metri",
+      "price": 1.9,
+      "description": "Per cuocere senza attaccare e semplificare la pulizia.",
+      "image": "https://images.unsplash.com/photo-1777647341971-145e89c91cc6?auto=format&fit=crop&w=900&q=82",
+      "specifications": [
+        { "label": "Lunghezza", "value": "8 metri" },
+        { "label": "Caratteristica", "value": "Antiaderente" }
+      ],
+      "featured": false,
+      "available": true
+    },
+    {
+      "id": "carta-igienica-maxi-4",
+      "name": "Carta igienica maxi comfort",
+      "category": "Igiene",
+      "unit": "4 rotoli · 4 veli",
+      "price": 3.9,
+      "description": "Rotoli soffici e avvolgenti, in una confezione compatta.",
+      "image": "https://images.unsplash.com/photo-1584556812952-905ffd0c611a?auto=format&fit=crop&w=900&q=82",
+      "specifications": [
+        { "label": "Confezione", "value": "4 rotoli" },
+        { "label": "Veli", "value": "4" }
+      ],
+      "featured": false,
+      "available": true
+    }
+  ]
+}

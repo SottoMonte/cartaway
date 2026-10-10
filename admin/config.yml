@@ -1,0 +1,140 @@
+backend:
+  name: turbo-github
+  repo: "SottoMonte/auto"
+  turbo_site_id: "aa485609-5ec7-4033-a2f6-ad57c7b35d67"
+  branch: main
+
+locale: it
+publish_mode: simple
+media_folder: uploads
+public_folder: /uploads
+
+collections:
+  - name: impostazioni
+    label: Impostazioni sito
+    files:
+      - name: azienda
+        label: Azienda e contatti
+        file: data/site.json
+        fields:
+          - { label: Nome attività, name: brand, widget: string }
+          - { label: Città o zona, name: city, widget: string }
+          - { label: Frase introduttiva, name: tagline, widget: string }
+          - { label: Attività offerte, name: services, widget: string, required: false }
+          - { label: Descrizione dei servizi, name: service_note, widget: string, required: false }
+          - { label: Nota sulle consegne, name: delivery_note, widget: string, required: false }
+          - label: Zone di consegna
+            name: delivery_zones
+            widget: list
+            required: false
+            label_singular: zona
+            fields:
+              - { label: ID zona, name: id, widget: string }
+              - { label: Nome zona, name: name, widget: string }
+              - { label: Tempo indicativo, name: delivery_time, widget: string }
+              - { label: Disponibilità, name: availability, widget: string }
+              - label: Modalità costo consegna
+                name: delivery_policy
+                widget: select
+                options:
+                  - { label: Gratuita senza soglia, value: free }
+                  - { label: Gratuita da una soglia, value: threshold }
+                  - { label: A pagamento, value: paid }
+              - { label: Importo minimo ordine (euro), name: minimum_order_amount, widget: number, value_type: float, min: 0, step: 0.01, required: false }
+              - { label: Soglia consegna gratuita (euro), name: free_delivery_minimum, widget: number, value_type: float, min: 0, step: 0.01, required: false }
+              - { label: Costo consegna (euro), name: delivery_fee, widget: number, value_type: float, min: 0, step: 0.01, required: false }
+              - label: Località sulla mappa
+                name: locations
+                widget: list
+                label_singular: località
+                fields:
+                  - { label: Comune, name: name, widget: string }
+                  - { label: Latitudine, name: lat, widget: number, value_type: float, step: 0.0000001 }
+                  - { label: Longitudine, name: lon, widget: number, value_type: float, step: 0.0000001 }
+          - label: Buono Tech
+            name: tech_voucher
+            widget: object
+            fields:
+              - { label: Percentuale sul primo ordine del mese, name: percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
+              - { label: Importo massimo (euro), name: maximum_amount, widget: number, value_type: float, min: 0, step: 0.01 }
+              - { label: Durata dalla consegna (giorni), name: validity_days, widget: number, value_type: int, min: 1, step: 1 }
+          - label: Ordine ricorrente
+            name: recurring_order
+            widget: object
+            fields:
+              - { label: Sconto percentuale, name: discount_percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
+              - { label: Mesi di prezzo bloccato, name: price_lock_months, widget: number, value_type: int, min: 1, step: 1 }
+              - label: Frequenze disponibili in giorni
+                name: frequency_days
+                widget: list
+                field: { label: Giorni, name: days, widget: number, value_type: int, min: 1, step: 1 }
+              - { label: Durata Buono Tech con ordine ricorrente (giorni), name: tech_voucher_validity_days, widget: number, value_type: int, min: 1, step: 1 }
+              - { label: Giorno fisso di consegna, name: fixed_delivery_day, widget: boolean, default: true }
+          - { label: Indirizzo pubblico, name: address, widget: string, required: false }
+          - { label: Telefono, name: phone, widget: string, required: false }
+          - label: Numero WhatsApp
+            name: whatsapp
+            widget: string
+            required: false
+            hint: Inserisci il numero completo con prefisso internazionale, solo cifre.
+          - { label: Email di contatto, name: email, widget: string, required: false }
+          - label: Dati dell'impresa
+            name: legal
+            widget: object
+            fields:
+              - { label: Titolare o denominazione, name: holder, widget: string, required: false }
+              - { label: Forma giuridica, name: legal_form, widget: string, required: false }
+              - { label: Sede legale, name: registered_office, widget: string, required: false }
+              - { label: Partita IVA, name: vat_number, widget: string, required: false }
+              - { label: Numero REA, name: rea, widget: string, required: false }
+
+  - name: catalogo
+    label: Catalogo prodotti
+    files:
+      - name: prodotti
+        label: Prodotti
+        file: data/products.json
+        fields:
+          - label: Prodotti
+            name: products
+            widget: list
+            label_singular: prodotto
+            fields:
+              - label: ID univoco
+                name: id
+                widget: string
+                hint: Breve, univoco e senza spazi; per esempio carta-igienica-12-rotoli.
+              - { label: Nome prodotto, name: name, widget: string }
+              - label: Categoria
+                name: category
+                widget: select
+                options:
+                  - Igiene
+                  - Cucina
+                  - Tavola
+                  - Ufficio
+                  - Casa e lavoro
+              - { label: Formato o quantità, name: unit, widget: string }
+              - label: Prezzo in euro
+                name: price
+                widget: number
+                value_type: float
+                min: 0
+                step: 0.01
+              - { label: Descrizione, name: description, widget: text, required: false }
+              - { label: Foto prodotto, name: image, widget: image, required: false }
+              - label: Foto aggiuntive
+                name: images
+                widget: list
+                required: false
+                field: { label: Foto, name: image, widget: image }
+              - label: Caratteristiche
+                name: specifications
+                widget: list
+                required: false
+                label_singular: caratteristica
+                fields:
+                  - { label: Nome caratteristica, name: label, widget: string }
+                  - { label: Valore, name: value, widget: string }
+              - { label: In evidenza, name: featured, widget: boolean, default: false }
+              - { label: Disponibile, name: available, widget: boolean, default: true }

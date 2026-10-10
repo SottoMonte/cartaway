@@ -1,0 +1,74 @@
+{
+  "brand": "Cartaway",
+  "city": "Montoro (AV)",
+  "phone": "+39 000 0000000",
+  "tagline": "La carta che ti serve, consegnata vicino a te.",
+  "whatsapp": "000 0000000",
+  "address": "Via Roma, 1, Torchiati di Montoro (AV)",
+  "legal": {
+    "holder": "MARIO ROSSI",
+    "legal_form": "Impresa individuale",
+    "registered_office": "Via Roma, 1, CAP 83025, frazione Torchiati, Montoro (AV)",
+    "vat_number": "00000000000",
+    "rea": "AV - 313427"
+  },
+  "service_note": "Consegna locale a Montoro e nei comuni vicini. Tempi da confermare prima dell'ordine.",
+  "delivery_note": "Tempi e disponibilità sono indicativi. Le condizioni di consegna sono indicate per zona e il totale dell'ordine viene confermato su WhatsApp.",
+  "delivery_zones": [
+    {
+      "id": "zona-01",
+      "name": "Montoro",
+      "delivery_time": "Entro circa 2 ore",
+      "availability": "Tempo indicativo",
+      "delivery_policy": "free",
+      "minimum_order_amount": 0,
+      "free_delivery_minimum": 0,
+      "delivery_fee": 0,
+      "locations": [
+        { "name": "Montoro", "lat": 40.8328763, "lon": 14.7917765 }
+      ]
+    },
+    {
+      "id": "zona-02",
+      "name": "Comuni vicini",
+      "delivery_time": "In giornata",
+      "availability": "Su conferma",
+      "delivery_policy": "threshold",
+      "minimum_order_amount": 0,
+      "free_delivery_minimum": 30,
+      "delivery_fee": 5,
+      "locations": [
+        { "name": "Solofra", "lat": 40.8291308, "lon": 14.8456516 },
+        { "name": "Forino", "lat": 40.8619728, "lon": 14.7347965 },
+        { "name": "Contrada", "lat": 40.8684521, "lon": 14.7812018 }
+      ]
+    },
+    {
+      "id": "zona-03",
+      "name": "Comuni più lontani",
+      "delivery_time": "Tempi da concordare",
+      "availability": "Servizio disponibile",
+      "delivery_policy": "paid",
+      "delivery_fee": 5,
+      "locations": [
+        { "name": "Fisciano", "lat": 40.772812, "lon": 14.799443 },
+        { "name": "Bracigliano", "lat": 40.823512, "lon": 14.705441 },
+        { "name": "Mercato San Severino", "lat": 40.7831498, "lon": 14.7557301 }
+      ]
+    }
+  ],
+  "tech_voucher": {
+    "percent": 50,
+    "maximum_amount": 25,
+    "validity_days": 60
+  },
+  "recurring_order": {
+    "discount_percent": 5,
+    "price_lock_months": 12,
+    "frequency_days": [30, 60],
+    "tech_voucher_validity_days": 90,
+    "fixed_delivery_day": true
+  },
+  "email": "example@gmail.com",
+  "services": "Carta per casa, cucina e ufficio"
+}

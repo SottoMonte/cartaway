@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#183d32" />
+    <meta name="description" content="Dettagli, immagini e caratteristiche del prodotto Cartaway." />
+    <title>Prodotto — Cartaway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="shop.css?v=18" />
+    <script src="shop.js?v=31" defer></script>
+  </head>
+  <body data-page="product">
+    <a class="skip-link" href="#main">Salta al contenuto</a>
+
+    <div class="notice-bar">
+      <div class="notice-bar__inner">
+        <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
+        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-percent>50%</span> sul primo ordine del mese, fino a <span data-tech-voucher-maximum>25 €</span></button>
+        <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog">Zone e tempi <span aria-hidden="true">↗</span></button>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="index.html#inizio" aria-label="Cartaway, torna all'inizio">
+          <span class="brand__mark" aria-hidden="true">C</span>
+          <span class="brand__wordmark">
+            <span class="brand__name" data-brand>Cartaway</span>
+            <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
+          </span>
+        </a>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Apri il menu" aria-controls="primary-navigation" aria-expanded="false">
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="primary-nav" id="primary-navigation" aria-label="Navigazione principale">
+          <a href="catalogo.html" aria-current="page">Prodotti</a>
+          <a href="index.html#consegna">Consegna</a>
+          <a href="index.html#come-funziona">Come ordinare</a>
+        </nav>
+        <button class="cart-trigger" id="cart-open" type="button" aria-label="Apri carrello, 0 articoli">
+          <svg class="cart-trigger__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="8" cy="21" r="1" />
+            <circle cx="19" cy="21" r="1" />
+            <path d="M2 3h2l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L22 7H5" />
+          </svg>
+          <span class="cart-trigger__label">Carrello</span>
+          <span class="cart-count" id="cart-count" aria-live="off">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="product-detail-page section-wrap">
+        <nav class="breadcrumbs" aria-label="Percorso di navigazione">
+          <a href="index.html">Home</a><span aria-hidden="true">/</span><a href="catalogo.html">Catalogo</a><span aria-hidden="true">/</span><span id="detail-breadcrumb-title" aria-current="page">Prodotto</span>
+        </nav>
+
+        <section class="product-detail" id="product-detail" aria-labelledby="detail-title" hidden>
+          <div class="product-detail__gallery">
+            <div class="product-detail__stage">
+              <img id="detail-image" src="" alt="" />
+              <span class="product-detail__counter" id="detail-image-counter" aria-live="polite"></span>
+              <button class="product-detail__arrow product-detail__arrow--previous" id="detail-image-previous" type="button" aria-label="Foto precedente">←</button>
+              <button class="product-detail__arrow product-detail__arrow--next" id="detail-image-next" type="button" aria-label="Foto successiva">→</button>
+            </div>
+            <div class="product-detail__thumbnails" id="detail-thumbnails" role="group" aria-label="Scegli una foto" hidden></div>
+          </div>
+          <div class="product-detail__content">
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span><span id="detail-category"></span></p>
+            <h1 id="detail-title"></h1>
+            <p class="product-detail__unit" id="detail-unit"></p>
+            <p class="product-detail__price" id="detail-price"></p>
+            <p class="product-detail__description" id="detail-description"></p>
+            <section class="product-detail__specifications" id="detail-specifications-section" aria-labelledby="specifications-title" hidden>
+              <h2 id="specifications-title">Caratteristiche</h2>
+              <dl id="detail-specifications"></dl>
+            </section>
+            <button class="button button--dark product-detail__add" id="detail-add" type="button">Aggiungi al carrello <span aria-hidden="true">+</span></button>
+            <p class="product-detail__delivery">Consegna a Montoro e dintorni. <a href="index.html#consegna">Verifica zone e tempi</a>.</p>
+          </div>
+        </section>
+
+        <section class="product-not-found" id="product-not-found" aria-labelledby="product-not-found-title" hidden>
+          <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> SCHEDA PRODOTTO</p>
+          <h1 id="product-not-found-title">Prodotto non trovato</h1>
+          <p>Il prodotto potrebbe non essere disponibile o il link non è corretto.</p>
+          <a class="button button--dark" href="catalogo.html">Vai al catalogo <span aria-hidden="true">↗</span></a>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer" id="contatti">
+      <div class="site-footer__main">
+        <div class="site-footer__brand">
+          <a class="brand brand--footer" href="index.html#inizio" aria-label="Cartaway, torna all'inizio">
+            <span class="brand__mark" aria-hidden="true">C</span>
+            <span class="brand__wordmark">
+              <span class="brand__name" data-brand>Cartaway</span>
+              <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
+            </span>
+          </a>
+          <p id="footer-business-copy">Carta per casa, ufficio e attività. Consegna locale a Montoro e dintorni.</p>
+        </div>
+        <div class="site-footer__contact-block">
+          <h2>Contatti</h2>
+          <a id="contact-whatsapp" href="https://wa.me/393477095289" target="_blank" rel="noopener noreferrer">Ordina su WhatsApp <span aria-hidden="true">↗</span></a>
+          <a id="contact-phone" href="tel:+393477095289">+39 347 7095289</a>
+          <a id="contact-email" href="mailto:nicolagal33@gmail.com">nicolagal33@gmail.com</a>
+          <p id="contact-address">Via Biagio de Giovanni, 1, Torchiati di Montoro (AV)</p>
+        </div>
+      </div>
+      <section class="site-footer__legal" id="legal-details" aria-labelledby="legal-details-title">
+        <h2 id="legal-details-title">Dati dell'impresa</h2>
+        <dl class="site-footer__legal-list" id="legal-details-list"></dl>
+      </section>
+      <div class="site-footer__bottom">
+        <span>© <span id="current-year"></span> <span data-brand>Cartaway</span></span>
+        <span>Ordini e pagamenti confermati direttamente con l'attività.</span>
+        <a href="#main">Torna su <span aria-hidden="true">↑</span></a>
+      </div>
+    </footer>
+
+    <dialog class="promo-dialog" id="promo-dialog" aria-labelledby="promo-dialog-title" aria-describedby="promo-dialog-description promo-dialog-terms">
+      <div class="promo-dialog__content">
+        <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi promozione">×</button></form>
+        <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> PROMO PER ORDINI B2B</p>
+        <h2 id="promo-dialog-title">Il Buono Tech del mese</h2>
+        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine di carta e consumabili di ogni mese genera un Buono Tech pari al <span data-tech-voucher-percent>50%</span> della spesa. Nessuna spesa minima.</p>
+        <div class="promo-dialog__example">
+          <span>Importo massimo</span>
+          <strong><span data-tech-voucher-maximum>25 €</span></strong>
+        </div>
+        <p class="promo-dialog__terms" id="promo-dialog-terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni.</p>
+      </div>
+    </dialog>
+
+    <dialog class="delivery-dialog" id="delivery-dialog" aria-labelledby="delivery-dialog-title" aria-describedby="delivery-dialog-note">
+      <div class="delivery-dialog__panel">
+        <header class="delivery-dialog__header">
+          <div>
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> CONSEGNA DI ZONA</p>
+            <h2 id="delivery-dialog-title">Zone e tempi</h2>
+          </div>
+          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi zone e tempi">×</button></form>
+        </header>
+        <div class="delivery-dialog__body">
+          <div class="delivery-dialog__map-wrap">
+            <div class="delivery-dialog__map" id="delivery-map" role="region" aria-label="Mappa interattiva delle zone di consegna"></div>
+          </div>
+          <aside class="delivery-dialog__sidebar">
+            <h3>Seleziona una zona</h3>
+            <div class="delivery-dialog__zones" id="delivery-dialog-zones"></div>
+            <p class="delivery-dialog__note" id="delivery-dialog-note">I marker indicano i centri comunali, non i confini esatti di copertura.</p>
+            <p class="delivery-dialog__service-note" id="delivery-service-note"></p>
+            <p class="delivery-dialog__status" id="delivery-map-status" role="status" aria-live="polite"></p>
+          </aside>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="cart-dialog" id="cart-dialog" aria-labelledby="cart-title">
+      <div class="cart-dialog__sheet">
+        <header class="cart-dialog__header">
+          <div>
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> LA TUA SPESA</p>
+            <h2 id="cart-title">Carrello</h2>
+          </div>
+          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+        </header>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-empty" id="cart-empty">
+          <span aria-hidden="true">+</span>
+          <h3>Il carrello è vuoto.</h3>
+          <p>Quando trovi quello che ti serve, aggiungilo qui.</p>
+          <button class="text-button" id="continue-shopping" type="button">Torna ai prodotti <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="cart-summary" id="cart-summary">
+          <p><span id="cart-subtotal-label">Subtotale articoli</span><strong id="cart-subtotal">€0,00</strong></p>
+          <p class="cart-discount-row" id="cart-discount-row" hidden><span>Sconto ricorrente</span><strong id="cart-discount-amount">−€0,00</strong></p>
+          <p class="cart-shipping-row"><span>Consegna</span><strong id="cart-delivery-cost" data-delivery-state="unknown">Da stimare</strong></p>
+          <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Seleziona il comune per conoscere costo e modalità di consegna.</small>
+          <p class="cart-total-row"><span>Totale stimato</span><strong id="cart-estimated-total">Da confermare</strong></p>
+          <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
+            <p>🎁 Buono Tech stimato, se è il primo ordine del mese: <strong id="cart-cashback-amount">€0,00</strong>.</p>
+            <small id="cart-cashback-note">Stima pari al 50% della spesa, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
+          </div>
+        </div>
+        <form class="checkout-form" id="checkout-form">
+          <h3>Dati per la consegna</h3>
+          <label class="form-field"><span>Telefono per ricontatto</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" /></label>
+          <div class="form-row">
+            <label class="form-field">
+              <span>Comune</span>
+              <select id="delivery-town" name="city" required>
+                <option value="">Seleziona il comune</option>
+                <option value="Montoro">Montoro</option>
+                <option value="Solofra">Solofra</option>
+                <option value="Forino">Forino</option>
+                <option value="Contrada">Contrada</option>
+                <option value="Fisciano">Fisciano</option>
+                <option value="Bracigliano">Bracigliano</option>
+                <option value="Mercato San Severino">Mercato San Severino</option>
+                <option value="altro">Altro comune</option>
+              </select>
+            </label>
+            <label class="form-field" id="other-town-field" hidden><span>Scrivi il comune</span><input id="other-town" name="other-town" type="text" autocomplete="address-level2" maxlength="80" /></label>
+          </div>
+          <label class="form-field"><span>Via e numero civico</span><input name="address" type="text" autocomplete="street-address" required maxlength="140" /></label>
+          <p class="delivery-estimate" id="delivery-estimate" role="status" aria-live="polite">Seleziona il comune per stimare la consegna.</p>
+          <div class="form-row">
+            <label class="form-field"><span>Data preferita <span class="form-field__optional">facoltativa</span></span><input id="preferred-date" name="preferred-date" type="date" /></label>
+            <div class="form-field preferred-time-range">
+              <span>Fascia oraria preferita <span class="form-field__optional">facoltativa</span></span>
+              <div class="preferred-time-range__inputs">
+                <label class="form-field"><span>Dalle</span><input id="preferred-time-start" name="preferred-time-start" type="time" /></label>
+                <label class="form-field"><span>Alle</span><input id="preferred-time-end" name="preferred-time-end" type="time" /></label>
+              </div>
+            </div>
+          </div>
+          <label class="recurring-order">
+            <span class="recurring-order__copy">
+              <span class="recurring-order__title">Ordine ricorrente</span>
+              <span class="recurring-order__hint" id="recurring-hint">Sconto 5% · prezzo bloccato per 12 mesi</span>
+            </span>
+            <input class="recurring-order__switch" name="recurring-order" type="checkbox" value="yes" role="switch" />
+          </label>
+          <div class="recurring-order__options" id="recurring-options" hidden>
+            <label class="form-field"><span>Frequenza di consegna</span><select id="recurring-frequency" name="recurring-frequency"></select></label>
+            <label class="form-field" id="recurring-day-field"><span>Giorno fisso del mese (1-28)</span><input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" /></label>
+            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da confermare su WhatsApp; il sito non attiva rinnovi automatici.</p>
+          </div>
+          <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
+          <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>
+          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled>Invia richiesta su WhatsApp <span aria-hidden="true">↗</span></button>
+          <p class="checkout-note">La richiesta non è ancora un ordine confermato. Ti rispondiamo per verificare disponibilità, consegna e pagamento.</p>
+        </form>
+      </div>
+    </dialog>
+
+    <p class="live-message" id="live-message" role="status" aria-live="polite"></p>
+  </body>
+</html>
