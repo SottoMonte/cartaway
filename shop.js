@@ -229,6 +229,14 @@ function techVoucherMaximumCents() {
   return optionalPriceInCents(state.site.tech_voucher?.maximum_amount) ?? 2500;
 }
 
+function techVoucherExampleOrderCents() {
+  const percent = techVoucherPercent();
+  const maximumCents = techVoucherMaximumCents();
+  return percent > 0 && maximumCents > 0
+    ? Math.ceil(maximumCents * 100 / percent)
+    : null;
+}
+
 function techVoucherValidityDays(recurring = false) {
   const configuredDays = recurring
     ? state.site.recurring_order?.tech_voucher_validity_days
@@ -247,6 +255,14 @@ function techVoucherAmountCents(subtotalCents) {
 }
 
 function configureTechVoucher() {
+  const exampleOrderCents = techVoucherExampleOrderCents();
+  document.querySelectorAll("[data-tech-voucher-example]").forEach((element) => {
+    element.hidden = exampleOrderCents === null;
+    if (exampleOrderCents !== null) {
+      const amount = element.querySelector("[data-tech-voucher-example-order]");
+      if (amount) amount.textContent = formatPrice(exampleOrderCents / 100);
+    }
+  });
   document.querySelectorAll("[data-tech-voucher-percent]").forEach((element) => {
     element.textContent = `${formatPercentage(techVoucherPercent())}%`;
   });
