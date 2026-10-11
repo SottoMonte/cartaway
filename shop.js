@@ -536,9 +536,9 @@ function renderCart() {
         <div class="cart-item__details">
           <h3>${escapeHtml(name)}</h3>
           <p>${escapeHtml(product.unit || "")} · ${unitPrice}</p>
-          <div class="quantity-control" aria-label="Quantità di ${escapeHtml(name)}">
+          <div class="quantity-control" role="group" aria-label="Quantità di ${escapeHtml(name)}">
             <button type="button" data-cart-change="-1" data-product-id="${id}" aria-label="Riduci ${escapeHtml(name)} di uno">−</button>
-            <span>${itemQuantity}</span>
+            <input class="quantity-control__input" type="number" min="1" step="1" inputmode="numeric" value="${itemQuantity}" data-cart-quantity="true" data-product-id="${id}" aria-label="Quantità di ${escapeHtml(name)}" />
             <button type="button" data-cart-change="1" data-product-id="${id}" aria-label="Aumenta ${escapeHtml(name)} di uno">+</button>
           </div>
         </div>
@@ -601,15 +601,19 @@ function addToCart(productId) {
   showMessage(`${product.name} aggiunto al carrello.`);
 }
 
-function changeQuantity(productId, delta) {
-  const nextQuantity = (state.cart[productId] || 0) + delta;
-  if (nextQuantity < 1) {
+function setQuantity(productId, quantity) {
+  if (!Number.isSafeInteger(quantity) || quantity < 0) return;
+  if (quantity === 0) {
     delete state.cart[productId];
   } else {
-    state.cart[productId] = nextQuantity;
+    state.cart[productId] = quantity;
   }
   saveCart();
   renderCart();
+}
+
+function changeQuantity(productId, delta) {
+  setQuantity(productId, (state.cart[productId] || 0) + delta);
 }
 
 function buildWhatsappUrl(message) {
@@ -1272,6 +1276,17 @@ function setupEvents() {
     const button = event.target.closest("[data-cart-change]");
     if (!button) return;
     changeQuantity(button.dataset.productId, Number(button.dataset.cartChange));
+  });
+
+  elements.cartItems.addEventListener("change", (event) => {
+    const input = event.target.closest("[data-cart-quantity]");
+    if (!input) return;
+    const quantity = Number(input.value);
+    if (!Number.isSafeInteger(quantity) || quantity < 1) {
+      input.value = String(state.cart[input.dataset.productId] || 1);
+      return;
+    }
+    setQuantity(input.dataset.productId, quantity);
   });
 
   elements.cartDialog.addEventListener("click", (event) => {
