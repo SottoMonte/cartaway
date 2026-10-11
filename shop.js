@@ -575,10 +575,7 @@ function renderCart() {
   } else if (!deliveryZone) {
     elements.deliveryEstimate.textContent = "Verifichiamo copertura e costo per questo comune prima di confermare.";
   } else {
-    const timing = [deliveryZone.delivery_time, deliveryZone.availability]
-      .map((value) => String(value || "").trim())
-      .filter(Boolean)
-      .join(", ");
+    const timing = String(deliveryZone.delivery_time || "").trim();
     elements.deliveryEstimate.textContent = `${selectedTown}: ${timing ? `${timing}. ` : ""}${deliveryQuote.note}`;
   }
 }
@@ -813,6 +810,11 @@ function getDeliveryZones() {
   );
 }
 
+function deliveryZoneLabel(zone) {
+  const match = String(zone.id || "").match(/^zona-(\d+)$/i);
+  return match ? `Zona ${match[1]}` : String(zone.name || "Zona di consegna");
+}
+
 function renderDeliveryInfo() {
   const zones = getDeliveryZones();
   const colors = ["#c95e47", "#5e874b", "#4f7892"];
@@ -833,10 +835,7 @@ function renderDeliveryInfo() {
   if (elements.deliveryZones) {
     elements.deliveryZones.innerHTML = zones.map((zone, index) => {
       const locations = zone.locations.map((location) => String(location.name || "").trim()).filter(Boolean);
-      const details = [zone.delivery_time, zone.availability]
-        .map((value) => String(value || "").trim())
-        .filter(Boolean)
-        .join(" · ");
+      const details = String(zone.delivery_time || "").trim();
       const description = [locations.join(", "), details, deliveryPolicyDescription(zone)].filter(Boolean).join(". ");
       return `
         <article class="delivery-zone${index === 0 ? " delivery-zone--primary" : ""}">
@@ -870,10 +869,9 @@ function renderDeliveryInfo() {
           style="--zone-color: ${colors[index % colors.length]}"
           aria-pressed="${index === 0}"
         >
-          <strong>${escapeHtml(zone.name || "Zona di consegna")}</strong>
-          <span>${escapeHtml(zone.delivery_time || "Tempi da concordare")}</span>
+          <strong>${escapeHtml(deliveryZoneLabel(zone))}</strong>
+          <span>${escapeHtml(zone.delivery_time || "Spedizione standard, tempi variabili")}</span>
           <small>${escapeHtml(locationText)}</small>
-          <small>${escapeHtml(zone.availability || "Disponibilità da confermare")}</small>
           <small>${escapeHtml(deliveryPolicyDescription(zone))}</small>
         </button>
       `;
@@ -999,7 +997,7 @@ async function initializeDeliveryMap() {
           weight: 1.5,
         }).addTo(state.deliveryMap);
         marker.bindTooltip(escapeHtml(location.name));
-        marker.bindPopup(`<strong>${escapeHtml(location.name)}</strong><br>${escapeHtml(zone.delivery_time || "Tempi da concordare")}<br>${escapeHtml(zone.availability || "Disponibilità da confermare")}<br>${escapeHtml(deliveryPolicyDescription(zone))}`);
+        marker.bindPopup(`<strong>${escapeHtml(location.name)}</strong><br>${escapeHtml(zone.delivery_time || "Spedizione standard, tempi variabili")}<br>${escapeHtml(deliveryPolicyDescription(zone))}`);
         marker.on("click", () => selectDeliveryZone(zone.id, false));
         return marker;
       });
@@ -1028,7 +1026,7 @@ function setupHeroCarousel() {
       actionHref: "catalogo.html",
       openPromo: false,
       deliveryHighlight: "Montoro: circa 2 ore",
-      deliverySecondary: "Comuni vicini: in giornata, su conferma",
+      deliverySecondary: "Comuni vicini: in giornata",
       caption: "UNA SCORTA IN MENO A CUI PENSARE",
     },
     {
@@ -1410,7 +1408,7 @@ function setupEvents() {
     }
     const deliveryMessageLines = deliveryZone
       ? [
-          `Zona di consegna: ${deliveryZone.id} (${deliveryZone.name}).`,
+          `Zona di consegna: ${deliveryZoneLabel(deliveryZone)} (${town}).`,
           `Regola: ${deliveryQuote.note}`,
           deliveryQuote.costCents === null
             ? `Costo consegna: ${deliveryQuote.label.toLocaleLowerCase("it-IT")}; importo da confermare.`
@@ -1474,7 +1472,7 @@ async function initializeShop() {
 
   try {
     const [siteResponse, productsResponse] = await Promise.all([
-      fetch("data/site.json"),
+      fetch("data/site.json", { cache: "no-store" }),
       fetch("data/products.json"),
     ]);
     if (!siteResponse.ok || !productsResponse.ok) throw new Error("Impossibile caricare i dati del negozio.");

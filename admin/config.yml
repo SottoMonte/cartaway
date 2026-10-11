@@ -31,8 +31,7 @@ collections:
             fields:
               - { label: ID zona, name: id, widget: string }
               - { label: Nome zona, name: name, widget: string }
-              - { label: Tempo indicativo, name: delivery_time, widget: string }
-              - { label: Disponibilità, name: availability, widget: string }
+              - { label: Tempo di consegna, name: delivery_time, widget: string }
               - label: Modalità costo consegna
                 name: delivery_policy
                 widget: select

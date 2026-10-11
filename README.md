@@ -31,7 +31,7 @@ Il CMS usa il backend GitHub di Decap Turbo, distribuito al momento come release
 - `data/site.json`: nome, zona, recapiti, indirizzo e dati dell'impresa. Verifica che i contatti e le informazioni legali siano aggiornati e pertinenti all'attività.
 - Il catalogo iniziale usa immagini dimostrative da Unsplash. Caricando le foto definitive da Decap, i file vengono salvati in `uploads/` nel repository.
 
-I tempi indicati sono stime: Montoro circa 2 ore, comuni vicini in giornata su conferma. Il sito non calcola le spese di consegna né verifica automaticamente disponibilità e tempi; l'ordine viene confermato manualmente su WhatsApp.
+I tempi di consegna sono indicativi: Montoro circa 2 ore, comuni vicini in giornata e, per la Zona 03, spedizione standard con tempi variabili. Le tariffe vengono calcolate in base alla zona; i dettagli dell'ordine vengono confermati su WhatsApp.
 
 ## Costi e limiti
 
