@@ -43,7 +43,9 @@ const elements = {
   cartCashbackAmount: document.querySelector("#cart-cashback-amount"),
   cartCashbackLabel: document.querySelector("#cart-cashback-label"),
   cartCashbackNote: document.querySelector("#cart-cashback-note"),
-  categoryButtons: [...document.querySelectorAll("[data-category]")],
+  categorySubtabs: document.querySelector("#category-subtabs"),
+  categorySelect: document.querySelector("#product-category"),
+  categoryTree: document.querySelector("#product-category-tree"),
   checkoutFeedback: document.querySelector("#checkout-feedback"),
   checkoutForm: document.querySelector("#checkout-form"),
   contactAddress: document.querySelector("#contact-address"),
@@ -336,6 +338,78 @@ function productImages(product) {
     .filter(Boolean))];
 }
 
+function productCategoryLabel(category) {
+  const value = String(category || "Carta");
+  const separator = value.lastIndexOf(" / ");
+  return separator === -1 ? value : value.slice(separator + 3);
+}
+
+function productCategoryGroups() {
+  if (!elements.categoryTree) return [];
+
+  return [...elements.categoryTree.children].flatMap((entry) => {
+    if (entry.tagName === "OPTGROUP") {
+      const options = [...entry.querySelectorAll(":scope > option")];
+      const parent = options.find((option) => option.value === entry.label);
+      if (!parent) {
+        return options.map((option) => ({
+          value: option.value,
+          label: option.textContent.trim(),
+          children: [],
+        }));
+      }
+      return [{
+        value: parent.value,
+        label: entry.label,
+        children: options
+          .filter((option) => option !== parent)
+          .map((option) => ({ value: option.value, label: option.textContent.trim() })),
+      }];
+    }
+
+    if (entry.tagName !== "OPTION" || entry.value === "tutte") return [];
+    return [{ value: entry.value, label: entry.textContent.trim(), children: [] }];
+  });
+}
+
+function categoryFilterButton(category, pressed) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = category.label;
+  button.dataset.category = category.value;
+  button.setAttribute("aria-pressed", String(pressed));
+  button.addEventListener("click", () => {
+    state.category = category.value;
+    renderCategoryFilters();
+    renderProducts();
+  });
+  return button;
+}
+
+function renderCategoryFilters() {
+  if (!elements.categorySelect || !elements.categorySubtabs) return;
+
+  const categories = productCategoryGroups();
+  const parentValue = state.category.split(" / ", 1)[0];
+  const activeGroup = categories.find((category) => category.value === parentValue);
+  const mainOptions = [
+    { value: "tutte", label: "Tutte le categorie" },
+    ...categories.map(({ value, label }) => ({ value, label })),
+  ].map(({ value, label }) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    return option;
+  });
+  elements.categorySelect.replaceChildren(...mainOptions);
+  elements.categorySelect.value = activeGroup ? activeGroup.value : "tutte";
+
+  const childButtons = (activeGroup?.children || []).map((category) =>
+    categoryFilterButton(category, state.category === category.value));
+  elements.categorySubtabs.hidden = childButtons.length === 0;
+  elements.categorySubtabs.replaceChildren(...childButtons);
+}
+
 function productCard(product) {
   const id = escapeHtml(product.id);
   const name = String(product.name || "Prodotto");
@@ -348,7 +422,7 @@ function productCard(product) {
         <a class="product-card__image-button" href="${escapeHtml(productUrl)}" data-open-product="${id}" aria-label="Apri anteprima di ${escapeHtml(name)}">
           <img src="${escapeHtml(safeImageUrl(images[0] || fallbackImage))}" alt="${escapeHtml(name)}" loading="lazy" decoding="async" />
         </a>
-        <span class="product-card__category">${escapeHtml(product.category || "Carta")}</span>
+        <span class="product-card__category">${escapeHtml(productCategoryLabel(product.category))}</span>
         ${state.page === "home" && product.featured === true ? `<span class="product-card__featured">In evidenza</span>` : ""}
         ${imageCount > 1 ? `<span class="product-card__image-count">${imageCount} foto</span>` : ""}
       </div>
@@ -405,7 +479,7 @@ function openProductDialog(productId) {
   state.dialogImages = productImages(product);
   if (state.dialogImages.length === 0) state.dialogImages = [fallbackImage];
   elements.productDialogTitle.textContent = product.name || "Prodotto";
-  elements.productDialogCategory.textContent = product.category || "Carta";
+  elements.productDialogCategory.textContent = productCategoryLabel(product.category);
   elements.productDialogUnit.textContent = product.unit || "";
   elements.productDialogPrice.textContent = formatPrice(product.price);
   elements.productDialogDescription.textContent = product.description || "";
@@ -473,7 +547,7 @@ function renderProductDetail() {
   elements.productDetail.hidden = false;
   elements.productNotFound.hidden = true;
   elements.detailTitle.textContent = productName;
-  elements.detailCategory.textContent = product.category || "Carta";
+  elements.detailCategory.textContent = productCategoryLabel(product.category);
   elements.detailUnit.textContent = productUnit;
   elements.detailPrice.textContent = formatPrice(product.price);
   elements.detailDescription.textContent = product.description || "";
@@ -555,7 +629,12 @@ function renderProducts() {
   } else {
     const normalizedSearch = normalizeText(state.search.trim());
     visibleProducts = visibleProducts
-      .filter((product) => state.category === "tutte" || product.category === state.category)
+      .filter((product) => {
+        const category = String(product.category || "");
+        return state.category === "tutte"
+          || category === state.category
+          || category.startsWith(`${state.category} /`);
+      })
       .filter((product) => {
         const searchable = normalizeText([product.name, product.category, product.unit, product.description].join(" "));
         return searchable.includes(normalizedSearch);
@@ -1403,15 +1482,15 @@ function setupHeroCarousel() {
 function setupEvents() {
   setupHeroCarousel();
 
-  elements.categoryButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      state.category = button.dataset.category;
-      elements.categoryButtons.forEach((item) => {
-        item.setAttribute("aria-pressed", String(item === button));
-      });
+  if (elements.categorySelect) {
+    elements.categorySelect.addEventListener("change", (event) => {
+      state.category = event.currentTarget.value;
+      renderCategoryFilters();
       renderProducts();
     });
-  });
+  }
+
+  renderCategoryFilters();
 
   if (elements.productSearch) {
     elements.productSearch.addEventListener("input", (event) => {
@@ -1751,7 +1830,7 @@ async function initializeShop() {
   try {
     const [siteResponse, productsResponse] = await Promise.all([
       fetch("data/site.json", { cache: "no-store" }),
-      fetch("data/products.json"),
+      fetch("data/products.json", { cache: "no-store" }),
     ]);
     if (!siteResponse.ok || !productsResponse.ok) throw new Error("Impossibile caricare i dati del negozio.");
 

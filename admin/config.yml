@@ -116,11 +116,71 @@ collections:
                 name: category
                 widget: select
                 options:
-                  - Igiene
+                  - Avvolgenti Alimentari
+                  - Avvolgenti Alimentari / Carta e Veline alimentari
+                  - Avvolgenti Alimentari / Carta sovrainvolto
+                  - Avvolgenti Alimentari / Ideabrill
+                  - Avvolgenti Alimentari / Rotoli pellicola, alluminio e carta forno
+                  - Avvolgenti Alimentari / Sacchetti di carta
+                  - Avvolgenti Alimentari / Sacchetti in plastica per alimenti
+                  - Avvolgenti Alimentari / Sacchetti sottovuoto
+                  - Avvolgenti Alimentari / Shoppers Bio-compostabili
+                  - Avvolgenti Alimentari / Shoppers in carta
+                  - Cancelleria e Ufficio
+                  - Cancelleria e Ufficio / Accessori
+                  - Cancelleria e Ufficio / Blocchi e fogli A4
+                  - Cancelleria e Ufficio / Rotoli per cassa
+                  - Cancelleria e Ufficio / Rotoli termici adesivi
+                  - Contenitori cibo asporto
+                  - Contenitori cibo asporto / Box fritti e panino
+                  - Contenitori cibo asporto / Box pizza e Teglie in cartone
+                  - Contenitori cibo asporto / Contenitori alluminio con coperchio bordo G
+                  - Contenitori cibo asporto / Contenitori alluminio con coperchio bordo L
+                  - Contenitori cibo asporto / Contenitori Bio-Compostabili
+                  - Contenitori cibo asporto / Contenitori fast food con coperchio
+                  - Contenitori cibo asporto / Contenitori in plastica con coperchio
+                  - Contenitori cibo asporto / Contenitori laccati con coperchio
+                  - Dispenser
+                  - Dispositivi di sicurezza
+                  - Dispositivi di sicurezza / Guanti
+                  - Dispositivi di sicurezza / Scarpe da lavoro
+                  - Igiene e Pulizia
+                  - Igiene e Pulizia / Detergenti stoviglie
+                  - Igiene e Pulizia / Detergenti superfici
+                  - Igiene e Pulizia / Materiale per la pulizia
+                  - Igiene e Pulizia / Sacchi spazzatura
+                  - Igiene e Pulizia / Sapone mani
+                  - Imballaggi
+                  - Imballaggi / Carta gommata
+                  - Imballaggi / Estensibile
+                  - Imballaggi / Nastri adesivi
+                  - Insetticida
+                  - Itissue - Monouso in carta
+                  - Itissue - Monouso in carta / Asciugamani piegati
+                  - Itissue - Monouso in carta / Carta igienica
+                  - Itissue - Monouso in carta / EcoNatural
+                  - Itissue - Monouso in carta / Lenzuolino medico
+                  - Itissue - Monouso in carta / Mini jumbo
+                  - Itissue - Monouso in carta / Rotoloni
+                  - Itissue - Monouso in carta / Tovaglioli
+                  - Pasticceria e Gelateria
+                  - Pasticceria e Gelateria / Basi e Accessori
+                  - Pasticceria e Gelateria / Porta torte
+                  - Pasticceria e Gelateria / Vaschette EPS gelato
+                  - Pasticceria e Gelateria / Vassoi in cartone
+                  - Stoviglie monouso
+                  - Stoviglie monouso / Accessori monouso
+                  - Stoviglie monouso / Bicchieri in cartoncino con coperchio
+                  - Stoviglie monouso / Bicchieri in plastica con coperchio
+                  - Stoviglie monouso / Cannucce e Agitatori
+                  - Stoviglie monouso / Piatti e Scodelle
+                  - Stoviglie monouso / Posate e Kit posate
+                  - Tovaglie e Tovaglioli
+                  - Tovaglie e Tovaglioli / Porta posate
+                  - Tovaglie e Tovaglioli / Tovaglia TNT
+                  - Tovaglie e Tovaglioli / Tovaglietta
+                  - Tovaglie e Tovaglioli / Tovaglioli colorati
                   - Cucina
-                  - Tavola
-                  - Ufficio
-                  - Casa e lavoro
               - { label: Formato o quantità, name: unit, widget: string }
               - label: Prezzo in euro
                 name: price

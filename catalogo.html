@@ -25,7 +25,7 @@
     />
     <link rel="stylesheet" href="shop.css?v=23" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=39" defer></script>
+    <script src="shop.js?v=40" defer></script>
   </head>
   <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -82,13 +82,102 @@
         </div>
 
         <div class="catalog-controls">
-          <div class="category-tabs" role="group" aria-label="Filtra per categoria">
-            <button type="button" data-category="tutte" aria-pressed="true">Tutti</button>
-            <button type="button" data-category="Igiene" aria-pressed="false">Igiene</button>
-            <button type="button" data-category="Cucina" aria-pressed="false">Cucina</button>
-            <button type="button" data-category="Tavola" aria-pressed="false">Tavola</button>
-            <button type="button" data-category="Ufficio" aria-pressed="false">Ufficio</button>
-            <button type="button" data-category="Casa e lavoro" aria-pressed="false">Casa e lavoro</button>
+          <div class="category-filter">
+            <label class="sort-field category-filter__select">
+              <span class="visually-hidden">Filtra per categoria</span>
+              <select id="product-category" aria-label="Filtra per categoria">
+                <option value="tutte">Tutte le categorie</option>
+              </select>
+            </label>
+            <div class="category-subtabs" id="category-subtabs" role="group" aria-label="Filtra per sottocategoria" hidden></div>
+            <select id="product-category-tree" aria-hidden="true" hidden>
+              <option value="tutte">Tutte le categorie</option>
+              <optgroup label="Avvolgenti Alimentari">
+                <option value="Avvolgenti Alimentari">Tutta la categoria</option>
+                <option value="Avvolgenti Alimentari / Carta e Veline alimentari">Carta e Veline alimentari</option>
+                <option value="Avvolgenti Alimentari / Carta sovrainvolto">Carta sovrainvolto</option>
+                <option value="Avvolgenti Alimentari / Ideabrill">Ideabrill</option>
+                <option value="Avvolgenti Alimentari / Rotoli pellicola, alluminio e carta forno">Rotoli pellicola, alluminio e carta forno</option>
+                <option value="Avvolgenti Alimentari / Sacchetti di carta">Sacchetti di carta</option>
+                <option value="Avvolgenti Alimentari / Sacchetti in plastica per alimenti">Sacchetti in plastica per alimenti</option>
+                <option value="Avvolgenti Alimentari / Sacchetti sottovuoto">Sacchetti sottovuoto</option>
+                <option value="Avvolgenti Alimentari / Shoppers Bio-compostabili">Shoppers Bio-compostabili</option>
+                <option value="Avvolgenti Alimentari / Shoppers in carta">Shoppers in carta</option>
+              </optgroup>
+              <optgroup label="Cancelleria e Ufficio">
+                <option value="Cancelleria e Ufficio">Tutta la categoria</option>
+                <option value="Cancelleria e Ufficio / Accessori">Accessori</option>
+                <option value="Cancelleria e Ufficio / Blocchi e fogli A4">Blocchi e fogli A4</option>
+                <option value="Cancelleria e Ufficio / Rotoli per cassa">Rotoli per cassa</option>
+                <option value="Cancelleria e Ufficio / Rotoli termici adesivi">Rotoli termici adesivi</option>
+              </optgroup>
+              <optgroup label="Contenitori cibo asporto">
+                <option value="Contenitori cibo asporto">Tutta la categoria</option>
+                <option value="Contenitori cibo asporto / Box fritti e panino">Box fritti e panino</option>
+                <option value="Contenitori cibo asporto / Box pizza e Teglie in cartone">Box pizza e Teglie in cartone</option>
+                <option value="Contenitori cibo asporto / Contenitori alluminio con coperchio bordo G">Contenitori alluminio con coperchio bordo G</option>
+                <option value="Contenitori cibo asporto / Contenitori alluminio con coperchio bordo L">Contenitori alluminio con coperchio bordo L</option>
+                <option value="Contenitori cibo asporto / Contenitori Bio-Compostabili">Contenitori Bio-Compostabili</option>
+                <option value="Contenitori cibo asporto / Contenitori fast food con coperchio">Contenitori fast food con coperchio</option>
+                <option value="Contenitori cibo asporto / Contenitori in plastica con coperchio">Contenitori in plastica con coperchio</option>
+                <option value="Contenitori cibo asporto / Contenitori laccati con coperchio">Contenitori laccati con coperchio</option>
+              </optgroup>
+              <option value="Dispenser">Dispenser</option>
+              <optgroup label="Dispositivi di sicurezza">
+                <option value="Dispositivi di sicurezza">Tutta la categoria</option>
+                <option value="Dispositivi di sicurezza / Guanti">Guanti</option>
+                <option value="Dispositivi di sicurezza / Scarpe da lavoro">Scarpe da lavoro</option>
+              </optgroup>
+              <optgroup label="Igiene e Pulizia">
+                <option value="Igiene e Pulizia">Tutta la categoria</option>
+                <option value="Igiene e Pulizia / Detergenti stoviglie">Detergenti stoviglie</option>
+                <option value="Igiene e Pulizia / Detergenti superfici">Detergenti superfici</option>
+                <option value="Igiene e Pulizia / Materiale per la pulizia">Materiale per la pulizia</option>
+                <option value="Igiene e Pulizia / Sacchi spazzatura">Sacchi spazzatura</option>
+                <option value="Igiene e Pulizia / Sapone mani">Sapone mani</option>
+              </optgroup>
+              <optgroup label="Imballaggi">
+                <option value="Imballaggi">Tutta la categoria</option>
+                <option value="Imballaggi / Carta gommata">Carta gommata</option>
+                <option value="Imballaggi / Estensibile">Estensibile</option>
+                <option value="Imballaggi / Nastri adesivi">Nastri adesivi</option>
+              </optgroup>
+              <option value="Insetticida">Insetticida</option>
+              <optgroup label="Itissue - Monouso in carta">
+                <option value="Itissue - Monouso in carta">Tutta la categoria</option>
+                <option value="Itissue - Monouso in carta / Asciugamani piegati">Asciugamani piegati</option>
+                <option value="Itissue - Monouso in carta / Carta igienica">Carta igienica</option>
+                <option value="Itissue - Monouso in carta / EcoNatural">EcoNatural</option>
+                <option value="Itissue - Monouso in carta / Lenzuolino medico">Lenzuolino medico</option>
+                <option value="Itissue - Monouso in carta / Mini jumbo">Mini jumbo</option>
+                <option value="Itissue - Monouso in carta / Rotoloni">Rotoloni</option>
+                <option value="Itissue - Monouso in carta / Tovaglioli">Tovaglioli</option>
+              </optgroup>
+              <optgroup label="Pasticceria e Gelateria">
+                <option value="Pasticceria e Gelateria">Tutta la categoria</option>
+                <option value="Pasticceria e Gelateria / Basi e Accessori">Basi e Accessori</option>
+                <option value="Pasticceria e Gelateria / Porta torte">Porta torte</option>
+                <option value="Pasticceria e Gelateria / Vaschette EPS gelato">Vaschette EPS gelato</option>
+                <option value="Pasticceria e Gelateria / Vassoi in cartone">Vassoi in cartone</option>
+              </optgroup>
+              <optgroup label="Stoviglie monouso">
+                <option value="Stoviglie monouso">Tutta la categoria</option>
+                <option value="Stoviglie monouso / Accessori monouso">Accessori monouso</option>
+                <option value="Stoviglie monouso / Bicchieri in cartoncino con coperchio">Bicchieri in cartoncino con coperchio</option>
+                <option value="Stoviglie monouso / Bicchieri in plastica con coperchio">Bicchieri in plastica con coperchio</option>
+                <option value="Stoviglie monouso / Cannucce e Agitatori">Cannucce e Agitatori</option>
+                <option value="Stoviglie monouso / Piatti e Scodelle">Piatti e Scodelle</option>
+                <option value="Stoviglie monouso / Posate e Kit posate">Posate e Kit posate</option>
+              </optgroup>
+              <optgroup label="Tovaglie e Tovaglioli">
+                <option value="Tovaglie e Tovaglioli">Tutta la categoria</option>
+                <option value="Tovaglie e Tovaglioli / Porta posate">Porta posate</option>
+                <option value="Tovaglie e Tovaglioli / Tovaglia TNT">Tovaglia TNT</option>
+                <option value="Tovaglie e Tovaglioli / Tovaglietta">Tovaglietta</option>
+                <option value="Tovaglie e Tovaglioli / Tovaglioli colorati">Tovaglioli colorati</option>
+              </optgroup>
+              <option value="Cucina">Cucina</option>
+            </select>
           </div>
           <div class="catalog-tools">
             <label class="search-field">
