@@ -6,17 +6,32 @@
     <meta name="theme-color" content="#183d32" />
     <meta
       name="description"
-      content="Carta per casa, cucina e ufficio con consegna locale a Montoro e nei comuni vicini."
+      content="Carta igienica, rotoli cucina e carta A4 per casa e ufficio. Cartaway consegna a Montoro e nei comuni vicini, con tempi da concordare."
     />
-    <title>Cartaway — Carta per casa e ufficio, a Montoro</title>
+    <meta name="robots" content="max-image-preview:large" />
+    <link rel="canonical" href="https://cartaway.it/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:site_name" content="Cartaway" />
+    <meta property="og:url" content="https://cartaway.it/" />
+    <meta property="og:title" content="Cartaway | Carta per casa, cucina e ufficio a Montoro" />
+    <meta property="og:description" content="Carta igienica, rotoli cucina e carta A4 per casa e ufficio. Cartaway consegna a Montoro e nei comuni vicini, con tempi da concordare." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Cartaway | Carta per casa, cucina e ufficio a Montoro" />
+    <meta name="twitter:description" content="Carta igienica, rotoli cucina e carta A4 per casa e ufficio. Cartaway consegna a Montoro e nei comuni vicini, con tempi da concordare." />
+    <title>Cartaway | Carta per casa, cucina e ufficio a Montoro</title>
+    <script id="seo-structured-data" type="application/ld+json">
+      {"@context":"https://schema.org","@type":"WebSite","@id":"https://cartaway.it/#website","url":"https://cartaway.it/","name":"Cartaway","inLanguage":"it-IT"}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=22" />
-    <script src="shop.js?v=36" defer></script>
+    <link rel="stylesheet" href="shop.css?v=23" />
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
+    <script src="shop.js?v=38" defer></script>
   </head>
   <body data-page="home">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -24,7 +39,7 @@
     <div class="notice-bar">
       <div class="notice-bar__inner">
         <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
-        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-percent>50%</span> sul primo ordine del mese, fino a <span data-tech-voucher-maximum>25 €</span></button>
+        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</button>
         <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
       </div>
     </div>
@@ -100,7 +115,7 @@
       <section class="benefit-strip" aria-label="Vantaggi del servizio">
         <div class="benefit-strip__inner">
           <p><span class="benefit-strip__index">01</span><strong>Consegna locale</strong><span>Montoro e comuni vicini</span></p>
-          <p><span class="benefit-strip__index">02</span><strong>Ordine semplice</strong><span>Carrello e conferma su WhatsApp</span></p>
+          <p><span class="benefit-strip__index">02</span><strong>Riepilogo semplice</strong><span>Ricevilo via email</span></p>
           <p><span class="benefit-strip__index">03</span><strong>Solo l'essenziale</strong><span>Casa, cucina e ufficio</span></p>
         </div>
       </section>
@@ -151,7 +166,7 @@
               <p>Fisciano, Bracigliano e Mercato San Severino: consegna a pagamento, €5,00.</p>
             </article>
           </div>
-          <p class="delivery__disclaimer" id="delivery-disclaimer">Tempi e disponibilità sono indicativi. Costo e condizioni di consegna dipendono dalla zona e si confermano su WhatsApp.</p>
+          <p class="delivery__disclaimer" id="delivery-disclaimer">Tempi e disponibilità sono indicativi. Costo e condizioni di consegna dipendono dalla zona e si confermano con l'attività.</p>
         </div>
       </section>
 
@@ -161,7 +176,7 @@
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> TRE PASSAGGI</p>
             <h2 id="how-title">Fatto, senza<br />perdere tempo.</h2>
           </div>
-          <p class="section-heading__note">Il carrello prepara il messaggio con prodotti e indirizzo. La richiesta diventa ordine solo dopo la nostra conferma.</p>
+          <p class="section-heading__note">Il carrello invia al cliente un riepilogo via email. Per inoltrare la richiesta e concordare l'ordine, contatta l'attività.</p>
         </div>
         <div class="steps">
           <article class="step">
@@ -172,12 +187,12 @@
           <article class="step">
             <span class="step__number">02</span>
             <h3>Invia</h3>
-            <p>Inserisci il comune e l'indirizzo, poi continua su WhatsApp.</p>
+            <p>Inserisci i dati e ricevi via email il riepilogo della richiesta.</p>
           </article>
           <article class="step">
             <span class="step__number">03</span>
             <h3>Conferma</h3>
-            <p>Verifichiamo disponibilità, costo e orario di consegna.</p>
+            <p>Contatta l'attività per verificare disponibilità, consegna e pagamento.</p>
           </article>
         </div>
       </section>
@@ -191,7 +206,7 @@
           <div class="faq-list">
             <details>
               <summary>Il tempo di consegna è garantito?</summary>
-              <p>No: sono stime. Confermiamo l'orario su WhatsApp in base alla zona, alla disponibilità e al momento dell'ordine.</p>
+              <p>No: sono stime. Confermiamo l'orario in base alla zona, alla disponibilità e al momento della richiesta.</p>
             </details>
             <details>
               <summary>Come si paga?</summary>
@@ -207,11 +222,11 @@
             </details>
             <details>
               <summary>Come si utilizza il Buono Tech?</summary>
-              <p>Il Buono Tech è pari al <span data-tech-voucher-percent>50%</span> della spesa del primo ordine di ogni mese, fino a un massimo di <span data-tech-voucher-maximum>25 €</span>, senza spesa minima. È valido per <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. Vale per un solo intervento. Non è convertibile in denaro né cumulabile con altri buoni. Un solo buono per cliente al mese. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
+              <p>Il Buono Tech può essere generato sul primo ordine del mese: vale il <span data-tech-voucher-standard-percent>25%</span> della spesa per gli ordini non ricorrenti e il <span data-tech-voucher-recurring-percent>50%</span> per gli ordini ricorrenti, fino a un massimo di <span data-tech-voucher-maximum>25 €</span>, senza spesa minima. È valido per <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. Vale per un solo intervento. Non è convertibile in denaro né cumulabile con altri buoni. Un solo buono per cliente al mese. L'attivazione è soggetta a verifica dell'attività. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
             </details>
             <details>
               <summary>Come funziona l'ordine ricorrente?</summary>
-              <p>Scegli una consegna ogni <span id="recurring-frequency-faq">30 o 60 giorni</span>: hai il <span id="recurring-discount-faq">5%</span> di sconto e prezzi bloccati per <span id="recurring-price-lock-faq">12 mesi</span>. Puoi indicare un giorno fisso del mese. Con l'ordine ricorrente, la validità del Buono Tech si estende a <span data-tech-voucher-recurring-validity>90 giorni</span> dalla consegna. Il sito invia una richiesta, non attiva rinnovi automatici: frequenza e consegna si confermano su WhatsApp.</p>
+              <p>Scegli una consegna ogni <span id="recurring-frequency-faq">30 o 60 giorni</span>: hai il <span id="recurring-discount-faq">5%</span> di sconto e prezzi bloccati per <span id="recurring-price-lock-faq">12 mesi</span>. Puoi indicare un giorno fisso del mese. Con l'ordine ricorrente, la validità del Buono Tech si estende a <span data-tech-voucher-recurring-validity>90 giorni</span> dalla consegna. Il sito invia una richiesta, non attiva rinnovi automatici: frequenza e consegna si concordano con l'attività.</p>
             </details>
           </div>
         </div>
@@ -232,7 +247,7 @@
         </div>
         <div class="site-footer__contact-block">
           <h2>Contatti</h2>
-          <a id="contact-whatsapp" href="https://wa.me/393477095289" target="_blank" rel="noopener noreferrer">Ordina su WhatsApp <span aria-hidden="true">↗</span></a>
+          <a id="contact-whatsapp" href="https://wa.me/393477095289" target="_blank" rel="noopener noreferrer">Contattaci su WhatsApp <span aria-hidden="true">↗</span></a>
           <a id="contact-phone" href="tel:+393477095289">+39 347 7095289</a>
           <a id="contact-email" href="mailto:nicolagal33@gmail.com">nicolagal33@gmail.com</a>
           <p id="contact-address">Via Biagio de Giovanni, 1, Torchiati di Montoro (AV)</p>
@@ -280,10 +295,12 @@
         <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi promozione">×</button></form>
         <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> PROMO PER ORDINI B2B</p>
         <h2 id="promo-dialog-title">Il Buono Tech del mese</h2>
-        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine di carta e consumabili di ogni mese genera un Buono Tech pari al <span data-tech-voucher-percent>50%</span> della spesa. Nessuna spesa minima.</p>
+        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine del mese può ottenere un Buono Tech pari al <span data-tech-voucher-standard-percent>25%</span> della spesa se non ricorrente o al <span data-tech-voucher-recurring-percent>50%</span> se ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.</p>
         <div class="promo-dialog__example" data-tech-voucher-example>
-          <span>Spesa per ottenere il Buono massimo</span>
-          <strong><span data-tech-voucher-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+          <span>Per ottenere il buono massimo con ordine non ricorrente</span>
+          <strong><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+          <span>Per ottenere il buono massimo con ordine ricorrente</span>
+          <strong><span data-tech-voucher-recurring-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
         </div>
         <p class="promo-dialog__terms" id="promo-dialog-terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
       </div>
@@ -336,12 +353,16 @@
           <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Seleziona il comune per conoscere costo e modalità di consegna.</small>
           <p class="cart-total-row"><span>Totale stimato</span><strong id="cart-estimated-total">Da confermare</strong></p>
           <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
-            <p>🎁 Buono Tech stimato, se è il primo ordine del mese: <strong id="cart-cashback-amount">€0,00</strong>.</p>
-            <small id="cart-cashback-note">Stima pari al 50% della spesa, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
+            <p>🎁 <span id="cart-cashback-label">Buono Tech stimato per un ordine singolo, se è il primo del mese</span>: <strong id="cart-cashback-amount">€0,00</strong>.</p>
+            <small id="cart-cashback-note">Stima pari al 25% della spesa con ordine non ricorrente o al 50% con ordine ricorrente, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
           </div>
         </div>
         <form class="checkout-form" id="checkout-form">
           <h3>Dati per la consegna</h3>
+          <label class="form-field">
+            <span>Email per la conferma della richiesta</span>
+            <input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" />
+          </label>
           <label class="form-field">
             <span>Telefono per ricontatto</span>
             <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" />
@@ -400,7 +421,7 @@
               <span>Giorno fisso del mese (1-28)</span>
               <input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" />
             </label>
-            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da confermare su WhatsApp; il sito non attiva rinnovi automatici.</p>
+            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
           </div>
           <label class="form-field">
             <span>Note per la consegna <span class="form-field__optional">facoltative</span></span>
@@ -411,10 +432,11 @@
             <input name="name" type="text" autocomplete="name" maxlength="80" />
           </label>
           <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled>
-            Invia richiesta su WhatsApp <span aria-hidden="true">↗</span>
+            <span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span>
           </button>
-          <p class="checkout-note">La richiesta non è ancora un ordine confermato. Ti rispondiamo per verificare disponibilità, consegna e pagamento.</p>
-        </form>
+            <p class="checkout-note">Riceverai via email solo un riepilogo dei dati inseriti. L'attività non riceve automaticamente la richiesta e l'ordine non è confermato: contattala per verificare disponibilità, consegna e pagamento.</p>
+          </form>
+          <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
       </div>
     </dialog>
 

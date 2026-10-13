@@ -1,0 +1,132 @@
+<div
+  style="
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #192923;
+    padding: 16px 8px;
+    background-color: #f4f7f2;
+  "
+>
+  <div style="max-width: 600px; margin: auto; background-color: #fff">
+    <div style="border-top: 6px solid #183d32; padding: 16px; background-color: #fff">
+      <a
+        href="{{website_url}}"
+        target="_blank"
+        style="display: inline-block; text-decoration: none; margin-right: 8px; vertical-align: middle"
+      >
+        <img
+          src="cid:logo.png"
+          alt="{{brand}}"
+          height="32"
+          style="display: block; height: 32px; width: auto; border: 0"
+        />
+      </a>
+      <span style="font-size: 16px; vertical-align: middle; border-left: 1px solid #d7dfd9; padding-left: 10px">
+        <strong>Riepilogo della richiesta</strong>
+      </span>
+    </div>
+
+    <div style="padding: 0 16px 20px">
+      <p style="margin-top: 0">
+        Questo riepilogo viene inviato solo a te. L'attività non riceve automaticamente la richiesta e l'ordine non è confermato.
+      </p>
+
+      <div style="text-align: left; padding: 8px 0; border-bottom: 2px solid #183d32">
+        <strong>Riferimento #{{order_id}}</strong>
+      </div>
+
+      <h2 style="font-size: 16px; margin: 22px 0 8px">Prodotti</h2>
+      <table role="presentation" style="width: 100%; border-collapse: collapse">
+        {{#orders}}
+        <tr style="vertical-align: top">
+          <td style="width: 72px; padding: 12px 8px 12px 0">
+            <img
+              src="{{image_url}}"
+              alt="{{name}}"
+              width="64"
+              height="64"
+              style="display: block; width: 64px; height: 64px; object-fit: contain; border: 0"
+            />
+          </td>
+          <td style="padding: 12px 8px; width: 100%">
+            <strong>{{name}}</strong>
+            <div style="color: #62736b; padding-top: 4px">Quantità: {{units}}</div>
+          </td>
+          <td style="padding: 12px 0; text-align: right; white-space: nowrap">
+            <strong>{{line_total}}</strong>
+            <div style="color: #62736b; padding-top: 4px">{{price}} / unità</div>
+          </td>
+        </tr>
+        {{/orders}}
+      </table>
+
+      <h2 style="font-size: 16px; margin: 22px 0 8px">Dati cliente</h2>
+      <table role="presentation" style="width: 100%; border-collapse: collapse">
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Nome</td><td style="padding: 4px 0">{{customer_name}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Email</td><td style="padding: 4px 0">{{customer_email}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Telefono</td><td style="padding: 4px 0">{{customer_phone}}</td></tr>
+      </table>
+
+      <h2 style="font-size: 16px; margin: 22px 0 8px">Consegna</h2>
+      <table role="presentation" style="width: 100%; border-collapse: collapse">
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Indirizzo</td><td style="padding: 4px 0">{{delivery_address}}, {{delivery_city}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Zona</td><td style="padding: 4px 0">{{delivery_zone}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Tempo indicativo</td><td style="padding: 4px 0">{{estimated_delivery_time}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Data preferita</td><td style="padding: 4px 0">{{preferred_delivery_date}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Fascia oraria preferita</td><td style="padding: 4px 0">{{preferred_delivery_time}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Note</td><td style="padding: 4px 0">{{delivery_notes}}</td></tr>
+      </table>
+
+      <h2 style="font-size: 16px; margin: 22px 0 8px">Ordine ricorrente</h2>
+      <table role="presentation" style="width: 100%; border-collapse: collapse">
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Attivo</td><td style="padding: 4px 0">{{recurring_order}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Frequenza</td><td style="padding: 4px 0">{{recurring_frequency}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Giorno richiesto</td><td style="padding: 4px 0">{{recurring_day}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Sconto</td><td style="padding: 4px 0">{{recurring_discount}}</td></tr>
+        <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Prezzo bloccato</td><td style="padding: 4px 0">{{price_lock_months}}</td></tr>
+      </table>
+      <p style="color: #62736b; font-size: 12px; margin: 8px 0 0">
+        Frequenza e giorno sono indicazioni da concordare con l'attività; il sito non attiva rinnovi automatici.
+      </p>
+
+      <h2 style="font-size: 16px; margin: 22px 0 8px">Totali stimati</h2>
+      <table role="presentation" style="width: 100%; border-collapse: collapse; text-align: right">
+        <tr><td style="width: 60%"></td><td style="padding: 6px 8px">Consegna</td><td style="padding: 6px 0">{{cost.shipping}}</td></tr>
+        <tr><td></td><td style="padding: 6px 8px">Imposte</td><td style="padding: 6px 0">{{cost.tax}}</td></tr>
+        <tr>
+          <td></td>
+          <td style="padding: 12px 8px; border-top: 2px solid #183d32"><strong>Totale</strong></td>
+          <td style="padding: 12px 0; border-top: 2px solid #183d32"><strong>{{cost.total}}</strong></td>
+        </tr>
+      </table>
+
+      <div style="margin-top: 22px; padding: 16px; border: 1px solid #b7d6a6; background-color: #edf6e8">
+        <h2 style="font-size: 16px; margin: 0 0 10px">Buono Tech candidato</h2>
+        <table role="presentation" style="width: 100%; border-collapse: collapse">
+          <tr>
+            <td style="padding: 5px 8px 5px 0; color: #62736b">Codice</td>
+            <td style="padding: 5px 0; text-align: right"><strong>{{tech_voucher_id}}</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 8px 5px 0; color: #62736b">Valore stimato</td>
+            <td style="padding: 5px 0; text-align: right"><strong>{{tech_voucher_value}}</strong></td>
+          </tr>
+        </table>
+        <p style="margin: 12px 0 6px">
+          Il buono è valido solo se questo è il primo ordine del mese per il cliente. Il valore è calcolato al {{tech_voucher_percent}} della spesa, fino a {{tech_voucher_maximum}}.
+        </p>
+        <p style="margin: 6px 0">
+          Codice e idoneità non sono ancora convalidati. Se il buono ti spetta, Cartaway ti invierà una seconda email per confermare che è attivo. Attendi quella conferma: fino a quel momento il codice non può essere utilizzato.
+        </p>
+        <p style="margin: 6px 0 0; color: #62736b; font-size: 12px">
+          Validità del buono convalidato: {{tech_voucher_validity}} dalla consegna. Un buono per cliente al mese; non convertibile in denaro né cumulabile.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 600px; margin: auto; color: #62736b; font-size: 12px">
+    <p>Email inviata a {{email}}. Il buono non è ancora attivo: attendi la seconda email di conferma da Cartaway.</p>
+  </div>
+</div>

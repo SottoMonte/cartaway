@@ -54,7 +54,7 @@ collections:
             name: tech_voucher
             widget: object
             fields:
-              - { label: Percentuale sul primo ordine del mese, name: percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
+              - { label: Percentuale Buono Tech non ricorrente, name: percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
               - { label: Importo massimo (euro), name: maximum_amount, widget: number, value_type: float, min: 0, step: 0.01 }
               - { label: Durata dalla consegna (giorni), name: validity_days, widget: number, value_type: int, min: 1, step: 1 }
           - label: Ordine ricorrente
@@ -62,6 +62,7 @@ collections:
             widget: object
             fields:
               - { label: Sconto percentuale, name: discount_percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
+              - { label: Percentuale Buono Tech ricorrente, name: tech_voucher_percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
               - { label: Mesi di prezzo bloccato, name: price_lock_months, widget: number, value_type: int, min: 1, step: 1 }
               - label: Frequenze disponibili in giorni
                 name: frequency_days
@@ -77,6 +78,13 @@ collections:
             required: false
             hint: Inserisci il numero completo con prefisso internazionale, solo cifre.
           - { label: Email di contatto, name: email, widget: string, required: false }
+          - label: Invio ordini EmailJS
+            name: emailjs
+            widget: object
+            fields:
+              - { label: Public Key, name: public_key, widget: string, required: false, hint: Identificativo pubblico EmailJS; il destinatario va configurato nel template EmailJS. }
+              - { label: Service ID, name: service_id, widget: string, required: false }
+              - { label: Template ID per il riepilogo cliente, name: template_id, widget: string, required: false }
           - label: Dati dell'impresa
             name: legal
             widget: object

@@ -10,6 +10,7 @@ const state = {
   page: document.body.dataset.page || "home",
   products: [],
   site: {},
+  orderSubmitting: false,
   cart: readCart(),
   category: "tutte",
   search: "",
@@ -40,8 +41,10 @@ const elements = {
   cartDiscountAmount: document.querySelector("#cart-discount-amount"),
   cartCashback: document.querySelector("#cart-cashback"),
   cartCashbackAmount: document.querySelector("#cart-cashback-amount"),
+  cartCashbackLabel: document.querySelector("#cart-cashback-label"),
   cartCashbackNote: document.querySelector("#cart-cashback-note"),
   categoryButtons: [...document.querySelectorAll("[data-category]")],
+  checkoutFeedback: document.querySelector("#checkout-feedback"),
   checkoutForm: document.querySelector("#checkout-form"),
   contactAddress: document.querySelector("#contact-address"),
   contactEmail: document.querySelector("#contact-email"),
@@ -81,6 +84,7 @@ const elements = {
   menuToggle: document.querySelector("#menu-toggle"),
   navigation: document.querySelector("#primary-navigation"),
   orderSubmit: document.querySelector("#order-submit"),
+  orderSubmitLabel: document.querySelector("#order-submit-label"),
   otherTown: document.querySelector("#other-town"),
   otherTownField: document.querySelector("#other-town-field"),
   productCount: document.querySelector("#product-count"),
@@ -220,17 +224,21 @@ function recurringFrequencyDays() {
   return days.length ? days : [30, 60];
 }
 
-function techVoucherPercent() {
-  const value = Number(state.site.tech_voucher?.percent);
-  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 50;
+function techVoucherPercent(recurring = false) {
+  const configuredPercent = recurring
+    ? state.site.recurring_order?.tech_voucher_percent
+    : state.site.tech_voucher?.percent;
+  const value = Number(configuredPercent);
+  const fallbackPercent = recurring ? 50 : 25;
+  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : fallbackPercent;
 }
 
 function techVoucherMaximumCents() {
   return optionalPriceInCents(state.site.tech_voucher?.maximum_amount) ?? 2500;
 }
 
-function techVoucherExampleOrderCents() {
-  const percent = techVoucherPercent();
+function techVoucherExampleOrderCents(recurring = false) {
+  const percent = techVoucherPercent(recurring);
   const maximumCents = techVoucherMaximumCents();
   return percent > 0 && maximumCents > 0
     ? Math.ceil(maximumCents * 100 / percent)
@@ -250,21 +258,27 @@ function techVoucherValidityText(recurring = false) {
   return `${days} ${days === 1 ? "giorno" : "giorni"}`;
 }
 
-function techVoucherAmountCents(subtotalCents) {
-  return Math.min(Math.round(subtotalCents * techVoucherPercent() / 100), techVoucherMaximumCents());
+function techVoucherAmountCents(subtotalCents, recurring = false) {
+  return Math.min(Math.round(subtotalCents * techVoucherPercent(recurring) / 100), techVoucherMaximumCents());
 }
 
 function configureTechVoucher() {
-  const exampleOrderCents = techVoucherExampleOrderCents();
+  const standardExampleOrderCents = techVoucherExampleOrderCents(false);
+  const recurringExampleOrderCents = techVoucherExampleOrderCents(true);
   document.querySelectorAll("[data-tech-voucher-example]").forEach((element) => {
-    element.hidden = exampleOrderCents === null;
-    if (exampleOrderCents !== null) {
-      const amount = element.querySelector("[data-tech-voucher-example-order]");
-      if (amount) amount.textContent = formatPrice(exampleOrderCents / 100);
-    }
+    element.hidden = standardExampleOrderCents === null || recurringExampleOrderCents === null;
   });
-  document.querySelectorAll("[data-tech-voucher-percent]").forEach((element) => {
-    element.textContent = `${formatPercentage(techVoucherPercent())}%`;
+  document.querySelectorAll("[data-tech-voucher-standard-example-order]").forEach((element) => {
+    if (standardExampleOrderCents !== null) element.textContent = formatPrice(standardExampleOrderCents / 100);
+  });
+  document.querySelectorAll("[data-tech-voucher-recurring-example-order]").forEach((element) => {
+    if (recurringExampleOrderCents !== null) element.textContent = formatPrice(recurringExampleOrderCents / 100);
+  });
+  document.querySelectorAll("[data-tech-voucher-standard-percent]").forEach((element) => {
+    element.textContent = `${formatPercentage(techVoucherPercent(false))}%`;
+  });
+  document.querySelectorAll("[data-tech-voucher-recurring-percent]").forEach((element) => {
+    element.textContent = `${formatPercentage(techVoucherPercent(true))}%`;
   });
   document.querySelectorAll("[data-tech-voucher-maximum]").forEach((element) => {
     element.textContent = formatPrice(techVoucherMaximumCents() / 100);
@@ -332,7 +346,7 @@ function productCard(product) {
     <article class="product-card">
       <div class="product-card__visual">
         <a class="product-card__image-button" href="${escapeHtml(productUrl)}" data-open-product="${id}" aria-label="Apri anteprima di ${escapeHtml(name)}">
-          <img src="${escapeHtml(safeImageUrl(images[0] || fallbackImage))}" alt="" loading="lazy" decoding="async" />
+          <img src="${escapeHtml(safeImageUrl(images[0] || fallbackImage))}" alt="${escapeHtml(name)}" loading="lazy" decoding="async" />
         </a>
         <span class="product-card__category">${escapeHtml(product.category || "Carta")}</span>
         ${state.page === "home" && product.featured === true ? `<span class="product-card__featured">In evidenza</span>` : ""}
@@ -438,22 +452,32 @@ function renderProductDetail() {
   if (!product) {
     elements.productDetail.hidden = true;
     elements.productNotFound.hidden = false;
-    document.title = "Prodotto non trovato — Cartaway";
+    const brand = String(state.site.brand || "Cartaway").trim();
+    updateSeoMetadata({
+      title: `Prodotto non trovato | ${brand}`,
+      description: `Il prodotto richiesto non è disponibile. Sfoglia il catalogo ${brand} o torna alla pagina iniziale.`,
+      siteName: brand,
+      pageType: "website",
+      robots: "noindex,follow",
+    });
+    updateSeoStructuredData(null);
     return;
   }
 
+  const brand = String(state.site.brand || "Cartaway").trim();
+  const productName = String(product.name || "Prodotto").trim();
+  const productUnit = String(product.unit || "").trim();
   state.detailProduct = product;
   state.detailImages = productImages(product);
   if (state.detailImages.length === 0) state.detailImages = [fallbackImage];
   elements.productDetail.hidden = false;
   elements.productNotFound.hidden = true;
-  elements.detailTitle.textContent = product.name || "Prodotto";
+  elements.detailTitle.textContent = productName;
   elements.detailCategory.textContent = product.category || "Carta";
-  elements.detailUnit.textContent = product.unit || "";
+  elements.detailUnit.textContent = productUnit;
   elements.detailPrice.textContent = formatPrice(product.price);
   elements.detailDescription.textContent = product.description || "";
-  elements.detailBreadcrumbTitle.textContent = product.name || "Prodotto";
-  document.title = `${product.name || "Prodotto"} — Cartaway`;
+  elements.detailBreadcrumbTitle.textContent = productName;
   renderDetailImage();
 
   const specifications = Array.isArray(product.specifications)
@@ -471,6 +495,55 @@ function renderProductDetail() {
   if (elements.detailSpecificationsSection) {
     elements.detailSpecificationsSection.hidden = specifications.length === 0;
   }
+
+  const canonicalUrl = seoCanonicalUrl("product", product.id);
+  const productImageUrls = productImages(product).map(safeImageUrl);
+  const productDescription = String(product.description || "Scopri dettagli e caratteristiche del prodotto.").trim();
+  const metaDescription = [
+    `${productName}${productUnit ? ` (${productUnit})` : ""}.`,
+    productDescription,
+    "Consegna a Montoro e nei comuni vicini.",
+  ].join(" ");
+  updateSeoMetadata({
+    title: `${productName}${productUnit ? ` ${productUnit}` : ""} | ${brand}`,
+    description: normalizeSeoDescription(metaDescription),
+    url: canonicalUrl,
+    siteName: brand,
+    pageType: "product",
+    imageUrl: productImageUrls[0] || "",
+    imageAlt: `${productName}${productUnit ? `, ${productUnit}` : ""}`,
+  });
+  updateSeoStructuredData({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        "@id": `${canonicalUrl}#product`,
+        name: productName,
+        url: canonicalUrl,
+        ...(product.category ? { category: String(product.category) } : {}),
+        ...(product.description ? { description: String(product.description) } : {}),
+        ...(productImageUrls.length ? { image: productImageUrls } : {}),
+        ...(specifications.length
+          ? {
+              additionalProperty: specifications.map((item) => ({
+                "@type": "PropertyValue",
+                name: String(item.label).trim(),
+                value: String(item.value).trim(),
+              })),
+            }
+          : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: brand, item: `${canonicalSiteOrigin}/` },
+          { "@type": "ListItem", position: 2, name: "Catalogo", item: `${canonicalSiteOrigin}/catalogo.html` },
+          { "@type": "ListItem", position: 3, name: productName, item: canonicalUrl },
+        ],
+      },
+    ],
+  });
 }
 
 function renderProducts() {
@@ -566,7 +639,8 @@ function renderCart() {
   elements.cartEmpty.hidden = entries.length > 0;
   elements.cartSummary.hidden = entries.length === 0;
   elements.checkoutForm.hidden = entries.length === 0;
-  elements.orderSubmit.disabled = entries.length === 0 || !minimumReached;
+  elements.orderSubmit.disabled = state.orderSubmitting || entries.length === 0 || !minimumReached;
+  elements.orderSubmit.setAttribute("aria-busy", String(state.orderSubmitting));
   elements.cartSubtotalLabel.textContent = recurring && discountPercent > 0 ? "Subtotale scontato" : "Subtotale articoli";
   elements.cartSubtotal.textContent = formatPrice(subtotalCents / 100);
   elements.cartDeliveryCost.textContent = deliveryQuote.label;
@@ -577,12 +651,17 @@ function renderCart() {
     : formatPrice((subtotalCents + deliveryQuote.costCents) / 100);
   elements.cartDiscountRow.hidden = !recurring || savingsCents <= 0;
   elements.cartDiscountAmount.textContent = `−${formatPrice(savingsCents / 100)}`;
-  elements.cartCashbackAmount.textContent = formatPrice(techVoucherAmountCents(subtotalCents) / 100);
+  elements.cartCashbackAmount.textContent = formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100);
+  if (elements.cartCashbackLabel) {
+    elements.cartCashbackLabel.textContent = recurring
+      ? "Buono Tech stimato per un ordine ricorrente, se è il primo del mese"
+      : "Buono Tech stimato per un ordine singolo, se è il primo del mese";
+  }
   if (elements.cartCashbackNote) {
     const voucherValidity = recurring
       ? `valido ${techVoucherValidityText(true)} dalla consegna grazie all'ordine ricorrente`
       : `valido ${techVoucherValidityText()} dalla consegna`;
-    elements.cartCashbackNote.textContent = `Stima se è il primo ordine del mese: ${formatPercentage(techVoucherPercent())}% della spesa, fino a ${formatPrice(techVoucherMaximumCents() / 100)}, senza minimo. Un buono per cliente al mese, ${voucherValidity} e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni; idoneità da confermare su WhatsApp.`;
+    elements.cartCashbackNote.textContent = `Stima pari al ${formatPercentage(techVoucherPercent(recurring))}% della spesa, fino a ${formatPrice(techVoucherMaximumCents() / 100)}, senza minimo. Un buono per cliente al mese, ${voucherValidity} e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni; idoneità da verificare con l'attività.`;
   }
   elements.cartCashback.hidden = entries.length === 0;
 
@@ -605,9 +684,23 @@ function showMessage(message) {
   }, 2600);
 }
 
+function clearCheckoutFeedback() {
+  elements.checkoutFeedback.hidden = true;
+  elements.checkoutFeedback.textContent = "";
+  elements.checkoutFeedback.classList.remove("checkout-feedback--success", "checkout-feedback--error");
+}
+
+function showCheckoutFeedback(message, type) {
+  elements.checkoutFeedback.textContent = message;
+  elements.checkoutFeedback.classList.remove("checkout-feedback--success", "checkout-feedback--error");
+  elements.checkoutFeedback.classList.add(`checkout-feedback--${type}`);
+  elements.checkoutFeedback.hidden = false;
+}
+
 function addToCart(productId) {
   const product = state.products.find((item) => item.id === productId && item.available !== false);
   if (!product) return;
+  clearCheckoutFeedback();
   state.cart[productId] = (state.cart[productId] || 0) + 1;
   saveCart();
   renderCart();
@@ -635,14 +728,138 @@ function buildWhatsappUrl(message) {
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
+const canonicalSiteOrigin = "https://cartaway.it";
+
+function seoCanonicalUrl(page = state.page, productId = "") {
+  const pathname = page === "home" ? "/" : page === "catalog" ? "/catalogo.html" : "/prodotto.html";
+  const url = new URL(pathname, canonicalSiteOrigin);
+  if (page === "product" && productId) url.searchParams.set("id", String(productId));
+  return url.href;
+}
+
+function setSeoMeta(attribute, key, value) {
+  let meta = document.head.querySelector(`meta[${attribute}="${key}"]`);
+  if (!value) {
+    meta?.remove();
+    return;
+  }
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute(attribute, key);
+    document.head.append(meta);
+  }
+  meta.setAttribute("content", String(value));
+}
+
+function normalizeSeoDescription(value) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text.length <= 160) return text;
+  const shortened = text.slice(0, 157);
+  const lastSpace = shortened.lastIndexOf(" ");
+  return `${shortened.slice(0, lastSpace > 0 ? lastSpace : shortened.length).trim()}...`;
+}
+
+function updateSeoMetadata({ title, description, url, siteName, pageType, imageUrl = "", imageAlt = "", robots = "max-image-preview:large" }) {
+  document.title = title;
+  setSeoMeta("name", "description", normalizeSeoDescription(description));
+  setSeoMeta("name", "robots", robots);
+  setSeoMeta("property", "og:title", title);
+  setSeoMeta("property", "og:description", normalizeSeoDescription(description));
+  setSeoMeta("property", "og:type", pageType);
+  setSeoMeta("property", "og:locale", "it_IT");
+  setSeoMeta("property", "og:site_name", siteName);
+  setSeoMeta("property", "og:url", url);
+  setSeoMeta("property", "og:image", imageUrl);
+  setSeoMeta("property", "og:image:alt", imageAlt);
+  setSeoMeta("name", "twitter:card", imageUrl ? "summary_large_image" : "summary");
+  setSeoMeta("name", "twitter:title", title);
+  setSeoMeta("name", "twitter:description", normalizeSeoDescription(description));
+  setSeoMeta("name", "twitter:image", imageUrl);
+  setSeoMeta("name", "twitter:image:alt", imageAlt);
+
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!url) {
+    canonical?.remove();
+    return;
+  }
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    document.head.append(canonical);
+  }
+  canonical.href = url;
+}
+
+function updateSeoStructuredData(data) {
+  let script = document.head.querySelector("#seo-structured-data");
+  if (!data) {
+    script?.remove();
+    return;
+  }
+  if (!script) {
+    script = document.createElement("script");
+    script.id = "seo-structured-data";
+    script.type = "application/ld+json";
+    document.head.append(script);
+  }
+  script.textContent = JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+function catalogStructuredData(title, description, url) {
+  const products = state.products.filter((product) => product.available !== false);
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    url,
+    inLanguage: "it-IT",
+    mainEntity: {
+      "@type": "ItemList",
+      itemListOrder: "https://schema.org/ItemListUnordered",
+      numberOfItems: products.length,
+      itemListElement: products.map((product, index) => {
+        const item = {
+          "@type": "Product",
+          name: String(product.name || "Prodotto"),
+          url: seoCanonicalUrl("product", product.id),
+        };
+        const images = productImages(product).map(safeImageUrl);
+        if (images.length) item.image = images;
+        if (product.description) item.description = String(product.description);
+        if (product.category) item.category = String(product.category);
+        return { "@type": "ListItem", position: index + 1, item };
+      }),
+    },
+  };
+}
+
 function renderSiteDetails() {
   const brand = String(state.site.brand || "Cartaway").trim();
   document.querySelectorAll("[data-brand]").forEach((element) => {
     element.textContent = brand;
   });
-  document.title = state.page === "catalog"
-    ? `Catalogo prodotti — ${brand}`
-    : `${brand} — Carta per casa e ufficio, a Montoro`;
+  if (state.page !== "product") {
+    const isCatalog = state.page === "catalog";
+    const title = isCatalog
+      ? `Catalogo carta per casa e ufficio a Montoro | ${brand}`
+      : `${brand} | Carta per casa, cucina e ufficio a Montoro`;
+    const description = isCatalog
+      ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini.`
+      : `Carta igienica, rotoli cucina e carta A4 per casa e ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
+    const url = seoCanonicalUrl();
+    updateSeoMetadata({ title, description, url, siteName: brand, pageType: "website" });
+    updateSeoStructuredData(isCatalog
+      ? catalogStructuredData(title, description, url)
+      : {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "@id": `${canonicalSiteOrigin}/#website`,
+          url: `${canonicalSiteOrigin}/`,
+          name: brand,
+          inLanguage: "it-IT",
+        });
+  }
 
   const email = String(state.site.email || "").trim();
   if (email) {
@@ -735,16 +952,16 @@ function deliveryPolicyDescription(zone) {
       ? `Ordine minimo ${formatPrice(minimumOrderCents / 100)}; `
       : "";
     const paidDescription = feeCents === null
-      ? `consegna a pagamento per ordini inferiori a ${formatPrice(thresholdCents / 100)}; costo da confermare su WhatsApp`
+      ? `consegna a pagamento per ordini inferiori a ${formatPrice(thresholdCents / 100)}; costo da confermare con l'attività`
       : `consegna a pagamento: ${formatPrice(feeCents / 100)} per ordini inferiori a ${formatPrice(thresholdCents / 100)}`;
     return `${minimumDescription}${paidDescription}; gratuita da ${formatPrice(thresholdCents / 100)}.`;
   }
   if (zone.delivery_policy === "paid") {
     return feeCents === null
-      ? "Consegna a pagamento, costo da confermare su WhatsApp."
+      ? "Consegna a pagamento, costo da confermare con l'attività."
       : `Consegna a pagamento: ${formatPrice(feeCents / 100)}.`;
   }
-  return "Costo di consegna da confermare su WhatsApp.";
+  return "Costo di consegna da confermare con l'attività.";
 }
 
 function getDeliveryQuote(zone, subtotalCents, freeThresholdSubtotalCents = subtotalCents) {
@@ -808,7 +1025,7 @@ function getDeliveryQuote(zone, subtotalCents, freeThresholdSubtotalCents = subt
     stateName = "paid";
     label = configuredFeeCents === null ? "A pagamento" : formatPrice(configuredFeeCents / 100);
     note = configuredFeeCents === null
-      ? "Consegna a pagamento; costo da confermare su WhatsApp."
+      ? "Consegna a pagamento; costo da confermare con l'attività."
       : `Consegna a pagamento: ${formatPrice(configuredFeeCents / 100)}.`;
   }
 
@@ -865,12 +1082,12 @@ function renderDeliveryInfo() {
 
   if (elements.deliveryDisclaimer) {
     elements.deliveryDisclaimer.textContent = state.site.delivery_note ||
-      "Tempi indicativi, soggetti a disponibilità e indirizzo. La consegna viene concordata su WhatsApp.";
+      "Tempi indicativi, soggetti a disponibilità e indirizzo. La consegna viene concordata con l'attività.";
   }
 
   if (elements.deliveryNote) {
     elements.deliveryNote.textContent = state.site.delivery_note ||
-      "Tempi indicativi, soggetti a disponibilità e indirizzo. La consegna viene concordata su WhatsApp.";
+      "Tempi indicativi, soggetti a disponibilità e indirizzo. La consegna viene concordata con l'attività.";
   }
 
   if (elements.deliveryDialogZones) {
@@ -1050,14 +1267,13 @@ function setupHeroCarousel() {
       imageAlt: "Carta per stampante A4",
       eyebrow: "PROMO CASHBACK CARTAWAY",
       title: "Un Buono Tech per il tuo mese.",
-      intro: "Sul primo ordine di carta e consumabili di ogni mese ricevi un Buono Tech pari al 50% della spesa, fino a 25 €. Nessuna spesa minima.",
       action: "Scopri la promo",
       actionHref: "#promo-dialog",
       openPromo: true,
       voucher: true,
       deliveryHighlight: "Un buono per cliente al mese",
       deliverySecondary: "60 giorni · 90 con ordine ricorrente · massimo 25 €",
-      caption: "BUONO TECH · 50% DEL PRIMO ORDINE MENSILE",
+      caption: "BUONO TECH · ORDINI SINGOLI E RICORRENTI",
     },
     {
       image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=2000&q=88",
@@ -1097,12 +1313,14 @@ function setupHeroCarousel() {
   const renderSlide = (index) => {
     currentSlide = (index + slides.length) % slides.length;
     const slide = slides[currentSlide];
+    const standardVoucherPercent = formatPercentage(techVoucherPercent(false));
+    const recurringVoucherPercent = formatPercentage(techVoucherPercent(true));
     elements.heroImage.src = slide.image;
     elements.heroImage.alt = slide.imageAlt;
     elements.heroEyebrow.textContent = slide.eyebrow;
     elements.heroTitle.textContent = slide.title;
     elements.heroIntro.textContent = slide.voucher
-      ? `Sul primo ordine di carta e consumabili di ogni mese ricevi un Buono Tech pari al ${formatPercentage(techVoucherPercent())}% della spesa, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Nessuna spesa minima.`
+      ? `Sul primo ordine del mese: ${standardVoucherPercent}% con un ordine singolo e ${recurringVoucherPercent}% con un ordine ricorrente, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. L'attivazione è verificata dall'attività.`
       : slide.recurringVoucher
         ? `${slide.intro} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
         : slide.intro;
@@ -1110,13 +1328,13 @@ function setupHeroCarousel() {
     elements.heroAction.href = slide.actionHref;
     elements.heroAction.dataset.openPromo = String(slide.openPromo);
     elements.heroDeliveryHighlight.textContent = slide.voucher
-      ? `Un buono per cliente al mese · massimo ${formatPrice(techVoucherMaximumCents() / 100)}`
+      ? `${standardVoucherPercent}% singolo · ${recurringVoucherPercent}% ricorrente · massimo ${formatPrice(techVoucherMaximumCents() / 100)}`
       : slide.deliveryHighlight;
     elements.heroDeliverySecondary.textContent = slide.voucher
       ? `${techVoucherValidityText()} dalla consegna · ${techVoucherValidityText(true)} con ordine ricorrente`
       : slide.deliverySecondary;
     elements.heroCaption.textContent = slide.voucher
-      ? `BUONO TECH · ${formatPercentage(techVoucherPercent())}% DEL PRIMO ORDINE MENSILE`
+      ? `BUONO TECH · ${standardVoucherPercent}% SINGOLO · ${recurringVoucherPercent}% RICORRENTE`
       : slide.caption;
     elements.heroSlideCount.textContent = `${String(currentSlide + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
   };
@@ -1378,13 +1596,29 @@ function setupEvents() {
     elements.navigation.classList.remove("is-open");
   });
 
-  elements.checkoutForm.addEventListener("submit", (event) => {
+  elements.checkoutForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (state.orderSubmitting) return;
+    clearCheckoutFeedback();
     const items = cartEntries();
     if (!items.length) return;
 
+    const emailSettings = state.site.emailjs || {};
+    const publicKey = String(emailSettings.public_key || "").trim();
+    const serviceId = String(emailSettings.service_id || "").trim();
+    const templateId = String(emailSettings.template_id || "").trim();
+    if (!publicKey || !serviceId || !templateId) {
+      showCheckoutFeedback("Invio email non configurato. Contatta l'attività per completare la richiesta.", "error");
+      return;
+    }
+    if (!window.emailjs) {
+      showCheckoutFeedback("Il servizio email non è disponibile. Riprova tra poco.", "error");
+      return;
+    }
+
     const formData = new FormData(elements.checkoutForm);
     const name = String(formData.get("name") || "").trim();
+    const customerEmail = String(formData.get("email") || "").trim();
     const phone = String(formData.get("phone") || "").trim();
     const address = String(formData.get("address") || "").trim();
     const selectedTown = String(formData.get("city") || "");
@@ -1415,70 +1649,96 @@ function setupEvents() {
       (total, item) => total + (recurringOrder ? recurringPriceInCents(item.product.price) : priceInCents(item.product.price)) * item.quantity,
       0,
     );
-    const savingsCents = fullSubtotalCents - subtotalCents;
     const deliveryZone = findDeliveryZoneForTown(town);
     const deliveryQuote = getDeliveryQuote(deliveryZone, subtotalCents, fullSubtotalCents);
     if (deliveryQuote.minimumReached === false) {
-      showMessage(`Ordine minimo ${formatPrice(deliveryQuote.minimumOrderCents / 100)}: aggiungi altri prodotti per continuare.`);
+      showCheckoutFeedback(`Ordine minimo ${formatPrice(deliveryQuote.minimumOrderCents / 100)}: aggiungi altri prodotti per continuare.`, "error");
       return;
     }
-    const deliveryMessageLines = deliveryZone
-      ? [
-          `Zona di consegna: ${deliveryZoneLabel(deliveryZone)} (${town}).`,
-          `Regola: ${deliveryQuote.note}`,
-          deliveryQuote.costCents === null
-            ? `Costo consegna: ${deliveryQuote.label.toLocaleLowerCase("it-IT")}; importo da confermare.`
-            : `Costo consegna: ${formatPrice(deliveryQuote.costCents / 100)}${deliveryQuote.costCents === 0 ? " (gratuita)" : ""}.`,
-          deliveryQuote.costCents === null
-            ? `Totale stimato: ${formatPrice(subtotalCents / 100)} + costo consegna da confermare.`
-            : `Totale stimato, consegna inclusa: ${formatPrice((subtotalCents + deliveryQuote.costCents) / 100)}.`,
-        ]
-      : [
-          `Zona di consegna da verificare per ${town}; costo da confermare su WhatsApp.`,
-          `Totale articoli: ${formatPrice(subtotalCents / 100)}; totale finale da confermare.`,
-        ];
-    const itemLines = items.map(({ product, quantity }) => {
-      const fullLineCents = priceInCents(product.price) * quantity;
+    const voucherId = window.crypto?.randomUUID
+      ? `BT-${window.crypto.randomUUID().toUpperCase()}`
+      : `BT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+    const voucherValueCents = techVoucherAmountCents(subtotalCents, recurringOrder);
+    const orderId = window.crypto?.randomUUID
+      ? window.crypto.randomUUID().slice(0, 8).toUpperCase()
+      : `CW-${Date.now()}`;
+    const emailOrders = items.map(({ product, quantity }) => {
       const unitPriceCents = recurringOrder ? recurringPriceInCents(product.price) : priceInCents(product.price);
-      const lineTotalCents = unitPriceCents * quantity;
-      const originalPrice = recurringOrder && discountPercent > 0
-        ? ` (prezzo pieno ${formatPrice(fullLineCents / 100)})`
-        : "";
-      return `- ${quantity} x ${product.name} (${product.unit}) — ${formatPrice(lineTotalCents / 100)}${originalPrice}`;
+      return {
+        name: `${product.name} (${product.unit})`,
+        units: quantity,
+        price: formatPrice(unitPriceCents / 100),
+        line_total: formatPrice((unitPriceCents * quantity) / 100),
+        image_url: safeImageUrl(product.image || fallbackImage),
+      };
     });
-    const message = [
-      `Buongiorno ${state.site.brand || "Cartaway"}, vorrei ordinare:`,
-      "",
-      ...itemLines,
-      "",
-      recurringOrder && savingsCents > 0 ? `Subtotale prima dello sconto: ${formatPrice(fullSubtotalCents / 100)}` : "",
-      recurringOrder && savingsCents > 0 ? `Sconto ricorrente (${formatPercentage(discountPercent)}%): -${formatPrice(savingsCents / 100)}` : "",
-      `Subtotale articoli${recurringOrder && discountPercent > 0 ? " scontato" : ""}: ${formatPrice(subtotalCents / 100)}`,
-      `Buono Tech stimato, se è il primo ordine del mese: ${formatPrice(techVoucherAmountCents(subtotalCents) / 100)}.`,
-      `Pari al ${formatPercentage(techVoucherPercent())}% della spesa, fino a ${formatPrice(techVoucherMaximumCents() / 100)}, senza minimo. Un solo buono per cliente al mese; valido ${techVoucherValidityText(recurringOrder)} dalla consegna${recurringOrder ? " grazie all'ordine ricorrente" : ""} e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.`,
-      ...deliveryMessageLines,
-      "Disponibilità, pagamento e conferma ordine da concordare su WhatsApp.",
-      "",
-      name ? `Nome: ${name}` : "",
-      `Telefono: ${phone}`,
-      `Comune: ${town}`,
-      `Indirizzo: ${address}`,
-      preferredDate ? `Data preferita: ${new Date(`${preferredDate}T00:00:00`).toLocaleDateString("it-IT")}` : "",
-      preferredTimeSlot ? `Fascia oraria preferita: ${preferredTimeSlot}` : "",
-      recurringOrder ? `Frequenza richiesta: ogni ${recurringFrequency} giorni.` : "",
-      recurringOrder && recurringDay ? `Giorno fisso del mese richiesto: ${recurringDay}.` : "",
-      recurringOrder ? `Prezzo bloccato richiesto per ${priceLockMonths} mesi.` : "",
-      recurringOrder ? "Ricorrenza e giorno di consegna da confermare su WhatsApp; il sito non attiva rinnovi automatici." : "",
-      notes ? `Note: ${notes}` : "",
-      "",
-      "Potete confermare disponibilità, data, fascia oraria e modalità di pagamento?",
-    ].filter(Boolean).join("\n");
-    const url = buildWhatsappUrl(message);
-    if (!url) {
-      showMessage("Il numero WhatsApp non è configurato. Contattaci dai recapiti in fondo alla pagina.");
-      return;
+    const shippingCost = deliveryQuote.costCents === null
+      ? "Da confermare"
+      : deliveryQuote.costCents === 0
+        ? "Gratuita"
+        : formatPrice(deliveryQuote.costCents / 100);
+    const totalCost = deliveryQuote.costCents === null
+      ? `${formatPrice(subtotalCents / 100)} + consegna da confermare`
+      : formatPrice((subtotalCents + deliveryQuote.costCents) / 100);
+    const preferredDeliveryDate = preferredDate
+      ? new Date(`${preferredDate}T00:00:00`).toLocaleDateString("it-IT")
+      : "Non indicata";
+    const deliveryZoneName = deliveryZone
+      ? `${deliveryZoneLabel(deliveryZone)} - ${String(deliveryZone.name || "").trim()}`
+      : "Da verificare";
+    const estimatedDeliveryTime = String(deliveryZone?.delivery_time || "").trim() || "Da confermare";
+    const templateParams = {
+      brand: String(state.site.brand || "Cartaway"),
+      website_url: window.location.origin,
+      order_id: orderId,
+      orders: emailOrders,
+      cost: { shipping: shippingCost, tax: "Da confermare", total: totalCost },
+      tech_voucher_id: voucherId,
+      tech_voucher_value: formatPrice(voucherValueCents / 100),
+      tech_voucher_percent: `${formatPercentage(techVoucherPercent(recurringOrder))}%`,
+      tech_voucher_maximum: formatPrice(techVoucherMaximumCents() / 100),
+      tech_voucher_validity: techVoucherValidityText(recurringOrder),
+      customer_name: name || "Cliente",
+      customer_email: customerEmail,
+      customer_phone: phone,
+      delivery_city: town || "Da specificare",
+      delivery_address: address || "Da specificare",
+      delivery_zone: deliveryZoneName,
+      estimated_delivery_time: estimatedDeliveryTime,
+      preferred_delivery_date: preferredDeliveryDate,
+      preferred_delivery_time: preferredTimeSlot || "Non indicata",
+      recurring_order: recurringOrder ? "Sì" : "No",
+      recurring_frequency: recurringOrder ? `Ogni ${recurringFrequency} giorni` : "Non applicabile",
+      recurring_day: recurringOrder && recurringDay ? recurringDay : "Non indicato",
+      recurring_discount: recurringOrder ? `${formatPercentage(discountPercent)}%` : "Nessuno",
+      price_lock_months: recurringOrder ? `${priceLockMonths} mesi` : "Non applicabile",
+      delivery_notes: notes || "Nessuna",
+    };
+
+    state.orderSubmitting = true;
+    elements.orderSubmitLabel.textContent = "Invio in corso...";
+    renderCart();
+    try {
+      window.emailjs.init({ publicKey });
+      await window.emailjs.send(serviceId, templateId, {
+        ...templateParams,
+        email: customerEmail,
+        reply_to: String(state.site.email || "").trim(),
+      });
+      state.cart = {};
+      saveCart();
+      elements.checkoutForm.reset();
+      elements.otherTownField.hidden = true;
+      elements.otherTown.required = false;
+      updateRecurringControls();
+      showCheckoutFeedback(`Riepilogo inviato con successo a ${customerEmail}. Il carrello è stato svuotato. L'attività non riceve automaticamente la richiesta.`, "success");
+    } catch {
+      showCheckoutFeedback("Invio email non riuscito. Il carrello è stato conservato; riprova tra poco.", "error");
+    } finally {
+      state.orderSubmitting = false;
+      elements.orderSubmitLabel.textContent = "Ricevi riepilogo via email";
+      renderCart();
     }
-    window.location.assign(url);
   });
 }
 

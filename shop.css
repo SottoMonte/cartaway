@@ -1462,7 +1462,7 @@ summary:focus-visible {
   display: none;
 }
 
-.promo-dialog__example span {
+.promo-dialog__example > span {
   font-size: 11px;
   font-weight: 700;
 }
@@ -2264,6 +2264,27 @@ html.cart-is-open {
 
 .checkout-note {
   margin: -7px 0 0;
+}
+
+.checkout-feedback {
+  margin: 14px 0 0;
+  padding: 13px 15px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.checkout-feedback--success {
+  border-color: #b7d6a6;
+  background: #edf6e8;
+  color: #183d32;
+}
+
+.checkout-feedback--error {
+  border-color: #e4b4aa;
+  background: #fff0ed;
+  color: #762f28;
 }
 
 .live-message {

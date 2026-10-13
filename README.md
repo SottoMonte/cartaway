@@ -1,6 +1,6 @@
 # Cartaway
 
-Negozio statico in italiano per prodotti di carta con consegna locale a Montoro e nei comuni vicini. Contatti e catalogo sono file JSON; Decap CMS li modifica senza database o server applicativo. Il carrello resta nel browser e invia una richiesta precompilata su WhatsApp, con data e fascia oraria preferite facoltative da confermare: non sono attivi pagamenti online.
+Negozio statico in italiano per prodotti di carta con consegna locale a Montoro e nei comuni vicini. Contatti e catalogo sono file JSON; Decap CMS li modifica senza database o server applicativo. Il carrello invia al cliente un riepilogo via email con EmailJS; non inoltra la richiesta all'attività. WhatsApp resta disponibile per i contatti diretti. Data e fascia oraria sono facoltative, e non sono attivi pagamenti online.
 
 La home mette in vetrina i prodotti disponibili marcati come in evidenza nel CMS. `catalogo.html` contiene il catalogo completo con ricerca e filtri; ogni scheda apre `prodotto.html?id=ID-PRODOTTO`, con galleria fotografica e caratteristiche.
 
@@ -31,10 +31,24 @@ Il CMS usa il backend GitHub di Decap Turbo, distribuito al momento come release
 - `data/site.json`: nome, zona, recapiti, indirizzo e dati dell'impresa. Verifica che i contatti e le informazioni legali siano aggiornati e pertinenti all'attività.
 - Il catalogo iniziale usa immagini dimostrative da Unsplash. Caricando le foto definitive da Decap, i file vengono salvati in `uploads/` nel repository.
 
-I tempi di consegna sono indicativi: Montoro circa 2 ore, comuni vicini in giornata e, per la Zona 03, spedizione standard con tempi variabili. Le tariffe vengono calcolate in base alla zona; i dettagli dell'ordine vengono confermati su WhatsApp.
+I tempi di consegna sono indicativi: Montoro circa 2 ore, comuni vicini in giornata e, per la Zona 03, spedizione standard con tempi variabili. Le tariffe vengono calcolate in base alla zona; i dettagli dell'ordine vengono confermati dall'attività dopo la richiesta.
+
+## Email ordini
+
+Il checkout invia una sola email di riepilogo al cliente e non notifica automaticamente l'attività né registra un ordine. Il riepilogo mostra un codice Buono Tech candidato; l'attività verifica manualmente l'idoneità e, solo se valido, invia al cliente una seconda email di conferma dell'attivazione. Questa seconda email non è generata automaticamente dal checkout. Raccoglie l'indirizzo email nel checkout. Crea un servizio e un template, poi configura nel CMS Public Key, Service ID e Template ID.
+
+Il codice HTML pronto da incollare nel template EmailJS è in `email/order-summary.html`. Imposta `To Email` su `{{email}}`, `Reply To` su `{{reply_to}}` e oggetto su `Riepilogo richiesta #{{order_id}} - {{brand}}`. Allega il logo come immagine inline con Content ID esatto `logo.png` perché il template lo richiama con `cid:logo.png`. Le immagini prodotto usano URL pubblici assoluti.
+
+Il template riceve `brand`, `website_url`, `order_id`, `email`, `reply_to`, `orders` (array con `name`, `units`, `price` unitario, `line_total`, `image_url`), `cost.shipping`, `cost.tax`, `cost.total`, `tech_voucher_id`, `tech_voucher_value`, `tech_voucher_percent`, `tech_voucher_maximum`, `tech_voucher_validity`, `customer_name`, `customer_email`, `customer_phone`, `delivery_address`, `delivery_city`, `delivery_zone`, `estimated_delivery_time`, `preferred_delivery_date`, `preferred_delivery_time`, `delivery_notes`, `recurring_order`, `recurring_frequency`, `recurring_day`, `recurring_discount` e `price_lock_months`. Il Buono Tech usa il 25% per ordini non ricorrenti e il 50% per quelli ricorrenti, fino al massimale configurato; il codice è candidato, il valore stimato e l'attivazione resta soggetta a verifica manuale sul primo ordine mensile del cliente. Imposte e costi non determinabili sono mostrati come "Da confermare".
+
+Il campo `email` è il destinatario cliente; `reply_to` usa l'email di contatto dell'attività configurata in `data/site.json`. Sostituisci il valore dimostrativo prima del rilascio, limita in EmailJS i domini autorizzati al dominio del negozio e verifica l'invio reale. Questi identificativi sono pubblici nel browser: non inserire chiavi private o credenziali del provider email. L'email è solo un riepilogo al cliente; per trasmettere l'ordine all'attività serve un canale separato.
 
 ## Costi e limiti
 
 Netlify Free costa attualmente €0 e include un limite di 300 crediti al mese. Le pubblicazioni di produzione e il traffico consumano crediti: oltre la quota il servizio può fermarsi fino al rinnovo o richiedere un piano superiore. Controlla i consumi e non attivare ricariche automatiche se l'obiettivo è non superare il budget. Il costo del dominio resta separato. Le quote e i piani dei servizi possono cambiare.
 
 Per un sito commerciale non usare il piano Vercel Hobby: i termini attuali lo limitano a progetti personali o non commerciali.
+
+## SEO
+
+Le pagine pubbliche usano canonical assoluti su `https://cartaway.it/`, metadati Open Graph e dati strutturati aggiornati dal catalogo. Il `robots.txt` pubblica `sitemap.xml`; quando aggiungi, rimuovi o cambi l'ID di un prodotto nel CMS, aggiorna anche il relativo URL nella sitemap. Lo schema prodotto non dichiara offerte o prezzi acquistabili: il sito invia solo un riepilogo e disponibilità e importi vanno confermati.

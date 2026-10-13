@@ -4,16 +4,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#183d32" />
-    <meta name="description" content="Sfoglia il catalogo Cartaway: prodotti di carta per casa, cucina e ufficio con consegna a Montoro." />
-    <title>Catalogo prodotti — Cartaway</title>
+    <meta name="description" content="Sfoglia il catalogo Cartaway: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini." />
+    <meta name="robots" content="max-image-preview:large" />
+    <link rel="canonical" href="https://cartaway.it/catalogo.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:site_name" content="Cartaway" />
+    <meta property="og:url" content="https://cartaway.it/catalogo.html" />
+    <meta property="og:title" content="Catalogo carta per casa e ufficio a Montoro | Cartaway" />
+    <meta property="og:description" content="Sfoglia il catalogo Cartaway: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Catalogo carta per casa e ufficio a Montoro | Cartaway" />
+    <meta name="twitter:description" content="Sfoglia il catalogo Cartaway: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini." />
+    <title>Catalogo carta per casa e ufficio a Montoro | Cartaway</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=22" />
-    <script src="shop.js?v=36" defer></script>
+    <link rel="stylesheet" href="shop.css?v=23" />
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
+    <script src="shop.js?v=38" defer></script>
   </head>
   <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -21,7 +33,7 @@
     <div class="notice-bar">
       <div class="notice-bar__inner">
         <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
-        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-percent>50%</span> sul primo ordine del mese, fino a <span data-tech-voucher-maximum>25 €</span></button>
+        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</button>
         <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
       </div>
     </div>
@@ -119,7 +131,7 @@
         </div>
         <div class="site-footer__contact-block">
           <h2>Contatti</h2>
-          <a id="contact-whatsapp" href="https://wa.me/393477095289" target="_blank" rel="noopener noreferrer">Ordina su WhatsApp <span aria-hidden="true">↗</span></a>
+          <a id="contact-whatsapp" href="https://wa.me/393477095289" target="_blank" rel="noopener noreferrer">Contattaci su WhatsApp <span aria-hidden="true">↗</span></a>
           <a id="contact-phone" href="tel:+393477095289">+39 347 7095289</a>
           <a id="contact-email" href="mailto:nicolagal33@gmail.com">nicolagal33@gmail.com</a>
           <p id="contact-address">Via Biagio de Giovanni, 1, Torchiati di Montoro (AV)</p>
@@ -167,10 +179,12 @@
         <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi promozione">×</button></form>
         <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> PROMO PER ORDINI B2B</p>
         <h2 id="promo-dialog-title">Il Buono Tech del mese</h2>
-        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine di carta e consumabili di ogni mese genera un Buono Tech pari al <span data-tech-voucher-percent>50%</span> della spesa. Nessuna spesa minima.</p>
+        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine del mese può ottenere un Buono Tech pari al <span data-tech-voucher-standard-percent>25%</span> della spesa se non ricorrente o al <span data-tech-voucher-recurring-percent>50%</span> se ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.</p>
         <div class="promo-dialog__example" data-tech-voucher-example>
-          <span>Spesa per ottenere il Buono massimo</span>
-          <strong><span data-tech-voucher-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+          <span>Per ottenere il buono massimo con ordine non ricorrente</span>
+          <strong><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+          <span>Per ottenere il buono massimo con ordine ricorrente</span>
+          <strong><span data-tech-voucher-recurring-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
         </div>
         <p class="promo-dialog__terms" id="promo-dialog-terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
       </div>
@@ -223,12 +237,13 @@
           <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Seleziona il comune per conoscere costo e modalità di consegna.</small>
           <p class="cart-total-row"><span>Totale stimato</span><strong id="cart-estimated-total">Da confermare</strong></p>
           <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
-            <p>🎁 Buono Tech stimato, se è il primo ordine del mese: <strong id="cart-cashback-amount">€0,00</strong>.</p>
-            <small id="cart-cashback-note">Stima pari al 50% della spesa, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
+            <p>🎁 <span id="cart-cashback-label">Buono Tech stimato per un ordine singolo, se è il primo del mese</span>: <strong id="cart-cashback-amount">€0,00</strong>.</p>
+            <small id="cart-cashback-note">Stima pari al 25% della spesa con ordine non ricorrente o al 50% con ordine ricorrente, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
           </div>
         </div>
         <form class="checkout-form" id="checkout-form">
           <h3>Dati per la consegna</h3>
+          <label class="form-field"><span>Email per la conferma della richiesta</span><input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" /></label>
           <label class="form-field"><span>Telefono per ricontatto</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" /></label>
           <div class="form-row">
             <label class="form-field">
@@ -269,13 +284,14 @@
           <div class="recurring-order__options" id="recurring-options" hidden>
             <label class="form-field"><span>Frequenza di consegna</span><select id="recurring-frequency" name="recurring-frequency"></select></label>
             <label class="form-field" id="recurring-day-field"><span>Giorno fisso del mese (1-28)</span><input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" /></label>
-            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da confermare su WhatsApp; il sito non attiva rinnovi automatici.</p>
+            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
           </div>
           <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
           <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>
-          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled>Invia richiesta su WhatsApp <span aria-hidden="true">↗</span></button>
-          <p class="checkout-note">La richiesta non è ancora un ordine confermato. Ti rispondiamo per verificare disponibilità, consegna e pagamento.</p>
+          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled><span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span></button>
+          <p class="checkout-note">Riceverai via email solo un riepilogo dei dati inseriti. L'attività non riceve automaticamente la richiesta e l'ordine non è confermato: contattala per verificare disponibilità, consegna e pagamento.</p>
         </form>
+        <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
       </div>
     </dialog>
 

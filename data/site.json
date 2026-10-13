@@ -13,7 +13,7 @@
     "rea": "AV - 313427"
   },
   "service_note": "Consegna locale a Montoro e nei comuni vicini. Tempi da confermare prima dell'ordine.",
-  "delivery_note": "Tempi e disponibilità sono indicativi. Le condizioni di consegna sono indicate per zona e il totale dell'ordine viene confermato su WhatsApp.",
+  "delivery_note": "Tempi e disponibilità sono indicativi. Le condizioni di consegna sono indicate per zona e il totale dell'ordine viene confermato dopo l'invio della richiesta.",
   "delivery_zones": [
     {
       "id": "zona-01",
@@ -55,17 +55,23 @@
     }
   ],
   "tech_voucher": {
-    "percent": 50,
+    "percent": 25,
     "maximum_amount": 25,
     "validity_days": 60
   },
   "recurring_order": {
     "discount_percent": 5,
+    "tech_voucher_percent": 50,
     "price_lock_months": 12,
     "frequency_days": [30, 60],
     "tech_voucher_validity_days": 90,
     "fixed_delivery_day": true
   },
   "email": "example@gmail.com",
+  "emailjs": {
+    "public_key": "khfx-WKeKM91KZmnj",
+    "service_id": "service_retgqpj",
+    "template_id": "template_4wxmf0m"
+  },
   "services": "Carta per casa, cucina e ufficio"
 }
