@@ -1696,6 +1696,8 @@ function setupEvents() {
       tech_voucher_id: voucherId,
       tech_voucher_value: formatPrice(voucherValueCents / 100),
       tech_voucher_percent: `${formatPercentage(techVoucherPercent(recurringOrder))}%`,
+      tech_voucher_standard_percent: `${formatPercentage(techVoucherPercent(false))}%`,
+      tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
       tech_voucher_maximum: formatPrice(techVoucherMaximumCents() / 100),
       tech_voucher_validity: techVoucherValidityText(recurringOrder),
       customer_name: name || "Cliente",
