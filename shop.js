@@ -5,6 +5,7 @@ const euro = new Intl.NumberFormat("it-IT", {
   style: "currency",
   currency: "EUR",
 });
+const unitNumber = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 3 });
 
 const state = {
   page: document.body.dataset.page || "home",
@@ -15,6 +16,7 @@ const state = {
   category: "tutte",
   search: "",
   sort: "featured",
+  view: "grid",
   dialogProduct: null,
   dialogImages: [],
   dialogImageIndex: 0,
@@ -93,6 +95,7 @@ const elements = {
   productGrid: document.querySelector("#product-grid"),
   productSearch: document.querySelector("#product-search"),
   productSort: document.querySelector("#product-sort"),
+  productViewButtons: document.querySelectorAll("[data-product-view]"),
   preferredTimeStart: document.querySelector("#preferred-time-start"),
   preferredTimeEnd: document.querySelector("#preferred-time-end"),
   promoDialog: document.querySelector("#promo-dialog"),
@@ -110,6 +113,8 @@ const elements = {
   productDialogThumbnails: document.querySelector("#product-dialog-thumbnails"),
   productDialogTitle: document.querySelector("#product-dialog-title"),
   productDialogUnit: document.querySelector("#product-dialog-unit"),
+  productDialogUnitPrice: document.querySelector("#product-dialog-unit-price"),
+  productDialogUnitPriceWrap: document.querySelector("#product-dialog-unit-price-wrap"),
   productDetail: document.querySelector("#product-detail"),
   productNotFound: document.querySelector("#product-not-found"),
   detailAdd: document.querySelector("#detail-add"),
@@ -125,6 +130,8 @@ const elements = {
   detailTitle: document.querySelector("#detail-title"),
   detailUnit: document.querySelector("#detail-unit"),
   detailPrice: document.querySelector("#detail-price"),
+  detailUnitPrice: document.querySelector("#detail-unit-price"),
+  detailUnitPriceWrap: document.querySelector("#detail-unit-price-wrap"),
   detailBreadcrumbTitle: document.querySelector("#detail-breadcrumb-title"),
   cartSummary: document.querySelector("#cart-summary"),
   recurringOrder: document.querySelector('[name="recurring-order"]'),
@@ -410,12 +417,37 @@ function renderCategoryFilters() {
   elements.categorySubtabs.replaceChildren(...childButtons);
 }
 
+function productUnitLabel(unit) {
+  if (!unit || typeof unit !== "object" || Array.isArray(unit)) return "";
+
+  const quantity = unit.quantity === null || unit.quantity === undefined || unit.quantity === ""
+    ? ""
+    : unitNumber.format(Number(unit.quantity));
+  const measure = String(unit.measure || "").trim();
+  const primary = quantity && measure ? `${quantity} ${measure}` : "";
+  const details = String(unit.details || "").trim();
+  return [primary, details].filter(Boolean).join(" · ");
+}
+
+function productPricePerUnit(product) {
+  const unit = product.unit;
+  const price = Number(product.price);
+  if (!unit || typeof unit !== "object" || Array.isArray(unit)) return null;
+
+  const quantity = Number(unit.quantity);
+  const label = String(unit.pricePer || "").trim();
+  if (!label || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price)) return null;
+  return { amount: Math.round((price / quantity) * 100) / 100, label };
+}
+
 function productCard(product) {
   const id = escapeHtml(product.id);
   const name = String(product.name || "Prodotto");
   const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
   const images = productImages(product);
   const imageCount = images.length;
+  const unitLabel = productUnitLabel(product.unit);
+  const pricePerUnit = productPricePerUnit(product);
   return `
     <article class="product-card">
       <div class="product-card__visual">
@@ -428,10 +460,24 @@ function productCard(product) {
       </div>
       <div class="product-card__content">
         <h3><a class="product-card__title" href="${escapeHtml(productUrl)}" data-open-product="${id}">${escapeHtml(name)}</a></h3>
-        <p class="product-card__unit">${escapeHtml(product.unit || "")}</p>
+        <p class="product-card__unit">
+          <span class="product-card__meta-label">Formato</span>
+          <span class="product-card__unit-value">${escapeHtml(unitLabel)}</span>
+        </p>
         <p class="product-card__description">${escapeHtml(product.description || "")}</p>
         <div class="product-card__purchase">
-          <strong class="product-card__price">${escapeHtml(formatPrice(product.price))}</strong>
+          <div class="product-price-set product-card__price-set">
+            <div class="product-price-set__item product-price-set__item--total">
+              <span class="product-price-set__label">Prezzo totale</span>
+              <strong class="product-price-set__value product-card__total-price">${escapeHtml(formatPrice(product.price))}</strong>
+            </div>
+            ${pricePerUnit === null ? "" : `
+              <div class="product-price-set__item product-price-set__item--unit">
+                <span class="product-price-set__label">Prezzo unitario</span>
+                <strong class="product-price-set__value product-price-set__unit-value">${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}</strong>
+              </div>
+            `}
+          </div>
           <button class="add-button" type="button" data-add-to-cart="${id}" aria-label="Aggiungi ${escapeHtml(name)} al carrello">
             <span class="add-button__plus" aria-hidden="true">+</span><span>Aggiungi</span>
           </button>
@@ -480,8 +526,15 @@ function openProductDialog(productId) {
   if (state.dialogImages.length === 0) state.dialogImages = [fallbackImage];
   elements.productDialogTitle.textContent = product.name || "Prodotto";
   elements.productDialogCategory.textContent = productCategoryLabel(product.category);
-  elements.productDialogUnit.textContent = product.unit || "";
+  elements.productDialogUnit.textContent = productUnitLabel(product.unit);
   elements.productDialogPrice.textContent = formatPrice(product.price);
+  const pricePerUnit = productPricePerUnit(product);
+  if (elements.productDialogUnitPriceWrap && elements.productDialogUnitPrice) {
+    elements.productDialogUnitPriceWrap.hidden = pricePerUnit === null;
+    elements.productDialogUnitPrice.textContent = pricePerUnit === null
+      ? ""
+      : `${formatPrice(pricePerUnit.amount)} / ${pricePerUnit.label}`;
+  }
   elements.productDialogDescription.textContent = product.description || "";
   elements.productDialogDetail.href = `prodotto.html?id=${encodeURIComponent(String(product.id))}`;
   renderProductDialogImage();
@@ -540,7 +593,7 @@ function renderProductDetail() {
 
   const brand = String(state.site.brand || "Cartaway").trim();
   const productName = String(product.name || "Prodotto").trim();
-  const productUnit = String(product.unit || "").trim();
+  const productUnit = productUnitLabel(product.unit);
   state.detailProduct = product;
   state.detailImages = productImages(product);
   if (state.detailImages.length === 0) state.detailImages = [fallbackImage];
@@ -550,6 +603,13 @@ function renderProductDetail() {
   elements.detailCategory.textContent = productCategoryLabel(product.category);
   elements.detailUnit.textContent = productUnit;
   elements.detailPrice.textContent = formatPrice(product.price);
+  const pricePerUnit = productPricePerUnit(product);
+  if (elements.detailUnitPriceWrap && elements.detailUnitPrice) {
+    elements.detailUnitPriceWrap.hidden = pricePerUnit === null;
+    elements.detailUnitPrice.textContent = pricePerUnit === null
+      ? ""
+      : `${formatPrice(pricePerUnit.amount)} / ${pricePerUnit.label}`;
+  }
   elements.detailDescription.textContent = product.description || "";
   elements.detailBreadcrumbTitle.textContent = productName;
   renderDetailImage();
@@ -612,7 +672,7 @@ function renderProductDetail() {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: brand, item: `${canonicalSiteOrigin}/` },
-          { "@type": "ListItem", position: 2, name: "Catalogo", item: `${canonicalSiteOrigin}/catalogo.html` },
+          { "@type": "ListItem", position: 2, name: "Catalogo", item: `${canonicalSiteOrigin}/` },
           { "@type": "ListItem", position: 3, name: productName, item: canonicalUrl },
         ],
       },
@@ -623,11 +683,13 @@ function renderProductDetail() {
 function renderProducts() {
   if (!elements.productGrid) return;
 
+  elements.productGrid.classList.toggle("product-grid--list", state.view === "list");
+  elements.productViewButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.productView === state.view));
+  });
+
   let visibleProducts = state.products.filter((product) => product.available !== false);
-  if (state.page === "home") {
-    visibleProducts = visibleProducts.filter((product) => product.featured === true);
-  } else {
-    const normalizedSearch = normalizeText(state.search.trim());
+  if (state.page !== "home") {
     visibleProducts = visibleProducts
       .filter((product) => {
         const category = String(product.category || "");
@@ -635,11 +697,13 @@ function renderProducts() {
           || category === state.category
           || category.startsWith(`${state.category} /`);
       })
-      .filter((product) => {
-        const searchable = normalizeText([product.name, product.category, product.unit, product.description].join(" "));
-        return searchable.includes(normalizedSearch);
-      });
   }
+
+  const normalizedSearch = normalizeText(state.search.trim());
+  visibleProducts = visibleProducts.filter((product) => {
+    const searchable = normalizeText([product.name, product.category, productUnitLabel(product.unit), product.description].join(" "));
+    return searchable.includes(normalizedSearch);
+  });
 
   if (state.sort === "price-asc") {
     visibleProducts.sort((first, second) => Number(first.price) - Number(second.price));
@@ -650,9 +714,7 @@ function renderProducts() {
   }
 
   if (elements.productCount) {
-    elements.productCount.textContent = state.page === "home"
-      ? `${visibleProducts.length} prodotti in evidenza`
-      : `${visibleProducts.length} ${visibleProducts.length === 1 ? "prodotto" : "prodotti"}`;
+    elements.productCount.textContent = `${visibleProducts.length} ${visibleProducts.length === 1 ? "prodotto" : "prodotti"}`;
   }
   elements.productGrid.innerHTML = visibleProducts.map(productCard).join("");
   if (elements.emptyState) elements.emptyState.hidden = visibleProducts.length > 0;
@@ -698,12 +760,17 @@ function renderCart() {
     const unitPrice = recurring && discountPercent > 0
       ? `<del>${escapeHtml(formatPrice(fullUnitPriceCents / 100))}</del> <strong>${escapeHtml(formatPrice(unitPriceCents / 100))}</strong>`
       : escapeHtml(formatPrice(unitPriceCents / 100));
+    const pricePerUnit = productPricePerUnit(product);
+    const comparableUnitPrice = pricePerUnit === null
+      ? ""
+      : `<p class="cart-item__unit-price">Prezzo unitario: ${escapeHtml(formatPrice(unitPriceCents / 100 / Number(product.unit.quantity)))} / ${escapeHtml(pricePerUnit.label)}</p>`;
     return `
       <article class="cart-item">
         <img class="cart-item__image" src="${escapeHtml(safeImageUrl(product.image))}" alt="" loading="lazy" />
         <div class="cart-item__details">
           <h3>${escapeHtml(name)}</h3>
-          <p>${escapeHtml(product.unit || "")} · ${unitPrice}</p>
+          <p>${escapeHtml(productUnitLabel(product.unit))} · ${unitPrice}</p>
+          ${comparableUnitPrice}
           <div class="quantity-control" role="group" aria-label="Quantità di ${escapeHtml(name)}">
             <button type="button" data-cart-change="-1" data-product-id="${id}" aria-label="Riduci ${escapeHtml(name)} di uno">−</button>
             <input class="quantity-control__input" type="number" min="1" step="1" inputmode="numeric" value="${itemQuantity}" data-cart-quantity="true" data-product-id="${id}" aria-label="Quantità di ${escapeHtml(name)}" />
@@ -810,7 +877,11 @@ function buildWhatsappUrl(message) {
 const canonicalSiteOrigin = "https://cartaway.it";
 
 function seoCanonicalUrl(page = state.page, productId = "") {
-  const pathname = page === "home" ? "/" : page === "catalog" ? "/catalogo.html" : "/prodotto.html";
+  const pathname = page === "home" || page === "catalog"
+    ? "/"
+    : page === "help"
+      ? "/primi-passi.html"
+      : "/prodotto.html";
   const url = new URL(pathname, canonicalSiteOrigin);
   if (page === "product" && productId) url.searchParams.set("id", String(productId));
   return url.href;
@@ -920,17 +991,33 @@ function renderSiteDetails() {
   });
   if (state.page !== "product") {
     const isCatalog = state.page === "catalog";
+    const isHelp = state.page === "help";
     const title = isCatalog
       ? `Catalogo carta per casa e ufficio a Montoro | ${brand}`
-      : `${brand} | Carta per casa, cucina e ufficio a Montoro`;
+      : isHelp
+        ? `Primi passi e FAQ | ${brand}`
+        : `${brand} | Carta per casa, cucina e ufficio a Montoro`;
     const description = isCatalog
       ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini.`
-      : `Carta igienica, rotoli cucina e carta A4 per casa e ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
+      : isHelp
+        ? `Come ordinare da ${brand}, zone di consegna e risposte alle domande frequenti.`
+        : `Carta igienica, rotoli cucina e carta A4 per casa e ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
     const url = seoCanonicalUrl();
     updateSeoMetadata({ title, description, url, siteName: brand, pageType: "website" });
     updateSeoStructuredData(isCatalog
       ? catalogStructuredData(title, description, url)
-      : {
+      : isHelp
+        ? {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "@id": `${url}#webpage`,
+            url,
+            name: title,
+            description,
+            inLanguage: "it-IT",
+            isPartOf: { "@id": `${canonicalSiteOrigin}/#website` },
+          }
+        : {
           "@context": "https://schema.org",
           "@type": "WebSite",
           "@id": `${canonicalSiteOrigin}/#website`,
@@ -1335,7 +1422,7 @@ function setupHeroCarousel() {
       title: "Casa e ufficio, mai senza.",
       intro: "Carta igienica, rotoli cucina e tutto l'essenziale. Ordini in pochi passaggi, noi te li portiamo.",
       action: "Scegli i prodotti",
-      actionHref: "catalogo.html",
+      actionHref: "index.html",
       openPromo: false,
       deliveryHighlight: "Montoro: circa 2 ore",
       deliverySecondary: "Comuni vicini: in giornata",
@@ -1506,6 +1593,13 @@ function setupEvents() {
     });
   }
 
+  elements.productViewButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      state.view = button.dataset.productView === "list" ? "list" : "grid";
+      renderProducts();
+    });
+  });
+
   elements.promoOpen.addEventListener("click", () => elements.promoDialog.showModal());
   elements.promoDialog.addEventListener("click", (event) => {
     if (event.target === elements.promoDialog) elements.promoDialog.close();
@@ -1614,7 +1708,7 @@ function setupEvents() {
     if (productsSection) {
       productsSection.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.location.assign("catalogo.html");
+      window.location.assign("index.html");
     }
   });
 
@@ -1744,7 +1838,7 @@ function setupEvents() {
     const emailOrders = items.map(({ product, quantity }) => {
       const unitPriceCents = recurringOrder ? recurringPriceInCents(product.price) : priceInCents(product.price);
       return {
-        name: `${product.name} (${product.unit})`,
+        name: `${product.name} (${productUnitLabel(product.unit)})`,
         units: quantity,
         price: formatPrice(unitPriceCents / 100),
         line_total: formatPrice((unitPriceCents * quantity) / 100),

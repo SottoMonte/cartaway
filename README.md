@@ -2,7 +2,7 @@
 
 Negozio statico in italiano per prodotti di carta con consegna locale a Montoro e nei comuni vicini. Contatti e catalogo sono file JSON; Decap CMS li modifica senza database o server applicativo. Il carrello invia al cliente un riepilogo via email con EmailJS; non inoltra la richiesta all'attività. WhatsApp resta disponibile per i contatti diretti. Data e fascia oraria sono facoltative, e non sono attivi pagamenti online.
 
-La home mette in vetrina i prodotti disponibili marcati come in evidenza nel CMS. `catalogo.html` contiene il catalogo completo con ricerca e filtri; ogni scheda apre `prodotto.html?id=ID-PRODOTTO`, con galleria fotografica e caratteristiche.
+`index.html` è la home e contiene il catalogo completo con ricerca, filtri e confronto dei prezzi. `catalogo.html` resta disponibile come URL compatibile. `primi-passi.html` raccoglie le modalità di consegna, i passaggi per ordinare e le FAQ; ogni scheda prodotto apre `prodotto.html?id=ID-PRODOTTO`.
 
 ## Avvio locale
 

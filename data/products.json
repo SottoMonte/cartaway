@@ -4,7 +4,12 @@
       "id": "rotoloni-asciugatutto-splash-2000",
       "name": "Rotoloni MAXI Asciugatutto Splash 2000",
       "category": "Itissue - Monouso in carta / Rotoloni",
-      "unit": "2 rotoli · 180 m ciascuno",
+      "unit": {
+        "quantity": 2,
+        "measure": "rotoli",
+        "details": "180 m ciascuno",
+        "pricePer": "rotolo"
+      },
       "price": 4.99,
       "description": "Due rotoloni in pura cellulosa, a 2 veli e con goffratura micro. Ogni rotolo è lungo 180 m e alto 24,5 cm.",
       "image": "https://m.media-amazon.com/images/I/61mQJDgCL9L._AC_SX425_.jpg",
@@ -16,12 +21,30 @@
         "https://m.media-amazon.com/images/I/415BeINNhbL._AC_SL1080_.jpg"
       ],
       "specifications": [
-        { "label": "Confezione", "value": "2 rotoli" },
-        { "label": "Materiale", "value": "Pura cellulosa" },
-        { "label": "Veli", "value": "2" },
-        { "label": "Lunghezza", "value": "180 m per rotolo" },
-        { "label": "Altezza", "value": "24,5 cm" },
-        { "label": "Goffratura", "value": "Micro" }
+        {
+          "label": "Confezione",
+          "value": "2 rotoli"
+        },
+        {
+          "label": "Materiale",
+          "value": "Pura cellulosa"
+        },
+        {
+          "label": "Veli",
+          "value": "2"
+        },
+        {
+          "label": "Lunghezza",
+          "value": "180 m per rotolo"
+        },
+        {
+          "label": "Altezza",
+          "value": "24,5 cm"
+        },
+        {
+          "label": "Goffratura",
+          "value": "Micro"
+        }
       ],
       "featured": true,
       "available": true
@@ -30,7 +53,12 @@
       "id": "rotoloni-asciugatutto-splash-2000-6",
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 - 6 rotoli",
       "category": "Cucina",
-      "unit": "6 rotoli · 180 m ciascuno",
+      "unit": {
+        "quantity": 6,
+        "measure": "rotoli",
+        "details": "180 m ciascuno",
+        "pricePer": "rotolo"
+      },
       "price": 9.99,
       "description": "Sei rotoloni in pura cellulosa, a 2 veli e con goffratura micro. Ogni rotolo è lungo 180 m e alto 24,5 cm.",
       "image": "https://m.media-amazon.com/images/I/61mQJDgCL9L._AC_SX425_.jpg",
@@ -42,12 +70,30 @@
         "https://m.media-amazon.com/images/I/415BeINNhbL._AC_SL1080_.jpg"
       ],
       "specifications": [
-        { "label": "Confezione", "value": "6 rotoli" },
-        { "label": "Materiale", "value": "Pura cellulosa" },
-        { "label": "Veli", "value": "2" },
-        { "label": "Lunghezza", "value": "180 m per rotolo" },
-        { "label": "Altezza", "value": "24,5 cm" },
-        { "label": "Goffratura", "value": "Micro" }
+        {
+          "label": "Confezione",
+          "value": "6 rotoli"
+        },
+        {
+          "label": "Materiale",
+          "value": "Pura cellulosa"
+        },
+        {
+          "label": "Veli",
+          "value": "2"
+        },
+        {
+          "label": "Lunghezza",
+          "value": "180 m per rotolo"
+        },
+        {
+          "label": "Altezza",
+          "value": "24,5 cm"
+        },
+        {
+          "label": "Goffratura",
+          "value": "Micro"
+        }
       ],
       "featured": true,
       "available": true
@@ -56,8 +102,13 @@
       "id": "carta-igienica-lavanda-singolo",
       "name": "Carta igienica profumata alla lavanda",
       "category": "Itissue - Monouso in carta / Carta igienica",
-      "unit": "4 rotoli · 2 veli",
-      "price": 1.50,
+      "unit": {
+        "quantity": 4,
+        "measure": "rotoli",
+        "details": "2 veli",
+        "pricePer": "rotolo"
+      },
+      "price": 1.5,
       "description": "Carta igienica in pura cellulosa, a 2 veli, profumata alla lavanda e certificata FSC. Prodotta in Italia.",
       "image": "https://m.media-amazon.com/images/I/61JaST8DfbL._AC_SX450_.jpg",
       "images": [
@@ -65,12 +116,30 @@
         "https://m.media-amazon.com/images/I/41tXMtM2bmL._AC_SL1080_.jpg"
       ],
       "specifications": [
-        { "label": "Confezione", "value": "4 rotoli" },
-        { "label": "Veli", "value": "2" },
-        { "label": "Fragranza", "value": "Lavanda" },
-        { "label": "Materiale", "value": "Pura cellulosa" },
-        { "label": "Certificazione", "value": "FSC" },
-        { "label": "Origine", "value": "Italia" }
+        {
+          "label": "Confezione",
+          "value": "4 rotoli"
+        },
+        {
+          "label": "Veli",
+          "value": "2"
+        },
+        {
+          "label": "Fragranza",
+          "value": "Lavanda"
+        },
+        {
+          "label": "Materiale",
+          "value": "Pura cellulosa"
+        },
+        {
+          "label": "Certificazione",
+          "value": "FSC"
+        },
+        {
+          "label": "Origine",
+          "value": "Italia"
+        }
       ],
       "featured": true,
       "available": true
@@ -79,7 +148,12 @@
       "id": "carta-igienica-lavanda-40-rotoli",
       "name": "Carta igienica profumata alla lavanda Carta Corona",
       "category": "Itissue - Monouso in carta / Carta igienica",
-      "unit": "40 rotoli · 2 veli",
+      "unit": {
+        "quantity": 40,
+        "measure": "rotoli",
+        "details": "2 veli",
+        "pricePer": "rotolo"
+      },
       "price": 12,
       "description": "Confezione da 40 rotoli di carta igienica in pura cellulosa, a 2 veli, profumata alla lavanda e certificata FSC. Prodotta in Italia.",
       "image": "https://m.media-amazon.com/images/I/61JaST8DfbL._AC_SX450_.jpg",
@@ -88,12 +162,30 @@
         "https://m.media-amazon.com/images/I/41tXMtM2bmL._AC_SL1080_.jpg"
       ],
       "specifications": [
-        { "label": "Confezione", "value": "40 rotoli" },
-        { "label": "Veli", "value": "2" },
-        { "label": "Fragranza", "value": "Lavanda" },
-        { "label": "Materiale", "value": "Pura cellulosa" },
-        { "label": "Certificazione", "value": "FSC" },
-        { "label": "Origine", "value": "Italia" }
+        {
+          "label": "Confezione",
+          "value": "40 rotoli"
+        },
+        {
+          "label": "Veli",
+          "value": "2"
+        },
+        {
+          "label": "Fragranza",
+          "value": "Lavanda"
+        },
+        {
+          "label": "Materiale",
+          "value": "Pura cellulosa"
+        },
+        {
+          "label": "Certificazione",
+          "value": "FSC"
+        },
+        {
+          "label": "Origine",
+          "value": "Italia"
+        }
       ],
       "featured": true,
       "available": true
@@ -102,7 +194,12 @@
       "id": "carta-velina-alimentare-hemoton",
       "name": "Fogli di carta velina per alimenti HEMOTON",
       "category": "Avvolgenti Alimentari / Carta e Veline alimentari",
-      "unit": "24 pezzi",
+      "unit": {
+        "quantity": 24,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 16.59,
       "description": "Carta velina per rivestire cestini e confezionare alimenti.",
       "image": "https://m.media-amazon.com/images/I/710-z10g0kL._AC_UL320_.jpg",
@@ -113,7 +210,12 @@
       "id": "carta-sovrainvolto-alimentare-hejo",
       "name": "Carta oleata alimentare HEJO",
       "category": "Avvolgenti Alimentari / Carta sovrainvolto",
-      "unit": "100 fogli · 33 × 23 cm",
+      "unit": {
+        "quantity": 100,
+        "measure": "fogli",
+        "details": "33 × 23 cm",
+        "pricePer": "foglio"
+      },
       "price": 11.99,
       "description": "Fogli oleati per avvolgere alimenti come salumi e formaggi.",
       "image": "https://m.media-amazon.com/images/I/81ZhMCDQFmL._AC_UL320_.jpg",
@@ -124,7 +226,12 @@
       "id": "incarto-ideabrill-so4-1000",
       "name": "Incarto alimentare IDEABRILL SO4",
       "category": "Avvolgenti Alimentari / Ideabrill",
-      "unit": "1.000 pezzi · 33 × 40 cm",
+      "unit": {
+        "quantity": 1000,
+        "measure": "pezzi",
+        "details": "33 × 40 cm",
+        "pricePer": "pezzo"
+      },
       "price": 55,
       "description": "Fogli per confezionare alimenti e prodotti da banco.",
       "image": "https://m.media-amazon.com/images/I/31Xe-DVWWzL._AC_UL320_.jpg",
@@ -135,7 +242,12 @@
       "id": "set-rotoli-cucina-frio-3-pezzi",
       "name": "Set cucina FRIO: alluminio, pellicola e carta forno",
       "category": "Avvolgenti Alimentari / Rotoli pellicola, alluminio e carta forno",
-      "unit": "3 rotoli · 50 m",
+      "unit": {
+        "quantity": 1,
+        "measure": "set",
+        "details": "3 rotoli · 50 m",
+        "pricePer": "set"
+      },
       "price": 18.97,
       "description": "Set di rotoli da cucina in alluminio, pellicola e carta forno.",
       "image": "https://m.media-amazon.com/images/I/71q1W9ijR5L._AC_UL320_.jpg",
@@ -146,7 +258,12 @@
       "id": "sacchetti-carta-kraft-alimenti-1000",
       "name": "Sacchetti per alimenti in carta kraft",
       "category": "Avvolgenti Alimentari / Sacchetti di carta",
-      "unit": "1.000 pezzi · 14 × 28 cm",
+      "unit": {
+        "quantity": 1000,
+        "measure": "pezzi",
+        "details": "14 × 28 cm",
+        "pricePer": "pezzo"
+      },
       "price": 30.92,
       "description": "Sacchetti in carta kraft per alimenti e prodotti da forno.",
       "image": "https://m.media-amazon.com/images/I/314nHIhAIkL._AC_UL320_.jpg",
@@ -157,7 +274,12 @@
       "id": "sacchetti-plastica-alimenti-zip",
       "name": "Buste alimentari trasparenti con chiusura zip",
       "category": "Avvolgenti Alimentari / Sacchetti in plastica per alimenti",
-      "unit": "8 × 12 cm",
+      "unit": {
+        "quantity": 1,
+        "measure": "confezione",
+        "details": "8 × 12 cm",
+        "pricePer": "confezione"
+      },
       "price": 12.99,
       "description": "Buste trasparenti richiudibili per conservare piccoli alimenti.",
       "image": "https://m.media-amazon.com/images/I/51oF9r51L9L._AC_UL320_.jpg",
@@ -168,7 +290,12 @@
       "id": "sacchetti-sottovuoto-laica-tr1000",
       "name": "Sacchetti sottovuoto LAICA TR1000",
       "category": "Avvolgenti Alimentari / Sacchetti sottovuoto",
-      "unit": "30 pezzi · 25 × 30 cm",
+      "unit": {
+        "quantity": 30,
+        "measure": "pezzi",
+        "details": "25 × 30 cm",
+        "pricePer": "pezzo"
+      },
       "price": 13.49,
       "description": "Sacchetti per conservazione sottovuoto e cottura sous vide.",
       "image": "https://m.media-amazon.com/images/I/61VUlCJGQLL._AC_UL320_.jpg",
@@ -179,7 +306,12 @@
       "id": "shopper-bio-compostabili-cf-carta",
       "name": "Shopper bio-compostabili CF Carta",
       "category": "Avvolgenti Alimentari / Shoppers Bio-compostabili",
-      "unit": "4 kg · 30 × 55 cm",
+      "unit": {
+        "quantity": 4,
+        "measure": "kg",
+        "details": "30 × 55 cm",
+        "pricePer": "kg"
+      },
       "price": 30,
       "description": "Shopper bio-compostabili per trasporto e confezionamento.",
       "image": "https://m.media-amazon.com/images/I/61eL3yi3f9L._AC_UL320_.jpg",
@@ -190,7 +322,12 @@
       "id": "shopper-carta-kraft-manici-250",
       "name": "Shopper in carta kraft con manici",
       "category": "Avvolgenti Alimentari / Shoppers in carta",
-      "unit": "250 pezzi · 22 × 28 cm",
+      "unit": {
+        "quantity": 250,
+        "measure": "pezzi",
+        "details": "22 × 28 cm",
+        "pricePer": "pezzo"
+      },
       "price": 43.9,
       "description": "Borse in carta kraft con manici per confezioni e acquisti.",
       "image": "https://m.media-amazon.com/images/I/81t3wVZvxdL._AC_UL320_.jpg",
@@ -201,7 +338,12 @@
       "id": "organizer-scrivania-supporto-monitor",
       "name": "Organizer da scrivania con supporto monitor",
       "category": "Cancelleria e Ufficio / Accessori",
-      "unit": "1 pezzo",
+      "unit": {
+        "quantity": 1,
+        "measure": "pezzo",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 25.99,
       "description": "Organizer da scrivania con ripiani, cassetto e portapenne.",
       "image": "https://m.media-amazon.com/images/I/71T2955ciGL._AC_UL320_.jpg",
@@ -212,7 +354,12 @@
       "id": "blocchi-appunti-a4-staufen-5",
       "name": "Blocchi appunti A4 Staufen",
       "category": "Cancelleria e Ufficio / Blocchi e fogli A4",
-      "unit": "5 blocchi · 50 fogli ciascuno",
+      "unit": {
+        "quantity": 5,
+        "measure": "blocchi",
+        "details": "50 fogli ciascuno",
+        "pricePer": "blocco"
+      },
       "price": 12.58,
       "description": "Blocchi formato A4 con fogli bianchi per appunti e ufficio.",
       "image": "https://m.media-amazon.com/images/I/61veDa0E1TL._AC_UL320_.jpg",
@@ -223,7 +370,12 @@
       "id": "carta-a4-stampante-75g-500-fogli",
       "name": "Risma carta A4 75 g/m² per stampanti",
       "category": "Cancelleria e Ufficio / Blocchi e fogli A4",
-      "unit": "1 risma · 500 fogli · 75 g/m²",
+      "unit": {
+        "quantity": 1,
+        "measure": "risma",
+        "details": "500 fogli · 75 g/m²",
+        "pricePer": "risma"
+      },
       "price": 5.79,
       "description": "Carta bianca A4 da 75 g/m² per stampanti inkjet e laser, fotocopiatrici e fax.",
       "image": "https://m.media-amazon.com/images/I/61ttGAul8sL._AC_SX679_.jpg",
@@ -234,7 +386,12 @@
       "id": "rotoli-cassa-termici-80x80-10",
       "name": "Rotoli termici 80 × 80 per cassa",
       "category": "Cancelleria e Ufficio / Rotoli per cassa",
-      "unit": "10 rotoli · 80 × 80 mm",
+      "unit": {
+        "quantity": 10,
+        "measure": "rotoli",
+        "details": "80 × 80 mm",
+        "pricePer": "rotolo"
+      },
       "price": 29.99,
       "description": "Rotoli termici per registratori di cassa compatibili.",
       "image": "https://m.media-amazon.com/images/I/71lvi45ZFtL._AC_UL320_.jpg",
@@ -245,7 +402,12 @@
       "id": "rotoli-termici-adesivi-bilancia-4",
       "name": "Rotoli termici adesivi per bilancia",
       "category": "Cancelleria e Ufficio / Rotoli termici adesivi",
-      "unit": "4 rotoli · 57 mm",
+      "unit": {
+        "quantity": 4,
+        "measure": "rotoli",
+        "details": "57 mm",
+        "pricePer": "rotolo"
+      },
       "price": 18.99,
       "description": "Rotoli termici adesivi per bilance ed etichettatrici compatibili.",
       "image": "https://m.media-amazon.com/images/I/41IYkf8FbfL._AC_UL320_.jpg",
@@ -256,7 +418,12 @@
       "id": "box-hamburger-asporto-50",
       "name": "Box in cartoncino per hamburger e panini",
       "category": "Contenitori cibo asporto / Box fritti e panino",
-      "unit": "50 pezzi",
+      "unit": {
+        "quantity": 50,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 15.95,
       "description": "Scatole in cartoncino per hamburger, panini e fritti da asporto.",
       "image": "https://m.media-amazon.com/images/I/61vQsZ7Wl7L._AC_UL320_.jpg",
@@ -267,7 +434,12 @@
       "id": "scatole-pizza-cartone-24x24-200",
       "name": "Scatole pizza in cartone 24 × 24 cm",
       "category": "Contenitori cibo asporto / Box pizza e Teglie in cartone",
-      "unit": "200 pezzi",
+      "unit": {
+        "quantity": 200,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 39.99,
       "description": "Scatole in cartone per pizza e prodotti da forno da asporto.",
       "image": "https://m.media-amazon.com/images/I/515pQnZjJeL._AC_UL320_.jpg",
@@ -278,7 +450,12 @@
       "id": "vaschette-alluminio-bordo-g",
       "name": "Vaschette in alluminio bordo G",
       "category": "Contenitori cibo asporto / Contenitori alluminio con coperchio bordo G",
-      "unit": "Confezioni da 25, 50 o 100 pezzi",
+      "unit": {
+        "quantity": 1,
+        "measure": "confezione",
+        "details": "Confezioni da 25, 50 o 100 pezzi",
+        "pricePer": "confezione"
+      },
       "price": 16.99,
       "description": "Contenitori in alluminio con bordo G per alimenti e asporto.",
       "image": "https://m.media-amazon.com/images/I/41lMrKHpIQL._AC_UL320_.jpg",
@@ -289,7 +466,12 @@
       "id": "vaschette-alluminio-bordo-l-r95",
       "name": "Vaschette in alluminio R95 bordo L",
       "category": "Contenitori cibo asporto / Contenitori alluminio con coperchio bordo L",
-      "unit": "100 pezzi · 20 × 11 cm",
+      "unit": {
+        "quantity": 100,
+        "measure": "pezzi",
+        "details": "20 × 11 cm",
+        "pricePer": "pezzo"
+      },
       "price": 33.59,
       "description": "Vaschette in alluminio con coperchio e bordo L per alimenti.",
       "image": "https://m.media-amazon.com/images/I/51Y03Gcrq5L._AC_UL320_.jpg",
@@ -300,7 +482,12 @@
       "id": "insalatiere-carta-avana-compostabili-50",
       "name": "Insalatiere compostabili in carta avana",
       "category": "Contenitori cibo asporto / Contenitori Bio-Compostabili",
-      "unit": "50 pezzi · 1.300 ml",
+      "unit": {
+        "quantity": 50,
+        "measure": "pezzi",
+        "details": "1.300 ml",
+        "pricePer": "pezzo"
+      },
       "price": 31.99,
       "description": "Insalatiere in carta con coperchio per piatti freddi da asporto.",
       "image": "https://m.media-amazon.com/images/I/61tgva4aFbL._AC_UL320_.jpg",
@@ -311,7 +498,12 @@
       "id": "contenitori-fast-food-bio-50",
       "name": "Contenitori fast food in polpa di cellulosa",
       "category": "Contenitori cibo asporto / Contenitori fast food con coperchio",
-      "unit": "50 pezzi · 218 × 207 mm",
+      "unit": {
+        "quantity": 50,
+        "measure": "pezzi",
+        "details": "218 × 207 mm",
+        "pricePer": "pezzo"
+      },
       "price": 21.9,
       "description": "Contenitori con coperchio in polpa di cellulosa per fast food e asporto.",
       "image": "https://m.media-amazon.com/images/I/21qfBjPtB-L._AC_UL320_.jpg",
@@ -322,7 +514,12 @@
       "id": "contenitori-plastica-asporto-450ml-100",
       "name": "Contenitori trasparenti da asporto con coperchio",
       "category": "Contenitori cibo asporto / Contenitori in plastica con coperchio",
-      "unit": "100 pezzi · 450 ml",
+      "unit": {
+        "quantity": 100,
+        "measure": "pezzi",
+        "details": "450 ml",
+        "pricePer": "pezzo"
+      },
       "price": 33.96,
       "description": "Contenitori rotondi in plastica per salse, cucina e ristorazione.",
       "image": "https://m.media-amazon.com/images/I/716ysES8EUL._AC_UL320_.jpg",
@@ -333,7 +530,12 @@
       "id": "contenitori-alluminio-laccati-497cc",
       "name": "Contenitori in alluminio laccato con coperchio",
       "category": "Contenitori cibo asporto / Contenitori laccati con coperchio",
-      "unit": "497 cc",
+      "unit": {
+        "quantity": 1,
+        "measure": "confezione",
+        "details": "497 cc",
+        "pricePer": "confezione"
+      },
       "price": 31,
       "description": "Contenitori in alluminio laccato terracotta con coperchio trasparente.",
       "image": "https://m.media-amazon.com/images/I/51ZbqJmsyxL._AC_UL320_.jpg",
@@ -344,7 +546,12 @@
       "id": "dispenser-asciugamani-piega-z-aike",
       "name": "Dispenser carta asciugamani AIKE",
       "category": "Dispenser",
-      "unit": "1 pezzo · per piega Z e multifoglio",
+      "unit": {
+        "quantity": 1,
+        "measure": "pezzo",
+        "details": "per piega Z e multifoglio",
+        "pricePer": "pezzo"
+      },
       "price": 19.99,
       "description": "Dispenser da parete per asciugamani di carta piegati.",
       "image": "https://m.media-amazon.com/images/I/61AUV0YlqHL._AC_UL320_.jpg",
@@ -355,7 +562,12 @@
       "id": "guanti-nitrile-ansell-microflex",
       "name": "Guanti monouso in nitrile Ansell Microflex",
       "category": "Dispositivi di sicurezza / Guanti",
-      "unit": "Confezione · taglia selezionabile",
+      "unit": {
+        "quantity": 1,
+        "measure": "confezione",
+        "details": "Confezione · taglia selezionabile",
+        "pricePer": "confezione"
+      },
       "price": 9.65,
       "description": "Guanti monouso in nitrile per attività professionali e pulizia.",
       "image": "https://m.media-amazon.com/images/I/41hFSHFvtHL._AC_UL320_.jpg",
@@ -366,7 +578,12 @@
       "id": "scarpe-antinfortunistiche-lavoro",
       "name": "Scarpe antinfortunistiche da lavoro",
       "category": "Dispositivi di sicurezza / Scarpe da lavoro",
-      "unit": "Taglie 37–46",
+      "unit": {
+        "quantity": 1,
+        "measure": "paio",
+        "details": "Taglie 37–46",
+        "pricePer": "paio"
+      },
       "price": 49.99,
       "description": "Calzature da lavoro antinfortunistiche in diverse taglie.",
       "image": "https://m.media-amazon.com/images/I/71WJwSNAUlL._AC_UL320_.jpg",
@@ -377,7 +594,12 @@
       "id": "detersivo-lavastoviglie-matic-l-20kg",
       "name": "Detersivo professionale lavastoviglie MATIC L",
       "category": "Igiene e Pulizia / Detergenti stoviglie",
-      "unit": "4 taniche · 5 kg ciascuna",
+      "unit": {
+        "quantity": 4,
+        "measure": "taniche",
+        "details": "5 kg ciascuna",
+        "pricePer": "tanica"
+      },
       "price": 50.63,
       "description": "Detersivo concentrato liquido per lavastoviglie e lavabicchieri.",
       "image": "https://m.media-amazon.com/images/I/51sNqvL01zL._AC_UL320_.jpg",
@@ -388,7 +610,12 @@
       "id": "detergente-superfici-horeca-5l",
       "name": "Detergente professionale superfici HoReCa",
       "category": "Igiene e Pulizia / Detergenti superfici",
-      "unit": "5 litri",
+      "unit": {
+        "quantity": 5,
+        "measure": "litri",
+        "details": "",
+        "pricePer": "litro"
+      },
       "price": 30.99,
       "description": "Detergente per superfici e cucina in tanica da 5 litri.",
       "image": "https://m.media-amazon.com/images/I/61xlSuDt-qL._AC_UL320_.jpg",
@@ -399,7 +626,12 @@
       "id": "mocio-industriale-pavimenti-90cm",
       "name": "Mocio industriale per pavimenti da 90 cm",
       "category": "Igiene e Pulizia / Materiale per la pulizia",
-      "unit": "1 mocio · 2 panni riutilizzabili",
+      "unit": {
+        "quantity": 1,
+        "measure": "mocio",
+        "details": "2 panni riutilizzabili",
+        "pricePer": "mocio"
+      },
       "price": 39.99,
       "description": "Mocio largo con panni riutilizzabili per la pulizia dei pavimenti.",
       "image": "https://m.media-amazon.com/images/I/71NrGR0CIeL._AC_UL320_.jpg",
@@ -410,7 +642,12 @@
       "id": "sacchi-spazzatura-150l-10",
       "name": "Sacchi neri per spazzatura da 150 litri",
       "category": "Igiene e Pulizia / Sacchi spazzatura",
-      "unit": "10 pezzi · 85 × 110 cm",
+      "unit": {
+        "quantity": 10,
+        "measure": "pezzi",
+        "details": "85 × 110 cm",
+        "pricePer": "pezzo"
+      },
       "price": 11.99,
       "description": "Sacchi capienti per bidoni condominiali e pattumiere grandi.",
       "image": "https://m.media-amazon.com/images/I/51GRuA-66RL._AC_UL320_.jpg",
@@ -421,7 +658,12 @@
       "id": "office-products-sacchetti-60l-10",
       "name": "Sacchetti neri Office Products da 60 litri",
       "category": "Igiene e Pulizia / Sacchi spazzatura",
-      "unit": "10 pezzi · 60 L · 57 × 70 cm",
+      "unit": {
+        "quantity": 10,
+        "measure": "pezzi",
+        "details": "60 L · 57 × 70 cm",
+        "pricePer": "pezzo"
+      },
       "price": 1.6,
       "description": "Sacchetti neri in LDPE resistente, spessore 19 μm, per pattumiere da 60 litri.",
       "image": "https://m.media-amazon.com/images/I/61ByScFl9UL._AC_SX450_.jpg",
@@ -432,7 +674,12 @@
       "id": "sapone-liquido-mani-idea-home-5l",
       "name": "Sapone liquido mani IDEA HOME AROMÉA",
       "category": "Igiene e Pulizia / Sapone mani",
-      "unit": "Tanica da 5 litri",
+      "unit": {
+        "quantity": 5,
+        "measure": "litri",
+        "details": "in tanica",
+        "pricePer": "litro"
+      },
       "price": 17.1,
       "description": "Sapone liquido per mani in tanica ricaricabile per dispenser.",
       "image": "https://m.media-amazon.com/images/I/71vrKFSPyKL._AC_UL320_.jpg",
@@ -443,7 +690,12 @@
       "id": "nastro-imballaggio-carta-kraft-adhes",
       "name": "Nastro da imballaggio in carta kraft ADHES",
       "category": "Imballaggi / Carta gommata",
-      "unit": "1 rotolo",
+      "unit": {
+        "quantity": 1,
+        "measure": "rotolo",
+        "details": "",
+        "pricePer": "rotolo"
+      },
       "price": 19.99,
       "description": "Nastro in carta kraft adesivo per chiudere e imballare pacchi.",
       "image": "https://m.media-amazon.com/images/I/71YCDlw9ZpL._AC_UL320_.jpg",
@@ -454,7 +706,12 @@
       "id": "film-estensibile-imballaggi-2000",
       "name": "Film estensibile manuale trasparente",
       "category": "Imballaggi / Estensibile",
-      "unit": "1 rotolo · 200 m × 47 cm",
+      "unit": {
+        "quantity": 1,
+        "measure": "rotolo",
+        "details": "200 m × 47 cm",
+        "pricePer": "rotolo"
+      },
       "price": 11.32,
       "description": "Film estensibile trasparente per imballaggio manuale.",
       "image": "https://m.media-amazon.com/images/I/51uw0X0mofL._AC_UL320_.jpg",
@@ -465,7 +722,12 @@
       "id": "nastro-adesivo-pacchi-gianto-6",
       "name": "Nastro adesivo avana GIANTO",
       "category": "Imballaggi / Nastri adesivi",
-      "unit": "6 rotoli · 50 mm × 66 m",
+      "unit": {
+        "quantity": 6,
+        "measure": "rotoli",
+        "details": "50 mm × 66 m",
+        "pricePer": "rotolo"
+      },
       "price": 9.9,
       "description": "Nastro adesivo marrone per cartoni, pacchi e spedizioni.",
       "image": "https://m.media-amazon.com/images/I/71s-+QCm4dL._AC_UL320_.jpg",
@@ -476,7 +738,12 @@
       "id": "asciugamani-piegati-z-imballaggi-2000",
       "name": "Asciugamani di carta piegati a Z",
       "category": "Itissue - Monouso in carta / Asciugamani piegati",
-      "unit": "Cartone da 3.750 salviette",
+      "unit": {
+        "quantity": 3750,
+        "measure": "salviette",
+        "details": "in cartone",
+        "pricePer": "salvietta"
+      },
       "price": 32.99,
       "description": "Asciugamani monouso piegati a Z per dispenser.",
       "image": "https://m.media-amazon.com/images/I/61xR5YhmkRL._AC_UL320_.jpg",
@@ -487,7 +754,12 @@
       "id": "asciugamani-lucart-econatural-190",
       "name": "Asciugamani piegati Lucart EcoNatural",
       "category": "Itissue - Monouso in carta / EcoNatural",
-      "unit": "190 pezzi",
+      "unit": {
+        "quantity": 190,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 29.95,
       "description": "Asciugamani di carta piegati della linea EcoNatural Lucart.",
       "image": "https://m.media-amazon.com/images/I/71tgQ9mXJAL._AC_UL320_.jpg",
@@ -498,7 +770,12 @@
       "id": "lenzuolino-medico-6-rotoli",
       "name": "Lenzuolino medico in rotolo a 2 veli",
       "category": "Itissue - Monouso in carta / Lenzuolino medico",
-      "unit": "6 rotoli · 55 m × 60 cm",
+      "unit": {
+        "quantity": 6,
+        "measure": "rotoli",
+        "details": "55 m × 60 cm",
+        "pricePer": "rotolo"
+      },
       "price": 27.99,
       "description": "Rotoli di carta monouso per lettini da visita e massaggio.",
       "image": "https://m.media-amazon.com/images/I/519BzJhLL3L._AC_UL320_.jpg",
@@ -509,7 +786,12 @@
       "id": "carta-igienica-mini-jumbo-12-rotoli",
       "name": "Carta igienica Mini Jumbo a 2 veli",
       "category": "Itissue - Monouso in carta / Mini jumbo",
-      "unit": "12 rotoli · 130 m",
+      "unit": {
+        "quantity": 12,
+        "measure": "rotoli",
+        "details": "130 m",
+        "pricePer": "rotolo"
+      },
       "price": 20.94,
       "description": "Rotoli Mini Jumbo per dispenser compatibili.",
       "image": "https://m.media-amazon.com/images/I/41tSww+r6sL._AC_UL320_.jpg",
@@ -520,7 +802,12 @@
       "id": "tovaglioli-carta-colorati-2-veli",
       "name": "Tovaglioli di carta colorati a 2 veli",
       "category": "Itissue - Monouso in carta / Tovaglioli",
-      "unit": "38 × 38 cm · 40 o 200 pezzi",
+      "unit": {
+        "quantity": 1,
+        "measure": "confezione",
+        "details": "38 × 38 cm · 40 o 200 pezzi",
+        "pricePer": "confezione"
+      },
       "price": 10.99,
       "description": "Tovaglioli colorati per bar, ristoranti e tavola.",
       "image": "https://m.media-amazon.com/images/I/51bOoXGyg4L._AC_UL320_.jpg",
@@ -531,7 +818,12 @@
       "id": "spatole-decorazione-torte-7-pezzi",
       "name": "Set spatole per decorazione torte",
       "category": "Pasticceria e Gelateria / Basi e Accessori",
-      "unit": "7 pezzi",
+      "unit": {
+        "quantity": 7,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 9.99,
       "description": "Spatole per stendere creme e decorare torte e dolci.",
       "image": "https://m.media-amazon.com/images/I/61XjETYVMkL._AC_UL320_.jpg",
@@ -542,7 +834,12 @@
       "id": "porta-torte-signora-ware-28cm",
       "name": "Porta torte rotondo con coperchio",
       "category": "Pasticceria e Gelateria / Porta torte",
-      "unit": "27,9 cm",
+      "unit": {
+        "quantity": 1,
+        "measure": "pezzo",
+        "details": "27,9 cm",
+        "pricePer": "pezzo"
+      },
       "price": 20.99,
       "description": "Contenitore in plastica con coperchio per trasportare torte.",
       "image": "https://m.media-amazon.com/images/I/61B3J07Jm5L._AC_UL320_.jpg",
@@ -553,7 +850,12 @@
       "id": "vaschette-gelato-eps-25-pezzi",
       "name": "Vaschette gelato da asporto in polistirolo",
       "category": "Pasticceria e Gelateria / Vaschette EPS gelato",
-      "unit": "25 pezzi · 750 cc",
+      "unit": {
+        "quantity": 25,
+        "measure": "pezzi",
+        "details": "750 cc",
+        "pricePer": "pezzo"
+      },
       "price": 29.99,
       "description": "Vaschette in polistirolo con coperchio per gelato da asporto.",
       "image": "https://m.media-amazon.com/images/I/714HltCPLsL._AC_UL320_.jpg",
@@ -564,7 +866,12 @@
       "id": "vassoi-cartone-oro-pasticceria",
       "name": "Vassoi in cartone oro per pasticceria",
       "category": "Pasticceria e Gelateria / Vassoi in cartone",
-      "unit": "Circa 133 pezzi · 29,5 × 20,5 cm",
+      "unit": {
+        "quantity": 1,
+        "measure": "cartone",
+        "details": "Circa 133 pezzi · 29,5 × 20,5 cm",
+        "pricePer": "cartone"
+      },
       "price": 39.9,
       "description": "Vassoi dorati in cartone per pasticceria e presentazione dolci.",
       "image": "https://m.media-amazon.com/images/I/41OhdxnbVoL._AC_UL320_.jpg",
@@ -575,7 +882,12 @@
       "id": "kit-accessori-caffe-monouso-150",
       "name": "Kit accessori monouso per pausa caffè",
       "category": "Stoviglie monouso / Accessori monouso",
-      "unit": "150 bicchierini, palette e bustine",
+      "unit": {
+        "quantity": 1,
+        "measure": "kit",
+        "details": "150 bicchierini, palette e bustine",
+        "pricePer": "kit"
+      },
       "price": 11.6,
       "description": "Kit da caffè con bicchierini di carta, palette e bustine.",
       "image": "https://m.media-amazon.com/images/I/71sT551JQ5L._AC_UL320_.jpg",
@@ -586,7 +898,12 @@
       "id": "bicchieri-cartoncino-coperchio-200",
       "name": "Bicchieri in cartoncino con coperchio",
       "category": "Stoviglie monouso / Bicchieri in cartoncino con coperchio",
-      "unit": "200 pezzi · 100 ml",
+      "unit": {
+        "quantity": 200,
+        "measure": "pezzi",
+        "details": "100 ml",
+        "pricePer": "pezzo"
+      },
       "price": 26.9,
       "description": "Bicchieri da caffè in cartoncino con coperchio per asporto.",
       "image": "https://m.media-amazon.com/images/I/71dv0x-hFOL._AC_UL320_.jpg",
@@ -597,7 +914,12 @@
       "id": "bicchieri-plastica-coperchio-50",
       "name": "Bicchierini PET da asporto con coperchio",
       "category": "Stoviglie monouso / Bicchieri in plastica con coperchio",
-      "unit": "50 pezzi",
+      "unit": {
+        "quantity": 50,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 13.49,
       "description": "Bicchierini in plastica con coperchio per bevande da asporto.",
       "image": "https://m.media-amazon.com/images/I/311LNVK17iL._AC_UL320_.jpg",
@@ -608,7 +930,12 @@
       "id": "cannucce-bambu-1000-pezzi",
       "name": "Cannucce in bambù monouso",
       "category": "Stoviglie monouso / Cannucce e Agitatori",
-      "unit": "1.000 pezzi · 12,7 cm",
+      "unit": {
+        "quantity": 1000,
+        "measure": "pezzi",
+        "details": "12,7 cm",
+        "pricePer": "pezzo"
+      },
       "price": 21.99,
       "description": "Cannucce in bambù per bevande, cocktail e servizio bar.",
       "image": "https://m.media-amazon.com/images/I/61n4Y+RcgsL._AC_UL320_.jpg",
@@ -619,7 +946,12 @@
       "id": "piatti-ciotole-biodegradabili-50",
       "name": "Piatti e ciotole monouso BIOZOYG",
       "category": "Stoviglie monouso / Piatti e Scodelle",
-      "unit": "50 pezzi",
+      "unit": {
+        "quantity": 50,
+        "measure": "pezzi",
+        "details": "",
+        "pricePer": "pezzo"
+      },
       "price": 16.9,
       "description": "Piatti e ciotole monouso per pasti e servizio al tavolo.",
       "image": "https://m.media-amazon.com/images/I/51luZ8h14hL._AC_UL320_.jpg",
@@ -630,7 +962,12 @@
       "id": "kit-posate-bambu-50",
       "name": "Set posate monouso in bambù con tovagliolo",
       "category": "Stoviglie monouso / Posate e Kit posate",
-      "unit": "50 set · 17 cm",
+      "unit": {
+        "quantity": 50,
+        "measure": "set",
+        "details": "17 cm",
+        "pricePer": "set"
+      },
       "price": 29.99,
       "description": "Kit individuali di posate in bambù con tovagliolo.",
       "image": "https://m.media-amazon.com/images/I/61JWnFi9DhL._AC_UL320_.jpg",
@@ -641,7 +978,12 @@
       "id": "buste-portaposate-tnt-100",
       "name": "Buste portaposate in TNT con tovagliolo",
       "category": "Tovaglie e Tovaglioli / Porta posate",
-      "unit": "100 pezzi · tovagliolo 38 × 38 cm",
+      "unit": {
+        "quantity": 100,
+        "measure": "pezzi",
+        "details": "tovagliolo 38 × 38 cm",
+        "pricePer": "pezzo"
+      },
       "price": 15.9,
       "description": "Buste portaposate monouso complete di tovagliolo.",
       "image": "https://m.media-amazon.com/images/I/61Sb9eXFT4L._AC_UL320_.jpg",
@@ -652,7 +994,12 @@
       "id": "tovaglia-tnt-rotolo-12x20m",
       "name": "Rotolo tovaglia monouso in TNT Gef Aura",
       "category": "Tovaglie e Tovaglioli / Tovaglia TNT",
-      "unit": "1,2 × 20 m · 50 g/m²",
+      "unit": {
+        "quantity": 1,
+        "measure": "rotolo",
+        "details": "1,2 × 20 m · 50 g/m²",
+        "pricePer": "rotolo"
+      },
       "price": 29.9,
       "description": "Tovaglia in tessuto non tessuto in rotolo, tagliabile su misura.",
       "image": "https://m.media-amazon.com/images/I/71dOfHYD9PL._AC_UL320_.jpg",
@@ -663,7 +1010,12 @@
       "id": "tovagliette-carta-ristorante-500",
       "name": "Tovagliette in carta per ristorante",
       "category": "Tovaglie e Tovaglioli / Tovaglietta",
-      "unit": "500 fogli · 30 × 40 cm",
+      "unit": {
+        "quantity": 500,
+        "measure": "fogli",
+        "details": "30 × 40 cm",
+        "pricePer": "foglio"
+      },
       "price": 21.99,
       "description": "Tovagliette monouso in carta per ristoranti e bar.",
       "image": "https://m.media-amazon.com/images/I/31SzOpGsYHL._AC_UL320_.jpg",
@@ -674,7 +1026,12 @@
       "id": "tovaglioli-colorati-2-veli-38cm",
       "name": "Tovaglioli colorati in carta a 2 veli",
       "category": "Tovaglie e Tovaglioli / Tovaglioli colorati",
-      "unit": "38 × 38 cm · 40 o 200 pezzi",
+      "unit": {
+        "quantity": 1,
+        "measure": "confezione",
+        "details": "38 × 38 cm · 40 o 200 pezzi",
+        "pricePer": "confezione"
+      },
       "price": 18.99,
       "description": "Tovaglioli di carta colorati per bar, ristoranti e tavola.",
       "image": "https://m.media-amazon.com/images/I/51HqUh1loeL._AC_UL320_.jpg",
@@ -685,7 +1042,12 @@
       "id": "insetticida-copyr-kenyasafe-extra",
       "name": "Insetticida Copyr KenyaSafe Extra",
       "category": "Insetticida",
-      "unit": "2 bombolette · 250 ml ciascuna",
+      "unit": {
+        "quantity": 2,
+        "measure": "bombolette",
+        "details": "250 ml ciascuna",
+        "pricePer": "bomboletta"
+      },
       "price": 18.99,
       "description": "Insetticida spray per zanzare, mosche e insetti volanti.",
       "image": "https://m.media-amazon.com/images/I/71e7u+0XBhL._AC_UL320_.jpg",

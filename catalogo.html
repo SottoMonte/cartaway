@@ -7,11 +7,11 @@
     <link rel="icon" href="assets/cartaway-cart.svg" type="image/svg+xml" />
     <meta name="description" content="Sfoglia il catalogo Cartaway: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini." />
     <meta name="robots" content="max-image-preview:large" />
-    <link rel="canonical" href="https://cartaway.it/catalogo.html" />
+    <link rel="canonical" href="https://cartaway.it/" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="it_IT" />
     <meta property="og:site_name" content="Cartaway" />
-    <meta property="og:url" content="https://cartaway.it/catalogo.html" />
+    <meta property="og:url" content="https://cartaway.it/" />
     <meta property="og:title" content="Catalogo carta per casa e ufficio a Montoro | Cartaway" />
     <meta property="og:description" content="Sfoglia il catalogo Cartaway: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini." />
     <meta name="twitter:card" content="summary" />
@@ -24,9 +24,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=24" />
+    <link rel="stylesheet" href="shop.css?v=31" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=40" defer></script>
+    <script src="shop.js?v=46" defer></script>
   </head>
   <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -34,14 +34,13 @@
     <div class="notice-bar">
       <div class="notice-bar__inner">
         <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
-        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</button>
         <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
       </div>
     </div>
 
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href="index.html#inizio" aria-label="Cartaway, torna all'inizio">
+        <a class="brand" href="index.html#prodotti" aria-label="Cartaway, torna al catalogo">
           <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
           <span class="brand__wordmark">
             <span class="brand__name" data-brand>Cartaway</span>
@@ -53,9 +52,9 @@
           <span></span>
         </button>
         <nav class="primary-nav" id="primary-navigation" aria-label="Navigazione principale">
-          <a href="catalogo.html" aria-current="page">Prodotti</a>
-          <a href="index.html#consegna">Consegna</a>
-          <a href="index.html#come-funziona">Come ordinare</a>
+          <a href="index.html" aria-current="page">Prodotti</a>
+          <a href="primi-passi.html">Primi passi</a>
+          <a href="primi-passi.html#domande">Domande frequenti</a>
         </nav>
         <button class="cart-trigger" id="cart-open" type="button" aria-label="Apri carrello, 0 articoli">
           <svg class="cart-trigger__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -193,6 +192,24 @@
                 <option value="price-desc">Prezzo decrescente</option>
               </select>
             </label>
+            <div class="product-view-toggle" role="group" aria-label="Visualizzazione prodotti">
+              <button class="product-view-button" type="button" data-product-view="grid" aria-label="Vista griglia" title="Vista griglia" aria-pressed="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              </button>
+              <button class="product-view-button" type="button" data-product-view="list" aria-label="Vista elenco" title="Vista elenco" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" focusable="false">
+                  <path d="M9 5h12M9 12h12M9 19h12" />
+                  <circle cx="4" cy="5" r="1" fill="currentColor" stroke="none" />
+                  <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" />
+                  <circle cx="4" cy="19" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -210,7 +227,7 @@
     <footer class="site-footer" id="contatti">
       <div class="site-footer__main">
         <div class="site-footer__brand">
-          <a class="brand brand--footer" href="index.html#inizio" aria-label="Cartaway, torna all'inizio">
+          <a class="brand brand--footer" href="index.html#prodotti" aria-label="Cartaway, torna al catalogo">
             <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
             <span class="brand__wordmark">
               <span class="brand__name" data-brand>Cartaway</span>
@@ -218,6 +235,7 @@
             </span>
           </a>
           <p id="footer-business-copy">Carta per casa, ufficio e attività. Consegna locale a Montoro e dintorni.</p>
+          <button class="site-footer__bonus" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">Bonus digitale per i clienti</button>
         </div>
         <div class="site-footer__contact-block">
           <h2>Contatti</h2>
@@ -254,11 +272,20 @@
           <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span><span id="product-dialog-category"></span></p>
           <h2 id="product-dialog-title"></h2>
           <p class="product-dialog__unit" id="product-dialog-unit"></p>
-          <p class="product-dialog__price" id="product-dialog-price"></p>
+          <div class="product-price-set product-dialog__prices">
+            <div class="product-price-set__item product-price-set__item--total">
+              <span class="product-price-set__label">Prezzo totale</span>
+              <p class="product-price-set__value product-dialog__price" id="product-dialog-price"></p>
+            </div>
+            <div class="product-price-set__item product-price-set__item--unit" id="product-dialog-unit-price-wrap" hidden>
+              <span class="product-price-set__label">Prezzo unitario</span>
+              <p class="product-price-set__value product-price-set__unit-value" id="product-dialog-unit-price"></p>
+            </div>
+          </div>
           <p class="product-dialog__description" id="product-dialog-description"></p>
           <div class="product-dialog__actions">
             <button class="button button--dark product-dialog__add" id="product-dialog-add" type="button">Aggiungi al carrello <span aria-hidden="true">+</span></button>
-            <a class="button product-dialog__detail" id="product-dialog-detail" href="catalogo.html">Vedi scheda completa <span aria-hidden="true">↗</span></a>
+            <a class="button product-dialog__detail" id="product-dialog-detail" href="index.html">Vedi scheda completa <span aria-hidden="true">↗</span></a>
           </div>
         </div>
       </div>

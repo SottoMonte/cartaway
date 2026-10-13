@@ -181,7 +181,14 @@ collections:
                   - Tovaglie e Tovaglioli / Tovaglietta
                   - Tovaglie e Tovaglioli / Tovaglioli colorati
                   - Cucina
-              - { label: Formato o quantità, name: unit, widget: string }
+              - label: Unità di vendita
+                name: unit
+                widget: object
+                fields:
+                  - { label: Quantità, name: quantity, widget: number, value_type: int, min: 1, required: true }
+                  - { label: Unità di misura, name: measure, widget: string, required: true }
+                  - { label: Dettagli formato, name: details, widget: string, required: false }
+                  - { label: Prezzo per unità, name: pricePer, widget: string, required: true }
               - label: Prezzo in euro
                 name: price
                 widget: number

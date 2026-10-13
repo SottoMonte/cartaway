@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#183d32" />
+    <link rel="icon" href="assets/cartaway-cart.svg" type="image/svg+xml" />
+    <meta
+      name="description"
+      content="Primi passi per ordinare da Cartaway: come funziona la richiesta, zone di consegna e risposte alle domande frequenti."
+    />
+    <meta name="robots" content="max-image-preview:large" />
+    <link rel="canonical" href="https://cartaway.it/primi-passi.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:site_name" content="Cartaway" />
+    <meta property="og:url" content="https://cartaway.it/primi-passi.html" />
+    <meta property="og:title" content="Primi passi e FAQ | Cartaway" />
+    <meta property="og:description" content="Come ordinare, zone di consegna e risposte alle domande frequenti di Cartaway." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Primi passi e FAQ | Cartaway" />
+    <meta name="twitter:description" content="Come ordinare, zone di consegna e risposte alle domande frequenti di Cartaway." />
+    <title>Primi passi e FAQ | Cartaway</title>
+    <script id="seo-structured-data" type="application/ld+json">
+      {"@context":"https://schema.org","@type":"WebPage","@id":"https://cartaway.it/primi-passi.html#webpage","url":"https://cartaway.it/primi-passi.html","name":"Primi passi e FAQ | Cartaway","inLanguage":"it-IT"}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="shop.css?v=31" />
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
+    <script src="shop.js?v=48" defer></script>
+  </head>
+  <body data-page="help">
+    <a class="skip-link" href="#main">Salta al contenuto</a>
+
+    <div class="notice-bar">
+      <div class="notice-bar__inner">
+        <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
+        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</button>
+        <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="primi-passi.html#inizio" aria-label="Cartaway, torna all'inizio">
+          <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
+          <span class="brand__wordmark">
+            <span class="brand__name" data-brand>Cartaway</span>
+            <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
+          </span>
+        </a>
+        <button
+          class="menu-toggle"
+          id="menu-toggle"
+          type="button"
+          aria-label="Apri il menu"
+          aria-controls="primary-navigation"
+          aria-expanded="false"
+        >
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="primary-nav" id="primary-navigation" aria-label="Navigazione principale">
+          <a href="index.html">Prodotti</a>
+          <a href="#consegna">Consegna</a>
+          <a href="#come-funziona">Come ordinare</a>
+          <a href="#domande">Domande frequenti</a>
+        </nav>
+        <button class="cart-trigger" id="cart-open" type="button" aria-label="Apri carrello, 0 articoli">
+          <svg class="cart-trigger__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="8" cy="21" r="1" />
+            <circle cx="19" cy="21" r="1" />
+            <path d="M2 3h2l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L22 7H5" />
+          </svg>
+          <span class="cart-trigger__label">Carrello</span>
+          <span class="cart-count" id="cart-count" aria-live="off">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="inizio" aria-labelledby="hero-title" aria-roledescription="carosello">
+        <img
+          class="hero__image"
+          id="hero-image"
+          src="https://images.unsplash.com/photo-1608494133726-bb93324274c8?auto=format&fit=crop&w=2000&q=88"
+          alt="Prodotti in carta per la casa"
+          fetchpriority="high"
+        />
+        <div class="hero__content">
+          <p class="eyebrow"><span class="eyebrow__rule" aria-hidden="true"></span><span id="hero-eyebrow">LA CARTA, VICINO A TE</span></p>
+          <h1 id="hero-title">Casa e ufficio, mai senza.</h1>
+          <p class="hero__intro" id="hero-intro">
+            Carta igienica, rotoli cucina e tutto l'essenziale. Ordini in pochi passaggi, noi te li portiamo.
+          </p>
+          <div class="hero__actions">
+            <a class="button button--lime" id="hero-action" href="index.html"><span id="hero-action-label">Scegli i prodotti</span><span aria-hidden="true">↗</span></a>
+            <p class="hero__delivery"><strong id="hero-delivery-highlight">Montoro: circa 2 ore</strong><span id="hero-delivery-secondary">Comuni vicini: in giornata</span></p>
+          </div>
+        </div>
+        <p class="hero__caption">
+          <span id="hero-caption">UNA SCORTA IN MENO A CUI PENSARE</span>
+          <span class="hero__controls" role="group" aria-label="Controlli carosello">
+            <button id="hero-previous" type="button" aria-label="Slide precedente" title="Slide precedente">←</button>
+            <button id="hero-toggle" type="button" aria-label="Metti in pausa lo scorrimento automatico" title="Metti in pausa">⏸</button>
+            <button id="hero-next" type="button" aria-label="Slide successiva" title="Slide successiva">→</button>
+            <span id="hero-slide-count">01 / 04</span>
+          </span>
+        </p>
+      </section>
+
+      <section class="benefit-strip" aria-label="Vantaggi del servizio">
+        <div class="benefit-strip__inner">
+          <p><span class="benefit-strip__index">01</span><strong>Consegna locale</strong><span>Montoro e comuni vicini</span></p>
+          <p><span class="benefit-strip__index">02</span><strong>Riepilogo semplice</strong><span>Ricevilo via email</span></p>
+          <p><span class="benefit-strip__index">03</span><strong>Solo l'essenziale</strong><span>Casa, cucina e ufficio</span></p>
+        </div>
+      </section>
+
+      <section class="delivery" id="consegna" aria-labelledby="delivery-title">
+        <div class="delivery__inner">
+          <div class="delivery__intro">
+            <p class="eyebrow eyebrow--light"><span class="eyebrow__rule" aria-hidden="true"></span> CONSEGNA DI ZONA</p>
+            <h2 id="delivery-title">Vicino è<br />davvero vicino.</h2>
+            <p>Portiamo la tua spesa di carta a casa o in ufficio. Prima di partire, confermiamo sempre tempi e disponibilità.</p>
+          </div>
+          <div class="delivery-zones" id="delivery-zones">
+            <article class="delivery-zone delivery-zone--primary">
+              <span class="delivery-zone__label">ZONA 01</span>
+              <h3>Montoro</h3>
+              <p>Consegna gratuita, senza importo minimo. Ordini piccoli benvenuti; entro circa 2 ore.</p>
+            </article>
+            <article class="delivery-zone">
+              <span class="delivery-zone__label">ZONA 02</span>
+              <h3>Comuni vicini</h3>
+              <p>Solofra, Forino e Contrada: consegna a €5 sotto €30, gratuita da €30.</p>
+            </article>
+            <article class="delivery-zone">
+              <span class="delivery-zone__label">ZONA 03</span>
+              <h3>Sei più lontano?</h3>
+              <p>Fisciano, Bracigliano e Mercato San Severino: consegna a pagamento, €5,00.</p>
+            </article>
+          </div>
+          <p class="delivery__disclaimer" id="delivery-disclaimer">Tempi e disponibilità sono indicativi. Costo e condizioni di consegna dipendono dalla zona e si confermano con l'attività.</p>
+        </div>
+      </section>
+
+      <section class="how-it-works section-wrap" id="come-funziona" aria-labelledby="how-title">
+        <div class="section-heading section-heading--compact">
+          <div>
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> TRE PASSAGGI</p>
+            <h2 id="how-title">Fatto, senza<br />perdere tempo.</h2>
+          </div>
+          <p class="section-heading__note">Riceviamo anche noi il riepilogo della richiesta. Verifichiamo la disponibilità e, se un prodotto manca, ti contatteremo noi.</p>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <span class="step__number">01</span>
+            <h3>Scegli</h3>
+            <p>Aggiungi al carrello carta e prodotti che ti servono.</p>
+          </article>
+          <article class="step">
+            <span class="step__number">02</span>
+            <h3>Invia</h3>
+            <p>Inserisci i dati e ricevi via email il riepilogo della richiesta.</p>
+          </article>
+          <article class="step">
+            <span class="step__number">03</span>
+            <h3>Ti aggiorniamo</h3>
+            <p>Verifichiamo la disponibilità. Se un prodotto non è disponibile, ti contatteremo noi: non devi fare nulla.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="faq-band" id="domande" aria-labelledby="faq-title">
+        <div class="faq-band__inner">
+          <div>
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> PRIMA DI ORDINARE</p>
+            <h2 id="faq-title">Due cose<br />da sapere.</h2>
+          </div>
+          <div class="faq-list">
+            <details>
+              <summary>Il tempo di consegna è garantito?</summary>
+              <p>No: sono stime. Confermiamo l'orario in base alla zona, alla disponibilità e al momento della richiesta.</p>
+            </details>
+            <details>
+              <summary>Come si paga?</summary>
+              <p>Il sito non raccoglie pagamenti. Modalità di pagamento, totale e costo di consegna vengono concordati al momento della conferma.</p>
+            </details>
+            <details>
+              <summary>C'è un minimo d'ordine? Quanto costa la consegna?</summary>
+              <ul class="delivery-policy-list">
+                <li><strong>Zona 01</strong><span id="zone-01-delivery-faq">Consegna gratuita, senza importo minimo d'ordine.</span></li>
+                <li><strong>Zona 02</strong><span id="zone-02-delivery-faq">Ordine minimo €30,00; consegna gratuita da €30,00.</span></li>
+                <li><strong>Zona 03</strong><span id="zone-03-delivery-faq">Consegna a pagamento: €5,00.</span></li>
+              </ul>
+            </details>
+            <details>
+              <summary>Come si utilizza il Buono Tech?</summary>
+              <p>Il Buono Tech può essere generato sul primo ordine del mese: vale il <span data-tech-voucher-standard-percent>25%</span> della spesa per gli ordini non ricorrenti e il <span data-tech-voucher-recurring-percent>50%</span> per gli ordini ricorrenti, fino a un massimo di <span data-tech-voucher-maximum>25 €</span>, senza spesa minima. È valido per <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. Vale per un solo intervento. Non è convertibile in denaro né cumulabile con altri buoni. Un solo buono per cliente al mese. L'attivazione è soggetta a verifica dell'attività. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
+            </details>
+            <details>
+              <summary>Come funziona l'ordine ricorrente?</summary>
+              <p>Scegli una consegna ogni <span id="recurring-frequency-faq">30 o 60 giorni</span>: hai il <span id="recurring-discount-faq">5%</span> di sconto e prezzi bloccati per <span id="recurring-price-lock-faq">12 mesi</span>. Puoi indicare un giorno fisso del mese. Con l'ordine ricorrente, la validità del Buono Tech si estende a <span data-tech-voucher-recurring-validity>90 giorni</span> dalla consegna. Il sito invia una richiesta, non attiva rinnovi automatici: frequenza e consegna si concordano con l'attività.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer" id="contatti">
+      <div class="site-footer__main">
+        <div class="site-footer__brand">
+          <a class="brand brand--footer" href="primi-passi.html#inizio" aria-label="Cartaway, torna all'inizio">
+            <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
+            <span class="brand__wordmark">
+              <span class="brand__name" data-brand>Cartaway</span>
+              <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
+            </span>
+          </a>
+          <p id="footer-business-copy">Carta per casa, ufficio e attività. Consegna locale a Montoro e dintorni.</p>
+        </div>
+        <div class="site-footer__contact-block">
+          <h2>Contatti</h2>
+          <a id="contact-whatsapp" href="https://wa.me/393477095289" target="_blank" rel="noopener noreferrer">Contattaci su WhatsApp <span aria-hidden="true">↗</span></a>
+          <a id="contact-phone" href="tel:+393477095289">+39 347 7095289</a>
+          <a id="contact-email" href="mailto:nicolagal33@gmail.com">nicolagal33@gmail.com</a>
+          <p id="contact-address">Via Biagio de Giovanni, 1, Torchiati di Montoro (AV)</p>
+        </div>
+      </div>
+      <section class="site-footer__legal" id="legal-details" aria-labelledby="legal-details-title">
+        <h2 id="legal-details-title">Dati dell'impresa</h2>
+        <dl class="site-footer__legal-list" id="legal-details-list"></dl>
+      </section>
+      <div class="site-footer__bottom">
+        <span>© <span id="current-year"></span> <span data-brand>Cartaway</span></span>
+        <span>Ordini e pagamenti confermati direttamente con l'attività.</span>
+        <a href="#inizio">Torna su <span aria-hidden="true">↑</span></a>
+      </div>
+    </footer>
+
+    <dialog class="product-dialog" id="product-dialog" aria-labelledby="product-dialog-title">
+      <div class="product-dialog__layout">
+        <div class="product-dialog__gallery">
+          <div class="product-dialog__stage">
+            <img id="product-dialog-image" src="" alt="" />
+            <span class="product-dialog__counter" id="product-dialog-counter" aria-live="polite"></span>
+            <button class="product-dialog__arrow product-dialog__arrow--previous" id="product-dialog-previous" type="button" aria-label="Foto precedente">←</button>
+            <button class="product-dialog__arrow product-dialog__arrow--next" id="product-dialog-next" type="button" aria-label="Foto successiva">→</button>
+          </div>
+          <div class="product-dialog__thumbnails" id="product-dialog-thumbnails" role="group" aria-label="Scegli una foto" hidden></div>
+        </div>
+        <div class="product-dialog__content">
+          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi anteprima prodotto">×</button></form>
+          <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span><span id="product-dialog-category"></span></p>
+          <h2 id="product-dialog-title"></h2>
+          <p class="product-dialog__unit" id="product-dialog-unit"></p>
+          <p class="product-dialog__price" id="product-dialog-price"></p>
+          <p class="product-dialog__description" id="product-dialog-description"></p>
+          <div class="product-dialog__actions">
+            <button class="button button--dark product-dialog__add" id="product-dialog-add" type="button">Aggiungi al carrello <span aria-hidden="true">+</span></button>
+            <a class="button product-dialog__detail" id="product-dialog-detail" href="index.html">Vedi scheda completa <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="promo-dialog" id="promo-dialog" aria-labelledby="promo-dialog-title" aria-describedby="promo-dialog-description promo-dialog-terms">
+      <div class="promo-dialog__content">
+        <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi promozione">×</button></form>
+        <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> PROMO PER ORDINI B2B</p>
+        <h2 id="promo-dialog-title">Il Buono Tech del mese</h2>
+        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine del mese può ottenere un Buono Tech pari al <span data-tech-voucher-standard-percent>25%</span> della spesa se non ricorrente o al <span data-tech-voucher-recurring-percent>50%</span> se ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.</p>
+        <div class="promo-dialog__example" data-tech-voucher-example>
+          <span>Per ottenere il buono massimo con ordine non ricorrente</span>
+          <strong><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+          <span>Per ottenere il buono massimo con ordine ricorrente</span>
+          <strong><span data-tech-voucher-recurring-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+        </div>
+        <p class="promo-dialog__terms" id="promo-dialog-terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
+      </div>
+    </dialog>
+
+    <dialog class="delivery-dialog" id="delivery-dialog" aria-labelledby="delivery-dialog-title" aria-describedby="delivery-dialog-note">
+      <div class="delivery-dialog__panel">
+        <header class="delivery-dialog__header">
+          <div>
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> CONSEGNA DI ZONA</p>
+            <h2 id="delivery-dialog-title">Zone e tempi</h2>
+          </div>
+          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi zone e tempi">×</button></form>
+        </header>
+        <div class="delivery-dialog__body">
+          <div class="delivery-dialog__map-wrap">
+            <div class="delivery-dialog__map" id="delivery-map" role="region" aria-label="Mappa interattiva delle zone di consegna"></div>
+          </div>
+          <aside class="delivery-dialog__sidebar">
+            <h3>Seleziona una zona</h3>
+            <div class="delivery-dialog__zones" id="delivery-dialog-zones"></div>
+            <p class="delivery-dialog__note" id="delivery-dialog-note">I marker indicano i centri comunali, non i confini esatti di copertura.</p>
+            <p class="delivery-dialog__service-note" id="delivery-service-note"></p>
+            <p class="delivery-dialog__status" id="delivery-map-status" role="status" aria-live="polite"></p>
+          </aside>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="cart-dialog" id="cart-dialog" aria-labelledby="cart-title">
+      <div class="cart-dialog__sheet">
+        <header class="cart-dialog__header">
+          <div>
+            <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> LA TUA SPESA</p>
+            <h2 id="cart-title">Carrello</h2>
+          </div>
+          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+        </header>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-empty" id="cart-empty">
+          <span aria-hidden="true">+</span>
+          <h3>Il carrello è vuoto.</h3>
+          <p>Quando trovi quello che ti serve, aggiungilo qui.</p>
+          <button class="text-button" id="continue-shopping" type="button">Torna ai prodotti <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="cart-summary" id="cart-summary">
+          <p><span id="cart-subtotal-label">Subtotale articoli</span><strong id="cart-subtotal">€0,00</strong></p>
+          <p class="cart-discount-row" id="cart-discount-row" hidden><span>Sconto ricorrente</span><strong id="cart-discount-amount">−€0,00</strong></p>
+          <p class="cart-shipping-row"><span>Consegna</span><strong id="cart-delivery-cost" data-delivery-state="unknown">Da stimare</strong></p>
+          <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Seleziona il comune per conoscere costo e modalità di consegna.</small>
+          <p class="cart-total-row"><span>Totale stimato</span><strong id="cart-estimated-total">Da confermare</strong></p>
+          <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
+            <p>🎁 <span id="cart-cashback-label">Buono Tech stimato per un ordine singolo, se è il primo del mese</span>: <strong id="cart-cashback-amount">€0,00</strong>.</p>
+            <small id="cart-cashback-note">Stima pari al 25% della spesa con ordine non ricorrente o al 50% con ordine ricorrente, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
+          </div>
+        </div>
+        <form class="checkout-form" id="checkout-form">
+          <h3>Dati per la consegna</h3>
+          <label class="form-field">
+            <span>Email per la conferma della richiesta</span>
+            <input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" />
+          </label>
+          <label class="form-field">
+            <span>Telefono per ricontatto</span>
+            <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" />
+          </label>
+          <div class="form-row">
+            <label class="form-field">
+              <span>Comune</span>
+              <select id="delivery-town" name="city" required>
+                <option value="">Seleziona il comune</option>
+                <option value="Montoro">Montoro</option>
+                <option value="Solofra">Solofra</option>
+                <option value="Forino">Forino</option>
+                <option value="Contrada">Contrada</option>
+                <option value="Fisciano">Fisciano</option>
+                <option value="Bracigliano">Bracigliano</option>
+                <option value="Mercato San Severino">Mercato San Severino</option>
+                <option value="altro">Altro comune</option>
+              </select>
+            </label>
+            <label class="form-field" id="other-town-field" hidden>
+              <span>Scrivi il comune</span>
+              <input id="other-town" name="other-town" type="text" autocomplete="address-level2" maxlength="80" />
+            </label>
+          </div>
+          <label class="form-field">
+            <span>Via e numero civico</span>
+            <input name="address" type="text" autocomplete="street-address" required maxlength="140" />
+          </label>
+          <p class="delivery-estimate" id="delivery-estimate" role="status" aria-live="polite">Seleziona il comune per stimare la consegna.</p>
+          <div class="form-row">
+            <label class="form-field">
+              <span>Data preferita <span class="form-field__optional">facoltativa</span></span>
+              <input id="preferred-date" name="preferred-date" type="date" />
+            </label>
+            <div class="form-field preferred-time-range">
+              <span>Fascia oraria preferita <span class="form-field__optional">facoltativa</span></span>
+              <div class="preferred-time-range__inputs">
+                <label class="form-field"><span>Dalle</span><input id="preferred-time-start" name="preferred-time-start" type="time" /></label>
+                <label class="form-field"><span>Alle</span><input id="preferred-time-end" name="preferred-time-end" type="time" /></label>
+              </div>
+            </div>
+          </div>
+          <label class="recurring-order">
+            <span class="recurring-order__copy">
+              <span class="recurring-order__title">Ordine ricorrente</span>
+              <span class="recurring-order__hint" id="recurring-hint">Sconto 5% · prezzo bloccato per 12 mesi</span>
+            </span>
+            <input class="recurring-order__switch" name="recurring-order" type="checkbox" value="yes" role="switch" />
+          </label>
+          <div class="recurring-order__options" id="recurring-options" hidden>
+            <label class="form-field">
+              <span>Frequenza di consegna</span>
+              <select id="recurring-frequency" name="recurring-frequency"></select>
+            </label>
+            <label class="form-field" id="recurring-day-field">
+              <span>Giorno fisso del mese (1-28)</span>
+              <input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" />
+            </label>
+            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
+          </div>
+          <label class="form-field">
+            <span>Note per la consegna <span class="form-field__optional">facoltative</span></span>
+            <textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea>
+          </label>
+          <label class="form-field">
+            <span>Nome <span class="form-field__optional">facoltativo</span></span>
+            <input name="name" type="text" autocomplete="name" maxlength="80" />
+          </label>
+          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled>
+            <span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span>
+          </button>
+            <p class="checkout-note">Riceverai via email un riepilogo e l'attività riceverà la richiesta. L'ordine non è ancora confermato: verificheremo disponibilità, consegna e pagamento. Se un prodotto non è disponibile, ti contatteremo noi; non devi fare nulla.</p>
+          </form>
+          <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+      </div>
+    </dialog>
+
+    <p class="live-message" id="live-message" role="status" aria-live="polite"></p>
+  </body>
+</html>

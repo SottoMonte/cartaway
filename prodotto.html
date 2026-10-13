@@ -22,9 +22,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=24" />
+    <link rel="stylesheet" href="shop.css?v=31" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=40" defer></script>
+    <script src="shop.js?v=46" defer></script>
   </head>
   <body data-page="product">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -32,14 +32,13 @@
     <div class="notice-bar">
       <div class="notice-bar__inner">
         <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
-        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</button>
         <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
       </div>
     </div>
 
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href="index.html#inizio" aria-label="Cartaway, torna all'inizio">
+        <a class="brand" href="index.html#prodotti" aria-label="Cartaway, torna al catalogo">
           <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
           <span class="brand__wordmark">
             <span class="brand__name" data-brand>Cartaway</span>
@@ -51,9 +50,9 @@
           <span></span>
         </button>
         <nav class="primary-nav" id="primary-navigation" aria-label="Navigazione principale">
-          <a href="catalogo.html" aria-current="page">Prodotti</a>
-          <a href="index.html#consegna">Consegna</a>
-          <a href="index.html#come-funziona">Come ordinare</a>
+          <a href="index.html" aria-current="page">Prodotti</a>
+          <a href="primi-passi.html">Primi passi</a>
+          <a href="primi-passi.html#domande">Domande frequenti</a>
         </nav>
         <button class="cart-trigger" id="cart-open" type="button" aria-label="Apri carrello, 0 articoli">
           <svg class="cart-trigger__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -70,7 +69,7 @@
     <main id="main">
       <section class="product-detail-page section-wrap">
         <nav class="breadcrumbs" aria-label="Percorso di navigazione">
-          <a href="index.html">Home</a><span aria-hidden="true">/</span><a href="catalogo.html">Catalogo</a><span aria-hidden="true">/</span><span id="detail-breadcrumb-title" aria-current="page">Prodotto</span>
+          <a href="index.html">Catalogo</a><span aria-hidden="true">/</span><span id="detail-breadcrumb-title" aria-current="page">Prodotto</span>
         </nav>
 
         <section class="product-detail" id="product-detail" aria-labelledby="detail-title" hidden>
@@ -87,14 +86,23 @@
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span><span id="detail-category"></span></p>
             <h1 id="detail-title"></h1>
             <p class="product-detail__unit" id="detail-unit"></p>
-            <p class="product-detail__price" id="detail-price"></p>
+            <div class="product-price-set product-detail__prices">
+              <div class="product-price-set__item product-price-set__item--total">
+                <span class="product-price-set__label">Prezzo totale</span>
+                <p class="product-price-set__value product-detail__price" id="detail-price"></p>
+              </div>
+              <div class="product-price-set__item product-price-set__item--unit" id="detail-unit-price-wrap" hidden>
+                <span class="product-price-set__label">Prezzo unitario</span>
+                <p class="product-price-set__value product-price-set__unit-value" id="detail-unit-price"></p>
+              </div>
+            </div>
             <p class="product-detail__description" id="detail-description"></p>
             <section class="product-detail__specifications" id="detail-specifications-section" aria-labelledby="specifications-title" hidden>
               <h2 id="specifications-title">Caratteristiche</h2>
               <dl id="detail-specifications"></dl>
             </section>
             <button class="button button--dark product-detail__add" id="detail-add" type="button">Aggiungi al carrello <span aria-hidden="true">+</span></button>
-            <p class="product-detail__delivery">Consegna a Montoro e dintorni. <a href="index.html#consegna">Verifica zone e tempi</a>.</p>
+            <p class="product-detail__delivery">Consegna a Montoro e dintorni. <a href="primi-passi.html#consegna">Verifica zone e tempi</a>.</p>
           </div>
         </section>
 
@@ -102,7 +110,7 @@
           <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> SCHEDA PRODOTTO</p>
           <h1 id="product-not-found-title">Prodotto non trovato</h1>
           <p>Il prodotto potrebbe non essere disponibile o il link non è corretto.</p>
-          <a class="button button--dark" href="catalogo.html">Vai al catalogo <span aria-hidden="true">↗</span></a>
+          <a class="button button--dark" href="index.html">Vai al catalogo <span aria-hidden="true">↗</span></a>
         </section>
       </section>
     </main>
@@ -110,7 +118,7 @@
     <footer class="site-footer" id="contatti">
       <div class="site-footer__main">
         <div class="site-footer__brand">
-          <a class="brand brand--footer" href="index.html#inizio" aria-label="Cartaway, torna all'inizio">
+          <a class="brand brand--footer" href="index.html#prodotti" aria-label="Cartaway, torna al catalogo">
             <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
             <span class="brand__wordmark">
               <span class="brand__name" data-brand>Cartaway</span>
@@ -118,6 +126,7 @@
             </span>
           </a>
           <p id="footer-business-copy">Carta per casa, ufficio e attività. Consegna locale a Montoro e dintorni.</p>
+          <button class="site-footer__bonus" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">Bonus digitale per i clienti</button>
         </div>
         <div class="site-footer__contact-block">
           <h2>Contatti</h2>
