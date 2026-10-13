@@ -22,9 +22,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=31" />
+    <link rel="stylesheet" href="shop.css?v=37" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=46" defer></script>
+    <script src="shop.js?v=51" defer></script>
   </head>
   <body data-page="product">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -194,7 +194,14 @@
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> LA TUA SPESA</p>
             <h2 id="cart-title">Carrello</h2>
           </div>
-          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+          <div class="cart-dialog__header-actions">
+            <button class="cart-dialog__clear" id="cart-clear" type="button" aria-label="Svuota carrello" title="Svuota carrello" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M3 6h18M8 6V4h8v2m-11 0 1 15h12l1-15M10 11v6m4-6v6" />
+              </svg>
+            </button>
+            <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+          </div>
         </header>
         <div class="cart-items" id="cart-items"></div>
         <div class="cart-empty" id="cart-empty">

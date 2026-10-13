@@ -24,9 +24,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=31" />
+    <link rel="stylesheet" href="shop.css?v=37" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=46" defer></script>
+    <script src="shop.js?v=51" defer></script>
   </head>
   <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -209,12 +209,49 @@
                   <circle cx="4" cy="19" r="1" fill="currentColor" stroke="none" />
                 </svg>
               </button>
+              <button class="product-view-button" type="button" data-product-view="excel" aria-label="Vista Excel" title="Vista Excel" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="18" height="18" rx="1" />
+                  <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+                </svg>
+              </button>
             </div>
+            <button class="catalog-share-button" id="catalog-share" type="button" title="Copia il link con filtri e vista selezionati">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect x="8" y="8" width="12" height="12" rx="1" />
+                <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+              </svg>
+              <span>Copia link</span>
+            </button>
           </div>
         </div>
 
+        <p class="catalog-share-status" id="catalog-share-status" role="status" aria-live="polite"></p>
         <p class="catalog-status" id="product-count" role="status" aria-live="polite">Carico il catalogo…</p>
         <div class="product-grid" id="product-grid"></div>
+        <div class="product-sheet" id="product-sheet" hidden>
+          <div class="product-sheet__toolbar">
+            <button class="product-sheet__add-all" id="product-sheet-add-all" type="button">
+              <span>Aggiungi tutto</span><span aria-hidden="true">+</span>
+            </button>
+          </div>
+          <div class="product-sheet__scroll" role="region" aria-label="Catalogo in vista Excel" tabindex="0">
+            <table class="product-sheet__table">
+              <thead>
+                <tr>
+                  <th scope="col">Articolo</th>
+                  <th scope="col">Categoria</th>
+                  <th scope="col">Formato</th>
+                  <th scope="col">Prezzo confezione</th>
+                  <th scope="col">Prezzo unitario</th>
+                  <th scope="col">Quantità</th>
+                </tr>
+              </thead>
+              <tbody id="product-sheet-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="product-sheet-preview" id="product-sheet-preview" role="tooltip" hidden></div>
         <div class="empty-state" id="empty-state" hidden>
           <span class="empty-state__mark" aria-hidden="true">—</span>
           <h3>Nessun prodotto trovato.</h3>
@@ -338,7 +375,14 @@
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> LA TUA SPESA</p>
             <h2 id="cart-title">Carrello</h2>
           </div>
-          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+          <div class="cart-dialog__header-actions">
+            <button class="cart-dialog__clear" id="cart-clear" type="button" aria-label="Svuota carrello" title="Svuota carrello" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M3 6h18M8 6V4h8v2m-11 0 1 15h12l1-15M10 11v6m4-6v6" />
+              </svg>
+            </button>
+            <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+          </div>
         </header>
         <div class="cart-items" id="cart-items"></div>
         <div class="cart-empty" id="cart-empty">

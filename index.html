@@ -30,11 +30,11 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=31" />
+    <link rel="stylesheet" href="shop.css?v=37" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=46" defer></script>
+    <script src="shop.js?v=51" defer></script>
   </head>
-  <body data-page="catalog">
+   <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
 
     <div class="notice-bar">
@@ -53,14 +53,7 @@
             <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
           </span>
         </a>
-        <button
-          class="menu-toggle"
-          id="menu-toggle"
-          type="button"
-          aria-label="Apri il menu"
-          aria-controls="primary-navigation"
-          aria-expanded="false"
-        >
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Apri il menu" aria-controls="primary-navigation" aria-expanded="false">
           <span></span>
           <span></span>
         </button>
@@ -83,6 +76,9 @@
 
     <main id="main">
       <section class="products section-wrap catalog-page" id="prodotti" aria-labelledby="catalog-title">
+        <nav class="breadcrumbs" aria-label="Percorso di navigazione">
+          <a href="index.html">Home</a><span aria-hidden="true">/</span><span aria-current="page">Catalogo</span>
+        </nav>
         <div class="section-heading">
           <div>
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> IL CATALOGO</p>
@@ -219,12 +215,49 @@
                   <circle cx="4" cy="19" r="1" fill="currentColor" stroke="none" />
                 </svg>
               </button>
+              <button class="product-view-button" type="button" data-product-view="excel" aria-label="Vista Excel" title="Vista Excel" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="18" height="18" rx="1" />
+                  <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+                </svg>
+              </button>
             </div>
+            <button class="catalog-share-button" id="catalog-share" type="button" title="Copia il link con filtri e vista selezionati">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect x="8" y="8" width="12" height="12" rx="1" />
+                <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+              </svg>
+              <span>Copia link</span>
+            </button>
           </div>
         </div>
 
+        <p class="catalog-share-status" id="catalog-share-status" role="status" aria-live="polite"></p>
         <p class="catalog-status" id="product-count" role="status" aria-live="polite">Carico il catalogo…</p>
         <div class="product-grid" id="product-grid"></div>
+        <div class="product-sheet" id="product-sheet" hidden>
+          <div class="product-sheet__toolbar">
+            <button class="product-sheet__add-all" id="product-sheet-add-all" type="button">
+              <span>Aggiungi tutto</span><span aria-hidden="true">+</span>
+            </button>
+          </div>
+          <div class="product-sheet__scroll" role="region" aria-label="Catalogo in vista Excel" tabindex="0">
+            <table class="product-sheet__table">
+              <thead>
+                <tr>
+                  <th scope="col">Articolo</th>
+                  <th scope="col">Categoria</th>
+                  <th scope="col">Formato</th>
+                  <th scope="col">Prezzo confezione</th>
+                  <th scope="col">Prezzo unitario</th>
+                  <th scope="col">Quantità</th>
+                </tr>
+              </thead>
+              <tbody id="product-sheet-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="product-sheet-preview" id="product-sheet-preview" role="tooltip" hidden></div>
         <div class="empty-state" id="empty-state" hidden>
           <span class="empty-state__mark" aria-hidden="true">—</span>
           <h3>Nessun prodotto trovato.</h3>
@@ -262,7 +295,7 @@
       <div class="site-footer__bottom">
         <span>© <span id="current-year"></span> <span data-brand>Cartaway</span></span>
         <span>Ordini e pagamenti confermati direttamente con l'attività.</span>
-        <a href="index.html#prodotti">Torna su <span aria-hidden="true">↑</span></a>
+        <a href="#main">Torna su <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
 
@@ -348,7 +381,14 @@
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> LA TUA SPESA</p>
             <h2 id="cart-title">Carrello</h2>
           </div>
-          <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+          <div class="cart-dialog__header-actions">
+            <button class="cart-dialog__clear" id="cart-clear" type="button" aria-label="Svuota carrello" title="Svuota carrello" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M3 6h18M8 6V4h8v2m-11 0 1 15h12l1-15M10 11v6m4-6v6" />
+              </svg>
+            </button>
+            <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+          </div>
         </header>
         <div class="cart-items" id="cart-items"></div>
         <div class="cart-empty" id="cart-empty">
@@ -370,14 +410,8 @@
         </div>
         <form class="checkout-form" id="checkout-form">
           <h3>Dati per la consegna</h3>
-          <label class="form-field">
-            <span>Email per la conferma della richiesta</span>
-            <input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" />
-          </label>
-          <label class="form-field">
-            <span>Telefono per ricontatto</span>
-            <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" />
-          </label>
+          <label class="form-field"><span>Email per la conferma della richiesta</span><input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" /></label>
+          <label class="form-field"><span>Telefono per ricontatto</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" /></label>
           <div class="form-row">
             <label class="form-field">
               <span>Comune</span>
@@ -393,21 +427,12 @@
                 <option value="altro">Altro comune</option>
               </select>
             </label>
-            <label class="form-field" id="other-town-field" hidden>
-              <span>Scrivi il comune</span>
-              <input id="other-town" name="other-town" type="text" autocomplete="address-level2" maxlength="80" />
-            </label>
+            <label class="form-field" id="other-town-field" hidden><span>Scrivi il comune</span><input id="other-town" name="other-town" type="text" autocomplete="address-level2" maxlength="80" /></label>
           </div>
-          <label class="form-field">
-            <span>Via e numero civico</span>
-            <input name="address" type="text" autocomplete="street-address" required maxlength="140" />
-          </label>
+          <label class="form-field"><span>Via e numero civico</span><input name="address" type="text" autocomplete="street-address" required maxlength="140" /></label>
           <p class="delivery-estimate" id="delivery-estimate" role="status" aria-live="polite">Seleziona il comune per stimare la consegna.</p>
           <div class="form-row">
-            <label class="form-field">
-              <span>Data preferita <span class="form-field__optional">facoltativa</span></span>
-              <input id="preferred-date" name="preferred-date" type="date" />
-            </label>
+            <label class="form-field"><span>Data preferita <span class="form-field__optional">facoltativa</span></span><input id="preferred-date" name="preferred-date" type="date" /></label>
             <div class="form-field preferred-time-range">
               <span>Fascia oraria preferita <span class="form-field__optional">facoltativa</span></span>
               <div class="preferred-time-range__inputs">
@@ -424,30 +449,16 @@
             <input class="recurring-order__switch" name="recurring-order" type="checkbox" value="yes" role="switch" />
           </label>
           <div class="recurring-order__options" id="recurring-options" hidden>
-            <label class="form-field">
-              <span>Frequenza di consegna</span>
-              <select id="recurring-frequency" name="recurring-frequency"></select>
-            </label>
-            <label class="form-field" id="recurring-day-field">
-              <span>Giorno fisso del mese (1-28)</span>
-              <input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" />
-            </label>
+            <label class="form-field"><span>Frequenza di consegna</span><select id="recurring-frequency" name="recurring-frequency"></select></label>
+            <label class="form-field" id="recurring-day-field"><span>Giorno fisso del mese (1-28)</span><input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" /></label>
             <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
           </div>
-          <label class="form-field">
-            <span>Note per la consegna <span class="form-field__optional">facoltative</span></span>
-            <textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea>
-          </label>
-          <label class="form-field">
-            <span>Nome <span class="form-field__optional">facoltativo</span></span>
-            <input name="name" type="text" autocomplete="name" maxlength="80" />
-          </label>
-          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled>
-            <span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span>
-          </button>
-            <p class="checkout-note">Riceverai via email un riepilogo e l'attività riceverà la richiesta. L'ordine non è ancora confermato: verificheremo disponibilità, consegna e pagamento. Se un prodotto non è disponibile, ti contatteremo noi; non devi fare nulla.</p>
-          </form>
-          <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+          <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
+          <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>
+          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled><span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span></button>
+          <p class="checkout-note">Riceverai via email un riepilogo e l'attività riceverà la richiesta. L'ordine non è ancora confermato: verificheremo disponibilità, consegna e pagamento. Se un prodotto non è disponibile, ti contatteremo noi; non devi fare nulla.</p>
+        </form>
+        <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
       </div>
     </dialog>
 

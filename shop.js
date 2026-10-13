@@ -13,6 +13,7 @@ const state = {
   site: {},
   orderSubmitting: false,
   cart: readCart(),
+  sharedOrder: null,
   category: "tutte",
   search: "",
   sort: "featured",
@@ -29,6 +30,7 @@ const state = {
 };
 
 const elements = {
+  cartClear: document.querySelector("#cart-clear"),
   cartCount: document.querySelector("#cart-count"),
   cartDialog: document.querySelector("#cart-dialog"),
   cartEmpty: document.querySelector("#cart-empty"),
@@ -96,6 +98,12 @@ const elements = {
   productSearch: document.querySelector("#product-search"),
   productSort: document.querySelector("#product-sort"),
   productViewButtons: document.querySelectorAll("[data-product-view]"),
+  productSheet: document.querySelector("#product-sheet"),
+  productSheetBody: document.querySelector("#product-sheet-body"),
+  productSheetAddAll: document.querySelector("#product-sheet-add-all"),
+  productSheetPreview: document.querySelector("#product-sheet-preview"),
+  catalogShare: document.querySelector("#catalog-share"),
+  catalogShareStatus: document.querySelector("#catalog-share-status"),
   preferredTimeStart: document.querySelector("#preferred-time-start"),
   preferredTimeEnd: document.querySelector("#preferred-time-end"),
   promoDialog: document.querySelector("#promo-dialog"),
@@ -388,6 +396,7 @@ function categoryFilterButton(category, pressed) {
   button.addEventListener("click", () => {
     state.category = category.value;
     renderCategoryFilters();
+    syncCatalogUrl();
     renderProducts();
   });
   return button;
@@ -485,6 +494,72 @@ function productCard(product) {
       </div>
     </article>
   `;
+}
+
+function productSheetRow(product) {
+  const id = escapeHtml(product.id);
+  const name = String(product.name || "Prodotto");
+  const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
+  const pricePerUnit = productPricePerUnit(product);
+  return `
+    <tr data-sheet-product-id="${id}">
+      <td class="product-sheet__product"><a href="${escapeHtml(productUrl)}" data-open-product="${id}" aria-describedby="product-sheet-preview">${escapeHtml(name)}</a></td>
+      <td class="product-sheet__category">${escapeHtml(String(product.category || "Carta"))}</td>
+      <td>${escapeHtml(productUnitLabel(product.unit) || "—")}</td>
+      <td class="product-sheet__price">${escapeHtml(formatPrice(product.price))}</td>
+      <td class="product-sheet__price">${pricePerUnit === null ? "—" : `${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</td>
+      <td><input class="product-sheet__quantity" type="number" min="0" max="999" step="1" value="0" inputmode="numeric" data-sheet-quantity aria-label="Quantità da aggiungere di ${escapeHtml(name)}" /></td>
+    </tr>
+  `;
+}
+
+let productSheetPreviewTimer = null;
+
+function hideProductSheetPreview() {
+  window.clearTimeout(productSheetPreviewTimer);
+  productSheetPreviewTimer = null;
+  if (elements.productSheetPreview) elements.productSheetPreview.hidden = true;
+}
+
+function scheduleProductSheetPreviewHide() {
+  window.clearTimeout(productSheetPreviewTimer);
+  productSheetPreviewTimer = window.setTimeout(() => {
+    if (elements.productSheetPreview) elements.productSheetPreview.hidden = true;
+    productSheetPreviewTimer = null;
+  }, 100);
+}
+
+function showProductSheetPreview(productId, anchor) {
+  const product = state.products.find((item) => item.id === productId && item.available !== false);
+  const preview = elements.productSheetPreview;
+  if (!product || !preview) return;
+
+  window.clearTimeout(productSheetPreviewTimer);
+  productSheetPreviewTimer = null;
+  const image = productImages(product)[0] || fallbackImage;
+  const pricePerUnit = productPricePerUnit(product);
+  preview.innerHTML = `
+    <img class="product-sheet-preview__image" src="${escapeHtml(safeImageUrl(image))}" alt="${escapeHtml(product.name || "Prodotto")}" />
+    <div class="product-sheet-preview__content">
+      <span class="product-sheet-preview__category">${escapeHtml(productCategoryLabel(product.category))}</span>
+      <strong class="product-sheet-preview__name">${escapeHtml(product.name || "Prodotto")}</strong>
+      <span class="product-sheet-preview__unit">${escapeHtml(productUnitLabel(product.unit) || "Formato non indicato")}</span>
+      <span class="product-sheet-preview__price">${escapeHtml(formatPrice(product.price))}${pricePerUnit === null ? "" : ` · ${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</span>
+      ${product.description ? `<span class="product-sheet-preview__description">${escapeHtml(product.description)}</span>` : ""}
+    </div>
+  `;
+  preview.hidden = false;
+
+  const margin = 12;
+  const anchorBounds = anchor.getBoundingClientRect();
+  const previewBounds = preview.getBoundingClientRect();
+  const left = Math.max(margin, Math.min(anchorBounds.left, window.innerWidth - previewBounds.width - margin));
+  let top = anchorBounds.bottom + 8;
+  if (top + previewBounds.height > window.innerHeight - margin) {
+    top = Math.max(margin, anchorBounds.top - previewBounds.height - 8);
+  }
+  preview.style.left = `${left}px`;
+  preview.style.top = `${top}px`;
 }
 
 function renderProductDialogImage(index = 0) {
@@ -680,9 +755,85 @@ function renderProductDetail() {
   });
 }
 
+function restoreCatalogStateFromUrl() {
+  if (state.page !== "catalog") return;
+
+  const params = new URLSearchParams(window.location.search);
+  state.sharedOrder = params.get("order");
+  const categoryValues = new Set(
+    elements.categoryTree ? [...elements.categoryTree.options].map((option) => option.value) : [],
+  );
+  categoryValues.add("tutte");
+  const requestedCategory = params.get("category");
+  state.category = categoryValues.has(requestedCategory) ? requestedCategory : "tutte";
+
+  const requestedSearch = params.get("q");
+  state.search = requestedSearch || "";
+
+  const sortValues = new Set(
+    elements.productSort ? [...elements.productSort.options].map((option) => option.value) : ["featured"],
+  );
+  const requestedSort = params.get("sort");
+  state.sort = sortValues.has(requestedSort) ? requestedSort : "featured";
+
+  const requestedView = params.get("view");
+  state.view = ["grid", "list", "excel"].includes(requestedView) ? requestedView : "grid";
+
+  if (elements.productSearch) elements.productSearch.value = state.search;
+  if (elements.productSort) elements.productSort.value = state.sort;
+  renderCategoryFilters();
+}
+
+function syncCatalogUrl() {
+  if (state.page !== "catalog") return;
+
+  const url = new URL(window.location.href);
+  ["category", "q", "sort", "view"].forEach((key) => url.searchParams.delete(key));
+  if (state.category !== "tutte") url.searchParams.set("category", state.category);
+  if (state.search.trim()) url.searchParams.set("q", state.search.trim());
+  if (state.sort !== "featured") url.searchParams.set("sort", state.sort);
+  if (state.view !== "grid") url.searchParams.set("view", state.view);
+  window.history.replaceState(window.history.state, "", url);
+  if (elements.catalogShareStatus) elements.catalogShareStatus.textContent = "";
+}
+
+function parseSharedOrder(serializedOrder) {
+  if (serializedOrder === null) return null;
+
+  let entries;
+  try {
+    entries = JSON.parse(serializedOrder);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(entries)) return null;
+
+  const availableProductIds = new Set(
+    state.products
+      .filter((product) => product.available !== false)
+      .map((product) => String(product.id)),
+  );
+  const sharedCart = {};
+  entries.forEach((entry) => {
+    if (!Array.isArray(entry) || entry.length !== 2) return;
+    const [productId, quantity] = entry;
+    if (
+      typeof productId !== "string"
+      || !availableProductIds.has(productId)
+      || !Number.isSafeInteger(quantity)
+      || quantity < 1
+    ) return;
+    sharedCart[productId] = quantity;
+  });
+  return sharedCart;
+}
+
 function renderProducts() {
   if (!elements.productGrid) return;
 
+  const excelView = state.view === "excel";
+  elements.productGrid.hidden = excelView;
+  if (elements.productSheet) elements.productSheet.hidden = !excelView;
   elements.productGrid.classList.toggle("product-grid--list", state.view === "list");
   elements.productViewButtons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.productView === state.view));
@@ -713,10 +864,17 @@ function renderProducts() {
     visibleProducts.sort((first, second) => Number(second.featured === true) - Number(first.featured === true));
   }
 
+  if (elements.productSheetAddAll) elements.productSheetAddAll.disabled = visibleProducts.length === 0;
   if (elements.productCount) {
     elements.productCount.textContent = `${visibleProducts.length} ${visibleProducts.length === 1 ? "prodotto" : "prodotti"}`;
   }
-  elements.productGrid.innerHTML = visibleProducts.map(productCard).join("");
+  if (excelView) {
+    elements.productGrid.replaceChildren();
+    if (elements.productSheetBody) elements.productSheetBody.innerHTML = visibleProducts.map(productSheetRow).join("");
+  } else {
+    elements.productGrid.innerHTML = visibleProducts.map(productCard).join("");
+    if (elements.productSheetBody) elements.productSheetBody.replaceChildren();
+  }
   if (elements.emptyState) elements.emptyState.hidden = visibleProducts.length > 0;
 }
 
@@ -752,6 +910,7 @@ function renderCart() {
 
   elements.cartCount.textContent = String(quantity);
   elements.cartOpen.setAttribute("aria-label", `Apri carrello, ${quantity} ${quantity === 1 ? "articolo" : "articoli"}`);
+  if (elements.cartClear) elements.cartClear.disabled = entries.length === 0;
   elements.cartItems.innerHTML = entries.map(({ product, quantity: itemQuantity }) => {
     const id = escapeHtml(product.id);
     const name = String(product.name || "Prodotto");
@@ -862,6 +1021,37 @@ function setQuantity(productId, quantity) {
   }
   saveCart();
   renderCart();
+}
+
+function addVisibleProductsToCart() {
+  if (!elements.productSheetBody) return;
+
+  let productCount = 0;
+  let unitCount = 0;
+  elements.productSheetBody.querySelectorAll("tr").forEach((row) => {
+    const quantityInput = row.querySelector("[data-sheet-quantity]");
+    const requestedQuantity = Number(quantityInput?.value);
+    if (!Number.isSafeInteger(requestedQuantity) || requestedQuantity < 1) return;
+
+    const productId = row.dataset.sheetProductId;
+    const product = state.products.find((item) => item.id === productId && item.available !== false);
+    if (!product) return;
+
+    const quantity = Math.min(requestedQuantity, 999);
+    state.cart[productId] = (state.cart[productId] || 0) + quantity;
+    productCount += 1;
+    unitCount += quantity;
+  });
+
+  if (productCount === 0) {
+    showMessage("Non ci sono prodotti disponibili da aggiungere.");
+    return;
+  }
+
+  clearCheckoutFeedback();
+  saveCart();
+  renderCart();
+  showMessage(`${unitCount} articoli aggiunti al carrello.`);
 }
 
 function changeQuantity(productId, delta) {
@@ -1573,6 +1763,7 @@ function setupEvents() {
     elements.categorySelect.addEventListener("change", (event) => {
       state.category = event.currentTarget.value;
       renderCategoryFilters();
+      syncCatalogUrl();
       renderProducts();
     });
   }
@@ -1582,6 +1773,7 @@ function setupEvents() {
   if (elements.productSearch) {
     elements.productSearch.addEventListener("input", (event) => {
       state.search = event.currentTarget.value;
+      syncCatalogUrl();
       renderProducts();
     });
   }
@@ -1589,16 +1781,46 @@ function setupEvents() {
   if (elements.productSort) {
     elements.productSort.addEventListener("change", (event) => {
       state.sort = event.currentTarget.value;
+      syncCatalogUrl();
       renderProducts();
     });
   }
 
   elements.productViewButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      state.view = button.dataset.productView === "list" ? "list" : "grid";
+      const view = button.dataset.productView;
+      state.view = view === "list" || view === "excel" ? view : "grid";
+      syncCatalogUrl();
       renderProducts();
     });
   });
+
+  if (elements.catalogShare) {
+    elements.catalogShare.addEventListener("click", async () => {
+      syncCatalogUrl();
+      const shareUrl = new URL(window.location.href);
+      const orderEntries = cartEntries().map(({ product, quantity }) => [product.id, quantity]);
+      if (orderEntries.length > 0) {
+        shareUrl.searchParams.set("order", JSON.stringify(orderEntries));
+      } else {
+        shareUrl.searchParams.delete("order");
+      }
+      try {
+        await navigator.clipboard.writeText(shareUrl.href);
+        if (elements.catalogShareStatus) {
+          elements.catalogShareStatus.textContent = orderEntries.length > 0
+            ? "Link ordine copiato. Il carrello si ricreerà all'apertura."
+            : "Link catalogo copiato. Aggiungi prodotti al carrello per condividere un ordine.";
+        }
+      } catch {
+        if (elements.catalogShareStatus) elements.catalogShareStatus.textContent = "Copia del link non disponibile in questo browser.";
+      }
+    });
+  }
+
+  if (elements.productSheetAddAll) {
+    elements.productSheetAddAll.addEventListener("click", addVisibleProductsToCart);
+  }
 
   elements.promoOpen.addEventListener("click", () => elements.promoDialog.showModal());
   elements.promoDialog.addEventListener("click", (event) => {
@@ -1633,6 +1855,37 @@ function setupEvents() {
       const button = event.target.closest("[data-add-to-cart]");
       if (button) addToCart(button.dataset.addToCart);
     });
+  }
+
+  if (elements.productSheetBody) {
+    elements.productSheetBody.addEventListener("pointerover", (event) => {
+      if (event.pointerType !== "mouse") return;
+      const productLink = event.target.closest("[data-open-product]");
+      if (!productLink || productLink.contains(event.relatedTarget)) return;
+      showProductSheetPreview(productLink.dataset.openProduct, productLink);
+    });
+    elements.productSheetBody.addEventListener("pointerout", (event) => {
+      const productLink = event.target.closest("[data-open-product]");
+      if (!productLink || productLink.contains(event.relatedTarget)) return;
+      scheduleProductSheetPreviewHide();
+    });
+    elements.productSheetBody.addEventListener("focusin", (event) => {
+      const productLink = event.target.closest("[data-open-product]");
+      if (productLink) showProductSheetPreview(productLink.dataset.openProduct, productLink);
+    });
+    elements.productSheetBody.addEventListener("focusout", (event) => {
+      const productLink = event.target.closest("[data-open-product]");
+      if (productLink && !productLink.contains(event.relatedTarget)) scheduleProductSheetPreviewHide();
+    });
+    elements.productSheetBody.addEventListener("click", (event) => {
+      const productLink = event.target.closest("[data-open-product]");
+      if (!productLink) return;
+      event.preventDefault();
+      hideProductSheetPreview();
+      openProductDialog(productLink.dataset.openProduct);
+    });
+    elements.productSheet?.addEventListener("scroll", hideProductSheetPreview, true);
+    window.addEventListener("resize", hideProductSheetPreview);
   }
 
   if (elements.productDialog) {
@@ -1676,6 +1929,17 @@ function setupEvents() {
     elements.cartDialog.showModal();
     document.documentElement.classList.add("cart-is-open");
   });
+
+  if (elements.cartClear) {
+    elements.cartClear.addEventListener("click", () => {
+      if (elements.cartClear.disabled) return;
+      state.cart = {};
+      saveCart();
+      clearCheckoutFeedback();
+      renderCart();
+      showMessage("Carrello svuotato.");
+    });
+  }
 
   elements.cartItems.addEventListener("click", (event) => {
     const button = event.target.closest("[data-cart-change]");
@@ -1918,6 +2182,7 @@ function setupEvents() {
 }
 
 async function initializeShop() {
+  restoreCatalogStateFromUrl();
   setupEvents();
   renderCart();
 
@@ -1934,6 +2199,15 @@ async function initializeShop() {
     configureRecurringOrder();
     updateRecurringControls();
     state.products = Array.isArray(catalog.products) ? catalog.products : [];
+    const sharedCart = parseSharedOrder(state.sharedOrder);
+    if (sharedCart !== null) {
+      state.cart = sharedCart;
+      if (elements.catalogShareStatus) {
+        elements.catalogShareStatus.textContent = Object.keys(sharedCart).length > 0
+          ? "Ordine condiviso caricato nel carrello."
+          : "Gli articoli dell'ordine condiviso non sono più disponibili.";
+      }
+    }
     state.cart = Object.fromEntries(
       Object.entries(state.cart).filter(([id]) =>
         state.products.some((product) => product.id === id && product.available !== false),
