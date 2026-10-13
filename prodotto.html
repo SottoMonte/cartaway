@@ -23,7 +23,7 @@
     />
     <link rel="stylesheet" href="shop.css?v=23" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=38" defer></script>
+    <script src="shop.js?v=39" defer></script>
   </head>
   <body data-page="product">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -252,7 +252,7 @@
           <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
           <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>
           <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled><span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span></button>
-          <p class="checkout-note">Riceverai via email solo un riepilogo dei dati inseriti. L'attività non riceve automaticamente la richiesta e l'ordine non è confermato: contattala per verificare disponibilità, consegna e pagamento.</p>
+          <p class="checkout-note">Riceverai via email un riepilogo e l'attività riceverà la richiesta. L'ordine non è ancora confermato: verificheremo disponibilità, consegna e pagamento. Se un prodotto non è disponibile, ti contatteremo noi; non devi fare nulla.</p>
         </form>
         <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
       </div>

@@ -1733,7 +1733,7 @@ function setupEvents() {
       elements.otherTownField.hidden = true;
       elements.otherTown.required = false;
       updateRecurringControls();
-      showCheckoutFeedback(`Riepilogo inviato con successo a ${customerEmail}. Il carrello è stato svuotato. L'attività non riceve automaticamente la richiesta.`, "success");
+      showCheckoutFeedback(`Riepilogo inviato a ${customerEmail} e all'attività. Il carrello è stato svuotato. Verificheremo la disponibilità; se un prodotto non è disponibile, ti contatteremo noi.`, "success");
     } catch {
       showCheckoutFeedback("Invio email non riuscito. Il carrello è stato conservato; riprova tra poco.", "error");
     } finally {

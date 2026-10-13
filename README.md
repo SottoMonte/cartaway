@@ -35,7 +35,7 @@ I tempi di consegna sono indicativi: Montoro circa 2 ore, comuni vicini in giorn
 
 ## Email ordini
 
-Il checkout invia una sola email di riepilogo al cliente e non notifica automaticamente l'attività né registra un ordine. Il riepilogo mostra un codice Buono Tech candidato; l'attività verifica manualmente l'idoneità e, solo se valido, invia al cliente una seconda email di conferma dell'attivazione. Questa seconda email non è generata automaticamente dal checkout. Raccoglie l'indirizzo email nel checkout. Crea un servizio e un template, poi configura nel CMS Public Key, Service ID e Template ID.
+Il checkout invia un riepilogo al cliente; configura una copia all'attività come CC/BCC nel template EmailJS. Il parametro `reply_to` è solo l'indirizzo a cui il cliente può rispondere, non invia una copia. Il riepilogo non conferma un ordine: l'attività verifica disponibilità, consegna e pagamento e contatta il cliente in caso di indisponibilità. Il riepilogo mostra un codice Buono Tech candidato; l'attività verifica manualmente l'idoneità e, solo se valido, invia al cliente una seconda email di conferma dell'attivazione. Questa seconda email non è generata automaticamente dal checkout. Raccoglie l'indirizzo email nel checkout. Crea un servizio e un template, poi configura nel CMS Public Key, Service ID e Template ID.
 
 Il codice HTML pronto da incollare nel template EmailJS è in `email/order-summary.html`. Imposta `To Email` su `{{email}}`, `Reply To` su `{{reply_to}}` e oggetto su `Riepilogo richiesta #{{order_id}} - {{brand}}`. Allega il logo come immagine inline con Content ID esatto `logo.png` perché il template lo richiama con `cid:logo.png`. Le immagini prodotto usano URL pubblici assoluti.
 
