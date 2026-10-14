@@ -2,7 +2,7 @@
   "products": [
     {
       "id": "rotoloni-asciugatutto-splash-2000",
-      "name": "Rotoloni MAXI Asciugatutto Splash 2000",
+      "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 2 rotoli",
       "category": "Itissue - Monouso in carta / Rotoloni",
       "unit": {
         "quantity": 2,
@@ -51,8 +51,8 @@
     },
     {
       "id": "rotoloni-asciugatutto-splash-2000-6",
-      "name": "Rotoloni MAXI Asciugatutto Splash 2000 - 6 rotoli",
-      "category": "Cucina",
+      "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 6 rotoli",
+      "category": "Itissue - Monouso in carta / Rotoloni",
       "unit": {
         "quantity": 6,
         "measure": "rotoli",
@@ -100,7 +100,7 @@
     },
     {
       "id": "carta-igienica-lavanda-singolo",
-      "name": "Carta igienica profumata alla lavanda",
+      "name": "Carta igienica lavanda · 4 rotoli, 2 veli",
       "category": "Itissue - Monouso in carta / Carta igienica",
       "unit": {
         "quantity": 4,
@@ -146,7 +146,7 @@
     },
     {
       "id": "carta-igienica-lavanda-40-rotoli",
-      "name": "Carta igienica profumata alla lavanda Carta Corona",
+      "name": "Carta igienica lavanda Carta Corona · 40 rotoli, 2 veli",
       "category": "Itissue - Monouso in carta / Carta igienica",
       "unit": {
         "quantity": 40,

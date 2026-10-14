@@ -22,9 +22,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=37" />
+    <link rel="stylesheet" href="shop.css?v=40" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=51" defer></script>
+    <script src="shop.js?v=52" defer></script>
   </head>
   <body data-page="product">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -76,6 +76,7 @@
           <div class="product-detail__gallery">
             <div class="product-detail__stage">
               <img id="detail-image" src="" alt="" />
+              <p class="product-detail__unit" id="detail-unit"></p>
               <span class="product-detail__counter" id="detail-image-counter" aria-live="polite"></span>
               <button class="product-detail__arrow product-detail__arrow--previous" id="detail-image-previous" type="button" aria-label="Foto precedente">←</button>
               <button class="product-detail__arrow product-detail__arrow--next" id="detail-image-next" type="button" aria-label="Foto successiva">→</button>
@@ -85,10 +86,8 @@
           <div class="product-detail__content">
             <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span><span id="detail-category"></span></p>
             <h1 id="detail-title"></h1>
-            <p class="product-detail__unit" id="detail-unit"></p>
             <div class="product-price-set product-detail__prices">
               <div class="product-price-set__item product-price-set__item--total">
-                <span class="product-price-set__label">Prezzo totale</span>
                 <p class="product-price-set__value product-detail__price" id="detail-price"></p>
               </div>
               <div class="product-price-set__item product-price-set__item--unit" id="detail-unit-price-wrap" hidden>

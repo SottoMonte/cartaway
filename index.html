@@ -30,11 +30,11 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=37" />
+    <link rel="stylesheet" href="shop.css?v=60" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=51" defer></script>
+    <script src="shop.js?v=60" defer></script>
   </head>
-   <body data-page="catalog">
+  <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
 
     <div class="notice-bar">
@@ -95,7 +95,6 @@
                 <option value="tutte">Tutte le categorie</option>
               </select>
             </label>
-            <div class="category-subtabs" id="category-subtabs" role="group" aria-label="Filtra per sottocategoria" hidden></div>
             <select id="product-category-tree" aria-hidden="true" hidden>
               <option value="tutte">Tutte le categorie</option>
               <optgroup label="Avvolgenti Alimentari">
@@ -182,7 +181,6 @@
                 <option value="Tovaglie e Tovaglioli / Tovaglietta">Tovaglietta</option>
                 <option value="Tovaglie e Tovaglioli / Tovaglioli colorati">Tovaglioli colorati</option>
               </optgroup>
-              <option value="Cucina">Cucina</option>
             </select>
           </div>
           <div class="catalog-tools">
@@ -196,6 +194,8 @@
                 <option value="featured">In evidenza</option>
                 <option value="price-asc">Prezzo crescente</option>
                 <option value="price-desc">Prezzo decrescente</option>
+                <option value="unit-price-asc">Unitario crescente</option>
+                <option value="unit-price-desc">Unitario decrescente</option>
               </select>
             </label>
             <div class="product-view-toggle" role="group" aria-label="Visualizzazione prodotti">
@@ -233,37 +233,60 @@
         </div>
 
         <p class="catalog-share-status" id="catalog-share-status" role="status" aria-live="polite"></p>
-        <p class="catalog-status" id="product-count" role="status" aria-live="polite">Carico il catalogo…</p>
-        <div class="product-grid" id="product-grid"></div>
-        <div class="product-sheet" id="product-sheet" hidden>
+        <div class="catalog-results-layout" id="catalog-results-layout">
+          <aside class="category-sidebar" id="category-sidebar" aria-label="Sottocategorie" hidden>
+            <h2 class="category-sidebar__heading">Sottocategorie</h2>
+            <div class="category-subtabs" id="category-subtabs" role="group" aria-label="Filtra per sottocategoria" hidden></div>
+            <button class="category-sidebar__toggle" id="category-sidebar-toggle" type="button" aria-controls="category-subtabs" aria-expanded="false" hidden></button>
+          </aside>
+          <div class="catalog-results">
+            <p class="catalog-status" id="product-count" role="status" aria-live="polite">Carico il catalogo…</p>
+            <div class="product-grid" id="product-grid"></div>
+            <div class="product-sheet" id="product-sheet" hidden>
           <div class="product-sheet__toolbar">
-            <button class="product-sheet__add-all" id="product-sheet-add-all" type="button">
-              <span>Aggiungi tutto</span><span aria-hidden="true">+</span>
-            </button>
+            <p class="product-sheet__vat-note">Prezzi indicativi · IVA da confermare</p>
           </div>
           <div class="product-sheet__scroll" role="region" aria-label="Catalogo in vista Excel" tabindex="0">
             <table class="product-sheet__table">
+              <caption class="visually-hidden">Prodotti, formati, prezzi e quantità da aggiungere al carrello</caption>
               <thead>
                 <tr>
                   <th scope="col">Articolo</th>
-                  <th scope="col">Categoria</th>
                   <th scope="col">Formato</th>
-                  <th scope="col">Prezzo confezione</th>
-                  <th scope="col">Prezzo unitario</th>
+                  <th class="product-sheet__category" scope="col">Categoria</th>
+                  <th scope="col" aria-sort="none" data-sheet-sort-header="price">
+                    <button class="product-sheet__sort" type="button" aria-label="Ordina per prezzo confezione">
+                      Prezzo confezione <span class="product-sheet__sort-indicator" aria-hidden="true">↕</span><span class="product-sheet__vat-label">· IVA da confermare</span>
+                    </button>
+                  </th>
+                  <th scope="col" aria-sort="none" data-sheet-sort-header="unit-price">
+                    <button class="product-sheet__sort" type="button" aria-label="Ordina per prezzo unitario">
+                      Prezzo unitario <span class="product-sheet__sort-indicator" aria-hidden="true">↕</span><span class="product-sheet__vat-label">· IVA da confermare</span>
+                    </button>
+                  </th>
                   <th scope="col">Quantità</th>
                 </tr>
               </thead>
               <tbody id="product-sheet-body"></tbody>
             </table>
           </div>
+          <div class="product-sheet__order-bar" id="product-sheet-order-bar" hidden>
+            <div class="product-sheet__order-copy">
+              <strong id="product-sheet-order-summary" role="status" aria-live="polite">0 articoli · €0,00</strong>
+              <span>IVA da confermare</span>
+            </div>
+            <button class="product-sheet__add-all" id="product-sheet-add-all" type="button" disabled>Aggiungi al carrello (0)</button>
+          </div>
+            </div>
+            <div class="product-sheet-preview" id="product-sheet-preview" role="tooltip" hidden></div>
+            <div class="empty-state" id="empty-state" hidden>
+              <span class="empty-state__mark" aria-hidden="true">—</span>
+              <h3>Nessun prodotto trovato.</h3>
+              <p>Prova un'altra ricerca o categoria.</p>
+            </div>
+            <p class="price-disclaimer">Catalogo e prezzi iniziali indicativi: disponibilità, totale e consegna vengono confermati prima dell'ordine.</p>
+          </div>
         </div>
-        <div class="product-sheet-preview" id="product-sheet-preview" role="tooltip" hidden></div>
-        <div class="empty-state" id="empty-state" hidden>
-          <span class="empty-state__mark" aria-hidden="true">—</span>
-          <h3>Nessun prodotto trovato.</h3>
-          <p>Prova un'altra ricerca o categoria.</p>
-        </div>
-        <p class="price-disclaimer">Catalogo e prezzi iniziali indicativi: disponibilità, totale e consegna vengono confermati prima dell'ordine.</p>
       </section>
     </main>
 
@@ -317,7 +340,6 @@
           <p class="product-dialog__unit" id="product-dialog-unit"></p>
           <div class="product-price-set product-dialog__prices">
             <div class="product-price-set__item product-price-set__item--total">
-              <span class="product-price-set__label">Prezzo totale</span>
               <p class="product-price-set__value product-dialog__price" id="product-dialog-price"></p>
             </div>
             <div class="product-price-set__item product-price-set__item--unit" id="product-dialog-unit-price-wrap" hidden>

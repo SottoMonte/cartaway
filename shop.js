@@ -14,7 +14,9 @@ const state = {
   orderSubmitting: false,
   cart: readCart(),
   sharedOrder: null,
+  sheetQuantities: {},
   category: "tutte",
+  categorySubcategoriesExpanded: false,
   search: "",
   sort: "featured",
   view: "grid",
@@ -47,6 +49,9 @@ const elements = {
   cartCashbackAmount: document.querySelector("#cart-cashback-amount"),
   cartCashbackLabel: document.querySelector("#cart-cashback-label"),
   cartCashbackNote: document.querySelector("#cart-cashback-note"),
+  catalogResultsLayout: document.querySelector("#catalog-results-layout"),
+  categorySidebar: document.querySelector("#category-sidebar"),
+  categorySidebarToggle: document.querySelector("#category-sidebar-toggle"),
   categorySubtabs: document.querySelector("#category-subtabs"),
   categorySelect: document.querySelector("#product-category"),
   categoryTree: document.querySelector("#product-category-tree"),
@@ -101,6 +106,8 @@ const elements = {
   productSheet: document.querySelector("#product-sheet"),
   productSheetBody: document.querySelector("#product-sheet-body"),
   productSheetAddAll: document.querySelector("#product-sheet-add-all"),
+  productSheetOrderBar: document.querySelector("#product-sheet-order-bar"),
+  productSheetOrderSummary: document.querySelector("#product-sheet-order-summary"),
   productSheetPreview: document.querySelector("#product-sheet-preview"),
   catalogShare: document.querySelector("#catalog-share"),
   catalogShareStatus: document.querySelector("#catalog-share-status"),
@@ -394,7 +401,7 @@ function categoryFilterButton(category, pressed) {
   button.dataset.category = category.value;
   button.setAttribute("aria-pressed", String(pressed));
   button.addEventListener("click", () => {
-    state.category = category.value;
+    state.category = pressed ? category.value.split(" / ", 1)[0] : category.value;
     renderCategoryFilters();
     syncCatalogUrl();
     renderProducts();
@@ -422,8 +429,51 @@ function renderCategoryFilters() {
 
   const childButtons = (activeGroup?.children || []).map((category) =>
     categoryFilterButton(category, state.category === category.value));
-  elements.categorySubtabs.hidden = childButtons.length === 0;
+  const hasSubcategories = childButtons.length > 0;
+  elements.categorySubtabs.hidden = !hasSubcategories;
+  if (elements.categorySidebar) elements.categorySidebar.hidden = !hasSubcategories;
+  elements.catalogResultsLayout?.classList.toggle("has-category-sidebar", hasSubcategories);
   elements.categorySubtabs.replaceChildren(...childButtons);
+
+  const isCompactViewport = window.matchMedia("(max-width: 1160px)").matches;
+  if (isCompactViewport && !state.categorySubcategoriesExpanded) {
+    const selectedButton = elements.categorySubtabs.querySelector('button[aria-pressed="true"]');
+    if (selectedButton) elements.categorySubtabs.prepend(selectedButton);
+  }
+
+  const subcategoryButtons = [...elements.categorySubtabs.querySelectorAll("button")];
+  const firstButtonTop = subcategoryButtons[0]?.getBoundingClientRect().top ?? 0;
+  const firstRowButtons = subcategoryButtons.filter((button) =>
+    Math.abs(button.getBoundingClientRect().top - firstButtonTop) < 1);
+  const subtabsTop = elements.categorySubtabs.getBoundingClientRect().top;
+  const firstRowBottom = firstRowButtons.reduce(
+    (bottom, button) => Math.max(bottom, button.getBoundingClientRect().bottom),
+    subtabsTop,
+  );
+  const hasAdditionalRows = isCompactViewport && subcategoryButtons.some(
+    (button) => button.getBoundingClientRect().top > firstButtonTop + 1,
+  );
+  const canToggle = hasSubcategories && hasAdditionalRows;
+  const isExpanded = canToggle && state.categorySubcategoriesExpanded;
+
+  if (canToggle) {
+    const collapsedHeight = Math.ceil(firstRowBottom - subtabsTop);
+    elements.categorySubtabs.style.setProperty("--category-subtabs-collapsed-height", `${collapsedHeight}px`);
+  } else {
+    elements.categorySubtabs.style.removeProperty("--category-subtabs-collapsed-height");
+    state.categorySubcategoriesExpanded = false;
+  }
+
+  elements.categorySidebar?.classList.toggle("is-collapsed", canToggle && !isExpanded);
+  if (elements.categorySidebarToggle) {
+    elements.categorySidebarToggle.hidden = !canToggle;
+    elements.categorySidebarToggle.setAttribute("aria-expanded", String(isExpanded));
+    elements.categorySidebarToggle.setAttribute(
+      "aria-label",
+      isExpanded ? "Riduci le sottocategorie" : `Mostra tutte le ${childButtons.length} sottocategorie`,
+    );
+    elements.categorySidebarToggle.textContent = isExpanded ? "Riduci" : `Mostra tutte (${childButtons.length})`;
+  }
 }
 
 function productUnitLabel(unit) {
@@ -436,6 +486,14 @@ function productUnitLabel(unit) {
   const primary = quantity && measure ? `${quantity} ${measure}` : "";
   const details = String(unit.details || "").trim();
   return [primary, details].filter(Boolean).join(" · ");
+}
+
+function productNameWithFormat(product) {
+  const name = String(product.name || "Prodotto").trim();
+  const unitLabel = productUnitLabel(product.unit);
+  const primaryFormat = unitLabel.split(" · ")[0].trim();
+  if (!primaryFormat || name.toLowerCase().includes(primaryFormat.toLowerCase())) return name;
+  return `${name} ${unitLabel}`;
 }
 
 function productPricePerUnit(product) {
@@ -477,7 +535,6 @@ function productCard(product) {
         <div class="product-card__purchase">
           <div class="product-price-set product-card__price-set">
             <div class="product-price-set__item product-price-set__item--total">
-              <span class="product-price-set__label">Prezzo totale</span>
               <strong class="product-price-set__value product-card__total-price">${escapeHtml(formatPrice(product.price))}</strong>
             </div>
             ${pricePerUnit === null ? "" : `
@@ -501,16 +558,63 @@ function productSheetRow(product) {
   const name = String(product.name || "Prodotto");
   const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
   const pricePerUnit = productPricePerUnit(product);
+  const quantity = normalizeSheetQuantity(state.sheetQuantities[product.id] || 0);
   return `
     <tr data-sheet-product-id="${id}">
-      <td class="product-sheet__product"><a href="${escapeHtml(productUrl)}" data-open-product="${id}" aria-describedby="product-sheet-preview">${escapeHtml(name)}</a></td>
-      <td class="product-sheet__category">${escapeHtml(String(product.category || "Carta"))}</td>
-      <td>${escapeHtml(productUnitLabel(product.unit) || "—")}</td>
-      <td class="product-sheet__price">${escapeHtml(formatPrice(product.price))}</td>
-      <td class="product-sheet__price">${pricePerUnit === null ? "—" : `${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</td>
-      <td><input class="product-sheet__quantity" type="number" min="0" max="999" step="1" value="0" inputmode="numeric" data-sheet-quantity aria-label="Quantità da aggiungere di ${escapeHtml(name)}" /></td>
+      <td class="product-sheet__product" data-label="Articolo"><a href="${escapeHtml(productUrl)}" data-open-product="${id}" aria-describedby="product-sheet-preview">${escapeHtml(name)}</a></td>
+      <td class="product-sheet__format" data-label="Formato"><strong>${escapeHtml(productUnitLabel(product.unit) || "—")}</strong></td>
+      <td class="product-sheet__category" data-label="Categoria" title="${escapeHtml(String(product.category || "Carta"))}">${escapeHtml(productCategoryLabel(product.category))}</td>
+      <td class="product-sheet__price" data-label="Prezzo confezione">${escapeHtml(formatPrice(product.price))}</td>
+      <td class="product-sheet__price" data-label="Prezzo unitario">${pricePerUnit === null ? "—" : `${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</td>
+      <td class="product-sheet__quantity-cell" data-label="Quantità">
+        <div class="product-sheet__stepper">
+          <button class="product-sheet__step" type="button" data-sheet-step="-1" aria-label="Riduci quantità di ${escapeHtml(name)}"${quantity === 0 ? " disabled" : ""}>−</button>
+          <input class="product-sheet__quantity" type="number" min="0" max="999" step="1" value="${quantity}" inputmode="numeric" data-sheet-quantity aria-label="Quantità da aggiungere di ${escapeHtml(name)}" />
+          <button class="product-sheet__step" type="button" data-sheet-step="1" aria-label="Aumenta quantità di ${escapeHtml(name)}"${quantity === 999 ? " disabled" : ""}>+</button>
+        </div>
+      </td>
     </tr>
   `;
+}
+
+function normalizeSheetQuantity(value) {
+  const quantity = Number(value);
+  return Number.isSafeInteger(quantity) ? Math.min(999, Math.max(0, quantity)) : 0;
+}
+
+function refreshProductSheetOrderBar() {
+  const selectedProducts = Object.entries(state.sheetQuantities)
+    .map(([id, value]) => ({
+      product: state.products.find((item) => item.id === id && item.available !== false),
+      quantity: normalizeSheetQuantity(value),
+    }))
+    .filter(({ product, quantity }) => product && quantity > 0);
+  const totalQuantity = selectedProducts.reduce((sum, entry) => sum + entry.quantity, 0);
+  const totalCents = selectedProducts.reduce(
+    (sum, entry) => sum + priceInCents(entry.product.price) * entry.quantity,
+    0,
+  );
+
+  if (elements.productSheetOrderBar) {
+    elements.productSheetOrderBar.hidden = state.page !== "catalog" || state.view !== "excel";
+  }
+  if (elements.productSheetOrderSummary) {
+    const itemLabel = totalQuantity === 1 ? "articolo" : "articoli";
+    elements.productSheetOrderSummary.textContent = `${totalQuantity} ${itemLabel} · ${formatPrice(totalCents / 100)}`;
+  }
+  if (elements.productSheetAddAll) {
+    elements.productSheetAddAll.disabled = totalQuantity === 0;
+    elements.productSheetAddAll.textContent = `Aggiungi al carrello (${totalQuantity})`;
+    elements.productSheetAddAll.setAttribute("aria-label", `Aggiungi al carrello, ${totalQuantity} ${totalQuantity === 1 ? "articolo" : "articoli"}`);
+  }
+  elements.productSheetBody?.querySelectorAll("[data-sheet-quantity]").forEach((input) => {
+    const quantity = normalizeSheetQuantity(input.value);
+    const row = input.closest("tr");
+    const decrease = row?.querySelector('[data-sheet-step="-1"]');
+    const increase = row?.querySelector('[data-sheet-step="1"]');
+    if (decrease) decrease.disabled = quantity === 0;
+    if (increase) increase.disabled = quantity === 999;
+  });
 }
 
 let productSheetPreviewTimer = null;
@@ -668,6 +772,7 @@ function renderProductDetail() {
 
   const brand = String(state.site.brand || "Cartaway").trim();
   const productName = String(product.name || "Prodotto").trim();
+  const productNameForMetadata = productNameWithFormat(product);
   const productUnit = productUnitLabel(product.unit);
   state.detailProduct = product;
   state.detailImages = productImages(product);
@@ -709,18 +814,18 @@ function renderProductDetail() {
   const productImageUrls = productImages(product).map(safeImageUrl);
   const productDescription = String(product.description || "Scopri dettagli e caratteristiche del prodotto.").trim();
   const metaDescription = [
-    `${productName}${productUnit ? ` (${productUnit})` : ""}.`,
+    `${productNameForMetadata}.`,
     productDescription,
     "Consegna a Montoro e nei comuni vicini.",
   ].join(" ");
   updateSeoMetadata({
-    title: `${productName}${productUnit ? ` ${productUnit}` : ""} | ${brand}`,
+    title: `${productNameForMetadata} | ${brand}`,
     description: normalizeSeoDescription(metaDescription),
     url: canonicalUrl,
     siteName: brand,
     pageType: "product",
     imageUrl: productImageUrls[0] || "",
-    imageAlt: `${productName}${productUnit ? `, ${productUnit}` : ""}`,
+    imageAlt: productNameForMetadata,
   });
   updateSeoStructuredData({
     "@context": "https://schema.org",
@@ -728,7 +833,7 @@ function renderProductDetail() {
       {
         "@type": "Product",
         "@id": `${canonicalUrl}#product`,
-        name: productName,
+        name: productNameForMetadata,
         url: canonicalUrl,
         ...(product.category ? { category: String(product.category) } : {}),
         ...(product.description ? { description: String(product.description) } : {}),
@@ -766,6 +871,7 @@ function restoreCatalogStateFromUrl() {
   categoryValues.add("tutte");
   const requestedCategory = params.get("category");
   state.category = categoryValues.has(requestedCategory) ? requestedCategory : "tutte";
+  state.categorySubcategoriesExpanded = state.category.includes(" / ");
 
   const requestedSearch = params.get("q");
   state.search = requestedSearch || "";
@@ -781,6 +887,7 @@ function restoreCatalogStateFromUrl() {
 
   if (elements.productSearch) elements.productSearch.value = state.search;
   if (elements.productSort) elements.productSort.value = state.sort;
+  document.body.classList.toggle("excel-view-active", state.view === "excel");
   renderCategoryFilters();
 }
 
@@ -828,10 +935,20 @@ function parseSharedOrder(serializedOrder) {
   return sharedCart;
 }
 
+function sortSheetColumn(column) {
+  const ascendingSort = `${column}-asc`;
+  const descendingSort = `${column}-desc`;
+  state.sort = state.sort === ascendingSort ? descendingSort : ascendingSort;
+  if (elements.productSort) elements.productSort.value = state.sort;
+  syncCatalogUrl();
+  renderProducts();
+}
+
 function renderProducts() {
   if (!elements.productGrid) return;
 
   const excelView = state.view === "excel";
+  document.body.classList.toggle("excel-view-active", state.page === "catalog" && excelView);
   elements.productGrid.hidden = excelView;
   if (elements.productSheet) elements.productSheet.hidden = !excelView;
   elements.productGrid.classList.toggle("product-grid--list", state.view === "list");
@@ -856,13 +973,31 @@ function renderProducts() {
     return searchable.includes(normalizedSearch);
   });
 
-  if (state.sort === "price-asc") {
+  if (state.sort === "unit-price-asc" || state.sort === "unit-price-desc") {
+    const direction = state.sort === "unit-price-asc" ? 1 : -1;
+    visibleProducts.sort((first, second) => {
+      const firstPrice = productPricePerUnit(first)?.amount;
+      const secondPrice = productPricePerUnit(second)?.amount;
+      if (firstPrice === undefined) return secondPrice === undefined ? 0 : 1;
+      if (secondPrice === undefined) return -1;
+      return (firstPrice - secondPrice) * direction;
+    });
+  } else if (state.sort === "price-asc") {
     visibleProducts.sort((first, second) => Number(first.price) - Number(second.price));
   } else if (state.sort === "price-desc") {
     visibleProducts.sort((first, second) => Number(second.price) - Number(first.price));
   } else {
     visibleProducts.sort((first, second) => Number(second.featured === true) - Number(first.featured === true));
   }
+
+  elements.productSheet?.querySelectorAll("[data-sheet-sort-header]").forEach((header) => {
+    const column = header.dataset.sheetSortHeader;
+    const ascending = state.sort === `${column}-asc`;
+    const descending = state.sort === `${column}-desc`;
+    header.setAttribute("aria-sort", ascending ? "ascending" : descending ? "descending" : "none");
+    const indicator = header.querySelector(".product-sheet__sort-indicator");
+    if (indicator) indicator.textContent = ascending ? "↑" : descending ? "↓" : "↕";
+  });
 
   if (elements.productSheetAddAll) elements.productSheetAddAll.disabled = visibleProducts.length === 0;
   if (elements.productCount) {
@@ -876,6 +1011,7 @@ function renderProducts() {
     if (elements.productSheetBody) elements.productSheetBody.replaceChildren();
   }
   if (elements.emptyState) elements.emptyState.hidden = visibleProducts.length > 0;
+  refreshProductSheetOrderBar();
 }
 
 function cartEntries() {
@@ -1023,34 +1159,32 @@ function setQuantity(productId, quantity) {
   renderCart();
 }
 
-function addVisibleProductsToCart() {
-  if (!elements.productSheetBody) return;
-
-  let productCount = 0;
-  let unitCount = 0;
-  elements.productSheetBody.querySelectorAll("tr").forEach((row) => {
-    const quantityInput = row.querySelector("[data-sheet-quantity]");
-    const requestedQuantity = Number(quantityInput?.value);
-    if (!Number.isSafeInteger(requestedQuantity) || requestedQuantity < 1) return;
-
-    const productId = row.dataset.sheetProductId;
-    const product = state.products.find((item) => item.id === productId && item.available !== false);
-    if (!product) return;
-
-    const quantity = Math.min(requestedQuantity, 999);
-    state.cart[productId] = (state.cart[productId] || 0) + quantity;
-    productCount += 1;
-    unitCount += quantity;
-  });
-
-  if (productCount === 0) {
-    showMessage("Non ci sono prodotti disponibili da aggiungere.");
+function addSelectedProductsToCart() {
+  const selectedProducts = Object.entries(state.sheetQuantities)
+    .map(([id, value]) => ({
+      product: state.products.find((item) => item.id === id && item.available !== false),
+      quantity: normalizeSheetQuantity(value),
+    }))
+    .filter(({ product, quantity }) => product && quantity > 0);
+  if (selectedProducts.length === 0) {
+    showMessage("Seleziona almeno una quantità da aggiungere.");
     return;
   }
+
+  let unitCount = 0;
+  selectedProducts.forEach(({ product, quantity }) => {
+    state.cart[product.id] = (state.cart[product.id] || 0) + quantity;
+    state.sheetQuantities[product.id] = 0;
+    unitCount += quantity;
+  });
 
   clearCheckoutFeedback();
   saveCart();
   renderCart();
+  elements.productSheetBody?.querySelectorAll("[data-sheet-quantity]").forEach((input) => {
+    input.value = "0";
+  });
+  refreshProductSheetOrderBar();
   showMessage(`${unitCount} articoli aggiunti al carrello.`);
 }
 
@@ -1762,11 +1896,21 @@ function setupEvents() {
   if (elements.categorySelect) {
     elements.categorySelect.addEventListener("change", (event) => {
       state.category = event.currentTarget.value;
+      state.categorySubcategoriesExpanded = false;
       renderCategoryFilters();
       syncCatalogUrl();
       renderProducts();
     });
   }
+
+  if (elements.categorySidebarToggle) {
+    elements.categorySidebarToggle.addEventListener("click", () => {
+      state.categorySubcategoriesExpanded = !state.categorySubcategoriesExpanded;
+      renderCategoryFilters();
+    });
+  }
+
+  window.matchMedia("(max-width: 1160px)").addEventListener("change", renderCategoryFilters);
 
   renderCategoryFilters();
 
@@ -1819,7 +1963,7 @@ function setupEvents() {
   }
 
   if (elements.productSheetAddAll) {
-    elements.productSheetAddAll.addEventListener("click", addVisibleProductsToCart);
+    elements.productSheetAddAll.addEventListener("click", addSelectedProductsToCart);
   }
 
   elements.promoOpen.addEventListener("click", () => elements.promoDialog.showModal());
@@ -1858,6 +2002,22 @@ function setupEvents() {
   }
 
   if (elements.productSheetBody) {
+    elements.productSheetBody.addEventListener("input", (event) => {
+      const input = event.target.closest("[data-sheet-quantity]");
+      const productId = input?.closest("tr")?.dataset.sheetProductId;
+      if (!input || !productId) return;
+      state.sheetQuantities[productId] = normalizeSheetQuantity(input.value);
+      refreshProductSheetOrderBar();
+    });
+    elements.productSheetBody.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-sheet-quantity]");
+      const productId = input?.closest("tr")?.dataset.sheetProductId;
+      if (!input || !productId) return;
+      const quantity = normalizeSheetQuantity(input.value);
+      input.value = String(quantity);
+      state.sheetQuantities[productId] = quantity;
+      refreshProductSheetOrderBar();
+    });
     elements.productSheetBody.addEventListener("pointerover", (event) => {
       if (event.pointerType !== "mouse") return;
       const productLink = event.target.closest("[data-open-product]");
@@ -1878,6 +2038,19 @@ function setupEvents() {
       if (productLink && !productLink.contains(event.relatedTarget)) scheduleProductSheetPreviewHide();
     });
     elements.productSheetBody.addEventListener("click", (event) => {
+      const stepButton = event.target.closest("[data-sheet-step]");
+      if (stepButton) {
+        const row = stepButton.closest("tr");
+        const input = row?.querySelector("[data-sheet-quantity]");
+        const productId = row?.dataset.sheetProductId;
+        if (!input || !productId) return;
+        const quantity = Math.min(999, Math.max(0, normalizeSheetQuantity(input.value) + Number(stepButton.dataset.sheetStep)));
+        input.value = String(quantity);
+        state.sheetQuantities[productId] = quantity;
+        refreshProductSheetOrderBar();
+        return;
+      }
+
       const productLink = event.target.closest("[data-open-product]");
       if (!productLink) return;
       event.preventDefault();
@@ -1886,6 +2059,13 @@ function setupEvents() {
     });
     elements.productSheet?.addEventListener("scroll", hideProductSheetPreview, true);
     window.addEventListener("resize", hideProductSheetPreview);
+  }
+
+  if (elements.productSheet) {
+    elements.productSheet.addEventListener("click", (event) => {
+      const sortableHeader = event.target.closest("th[data-sheet-sort-header]");
+      if (sortableHeader) sortSheetColumn(sortableHeader.dataset.sheetSortHeader);
+    });
   }
 
   if (elements.productDialog) {
@@ -2102,7 +2282,7 @@ function setupEvents() {
     const emailOrders = items.map(({ product, quantity }) => {
       const unitPriceCents = recurringOrder ? recurringPriceInCents(product.price) : priceInCents(product.price);
       return {
-        name: `${product.name} (${productUnitLabel(product.unit)})`,
+        name: productNameWithFormat(product),
         units: quantity,
         price: formatPrice(unitPriceCents / 100),
         line_total: formatPrice((unitPriceCents * quantity) / 100),
