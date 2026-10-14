@@ -70,6 +70,42 @@ collections:
                 field: { label: Giorni, name: days, widget: number, value_type: int, min: 1, step: 1 }
               - { label: Durata Buono Tech con ordine ricorrente (giorni), name: tech_voucher_validity_days, widget: number, value_type: int, min: 1, step: 1 }
               - { label: Giorno fisso di consegna, name: fixed_delivery_day, widget: boolean, default: true }
+          - label: Messaggi rapidi
+            name: quick_messages
+            widget: object
+            fields:
+              - label: Buono Tech
+                name: tech
+                widget: object
+                fields:
+                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Segnaposto: {standard_percent}, {recurring_percent}, {maximum_amount}." }
+                  - { label: Eyebrow del modale, name: eyebrow, widget: string }
+                  - { label: Titolo del modale, name: title, widget: string }
+                  - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {standard_percent}, {recurring_percent}, {maximum_amount}." }
+                  - { label: Etichetta esempio ordine singolo, name: standard_example_label, widget: string }
+                  - { label: Testo esempio ordine singolo, name: standard_example_result, widget: string, hint: "Segnaposto: {standard_example_amount}, {maximum_amount}." }
+                  - { label: Etichetta esempio ordine ricorrente, name: recurring_example_label, widget: string }
+                  - { label: Testo esempio ordine ricorrente, name: recurring_example_result, widget: string, hint: "Segnaposto: {recurring_example_amount}, {maximum_amount}." }
+                  - { label: Condizioni, name: terms, widget: text, hint: "Segnaposto: {validity_days}, {recurring_validity_days}, {link}." }
+                  - { label: Testo del link, name: link_label, widget: string }
+                  - { label: URL del link, name: link_url, widget: string, hint: Inserisci un indirizzo HTTPS o del sito. }
+              - label: Ordine ricorrente
+                name: recurring
+                widget: object
+                fields:
+                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Segnaposto: {discount_percent}, {price_lock_months}." }
+                  - { label: Eyebrow del modale, name: eyebrow, widget: string }
+                  - { label: Titolo del modale, name: title, widget: string }
+                  - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {frequency_days}, {discount_percent}, {price_lock_months}." }
+                  - { label: Etichetta dello sconto, name: discount_label, widget: string }
+                  - { label: Testo dello sconto, name: discount_value, widget: string, hint: "Segnaposto: {discount_percent}." }
+                  - { label: Etichetta del prezzo bloccato, name: price_lock_label, widget: string }
+                  - { label: Testo del prezzo bloccato, name: price_lock_value, widget: string, hint: "Segnaposto: {price_lock_months}." }
+                  - { label: Etichetta delle frequenze, name: frequency_label, widget: string }
+                  - { label: Testo delle frequenze, name: frequency_value, widget: string, hint: "Segnaposto: {frequency_days}." }
+                  - { label: Etichetta del Buono Tech, name: tech_voucher_label, widget: string }
+                  - { label: Testo del Buono Tech, name: tech_voucher_value, widget: string, hint: "Segnaposto: {tech_voucher_recurring_percent}, {maximum_amount}." }
+                  - { label: Condizioni, name: terms, widget: text }
           - { label: Indirizzo pubblico, name: address, widget: string, required: false }
           - { label: Telefono, name: phone, widget: string, required: false }
           - label: Numero WhatsApp
@@ -112,6 +148,20 @@ collections:
                 widget: string
                 hint: Breve, univoco e senza spazi; per esempio carta-igienica-12-rotoli.
               - { label: Nome prodotto, name: name, widget: string }
+              - label: Profili attività
+                name: profiles
+                widget: list
+                required: false
+                label_singular: profilo
+                field:
+                  label: Profilo
+                  name: profile
+                  widget: select
+                  options:
+                    - { label: Parrucchiere, value: parrucchiere }
+                    - { label: Meccanico, value: meccanico }
+                    - { label: Panificio, value: panificio }
+                    - { label: Ufficio, value: ufficio }
               - label: Categoria
                 name: category
                 widget: select

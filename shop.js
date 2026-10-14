@@ -6,6 +6,12 @@ const euro = new Intl.NumberFormat("it-IT", {
   currency: "EUR",
 });
 const unitNumber = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 3 });
+const catalogProfiles = [
+  { value: "parrucchiere", label: "Parrucchiere" },
+  { value: "meccanico", label: "Meccanico" },
+  { value: "panificio", label: "Panificio" },
+  { value: "ufficio", label: "Ufficio" },
+];
 
 const state = {
   page: document.body.dataset.page || "home",
@@ -14,8 +20,11 @@ const state = {
   orderSubmitting: false,
   cart: readCart(),
   sharedOrder: null,
+  sharedSheet: null,
+  openSharedCart: false,
   sheetQuantities: {},
   category: "tutte",
+  profile: "tutte",
   categorySubcategoriesExpanded: false,
   search: "",
   sort: "featured",
@@ -36,6 +45,7 @@ const elements = {
   cartCount: document.querySelector("#cart-count"),
   cartDialog: document.querySelector("#cart-dialog"),
   cartEmpty: document.querySelector("#cart-empty"),
+  cartShare: document.querySelector("#cart-share"),
   cartItems: document.querySelector("#cart-items"),
   cartOpen: document.querySelector("#cart-open"),
   cartSubtotal: document.querySelector("#cart-subtotal"),
@@ -53,6 +63,7 @@ const elements = {
   categorySidebar: document.querySelector("#category-sidebar"),
   categorySidebarToggle: document.querySelector("#category-sidebar-toggle"),
   categorySubtabs: document.querySelector("#category-subtabs"),
+  productProfile: document.querySelector("#product-profile"),
   categorySelect: document.querySelector("#product-category"),
   categoryTree: document.querySelector("#product-category-tree"),
   checkoutFeedback: document.querySelector("#checkout-feedback"),
@@ -108,13 +119,15 @@ const elements = {
   productSheetAddAll: document.querySelector("#product-sheet-add-all"),
   productSheetOrderBar: document.querySelector("#product-sheet-order-bar"),
   productSheetOrderSummary: document.querySelector("#product-sheet-order-summary"),
-  productSheetPreview: document.querySelector("#product-sheet-preview"),
+  catalogShare: document.querySelector("#catalog-share"),
   catalogShare: document.querySelector("#catalog-share"),
   catalogShareStatus: document.querySelector("#catalog-share-status"),
   preferredTimeStart: document.querySelector("#preferred-time-start"),
   preferredTimeEnd: document.querySelector("#preferred-time-end"),
   promoDialog: document.querySelector("#promo-dialog"),
   promoOpen: document.querySelector("#promo-open"),
+  promoOpenTop: document.querySelector("#promo-open-top"),
+  quickMessageButtons: document.querySelectorAll("[data-quick-message-button]"),
   productDialog: document.querySelector("#product-dialog"),
   productDialogAdd: document.querySelector("#product-dialog-add"),
   productDialogCategory: document.querySelector("#product-dialog-category"),
@@ -342,6 +355,148 @@ function configureRecurringOrder() {
   if (elements.recurringFrequencyFaq) {
     elements.recurringFrequencyFaq.textContent = `${frequencies.join(" o ")} giorni`;
   }
+  document.querySelectorAll("[data-recurring-discount-percent]").forEach((element) => {
+    element.textContent = `${formatPercentage(discount)}%`;
+  });
+  document.querySelectorAll("[data-recurring-price-lock]").forEach((element) => {
+    element.textContent = `${priceLockMonths} mesi`;
+  });
+  document.querySelectorAll("[data-recurring-frequency-days]").forEach((element) => {
+    element.textContent = `${frequencies.join(" o ")} giorni`;
+  });
+}
+
+function quickMessageTemplateValues(message) {
+  const maximumAmount = formatPrice(techVoucherMaximumCents() / 100);
+
+  if (message === "tech") {
+    return {
+      standard_percent: `${formatPercentage(techVoucherPercent(false))}%`,
+      recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
+      maximum_amount: maximumAmount,
+      validity_days: techVoucherValidityText(false),
+      recurring_validity_days: techVoucherValidityText(true),
+      standard_example_amount: formatPrice((techVoucherExampleOrderCents(false) ?? 0) / 100),
+      recurring_example_amount: formatPrice((techVoucherExampleOrderCents(true) ?? 0) / 100),
+    };
+  }
+
+  const configuredMonths = Number(state.site.recurring_order?.price_lock_months);
+  const priceLockMonths = Number.isInteger(configuredMonths) && configuredMonths > 0 ? configuredMonths : 12;
+  return {
+    discount_percent: `${formatPercentage(getRecurringDiscountPercent())}%`,
+    price_lock_months: `${priceLockMonths} mesi`,
+    frequency_days: `${recurringFrequencyDays().join(" o ")} giorni`,
+    tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
+    maximum_amount: maximumAmount,
+  };
+}
+
+function quickMessageLinkUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  try {
+    const url = new URL(value.trim(), window.location.href);
+    if (url.protocol === "https:" || url.origin === window.location.origin) return url.href;
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function renderQuickMessageCopy(element, message, field) {
+  const template = state.site.quick_messages?.[message]?.[field];
+  if (typeof template !== "string") return false;
+
+  const values = quickMessageTemplateValues(message);
+  const linkConfig = state.site.quick_messages?.tech || {};
+  const fragment = document.createDocumentFragment();
+  const placeholder = /\{([a-z][a-z0-9_]*)\}/gi;
+  let previousIndex = 0;
+
+  for (const match of template.matchAll(placeholder)) {
+    const matchIndex = match.index ?? previousIndex;
+    fragment.append(document.createTextNode(template.slice(previousIndex, matchIndex)));
+
+    if (match[1] === "link") {
+      const linkLabel = String(linkConfig.link_label || "");
+      const linkUrl = quickMessageLinkUrl(linkConfig.link_url);
+      if (linkUrl) {
+        const link = document.createElement("a");
+        link.href = linkUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = linkLabel;
+        fragment.append(link);
+      } else {
+        fragment.append(document.createTextNode(linkLabel || match[0]));
+      }
+    } else {
+      const value = values[match[1]];
+      fragment.append(document.createTextNode(value === undefined ? match[0] : value));
+    }
+
+    previousIndex = matchIndex + match[0].length;
+  }
+
+  fragment.append(document.createTextNode(template.slice(previousIndex)));
+  element.replaceChildren(fragment);
+  return true;
+}
+
+function configureQuickMessages() {
+  document.querySelectorAll("[data-quick-message-copy]").forEach((element) => {
+    const [message, field] = element.dataset.quickMessageCopy.split(".");
+    if (message && field) renderQuickMessageCopy(element, message, field);
+  });
+}
+
+let quickMessageIndex = 0;
+
+function renderQuickMessage(index) {
+  const buttons = [...elements.quickMessageButtons];
+  const slides = buttons[0]?.querySelectorAll("[data-quick-message-slide]");
+  if (!slides?.length) return;
+
+  quickMessageIndex = ((index % slides.length) + slides.length) % slides.length;
+  const activeMessage = slides[quickMessageIndex].dataset.quickMessageSlide;
+  buttons.forEach((button) => {
+    button.dataset.activeQuickMessage = activeMessage;
+    button.querySelectorAll("[data-quick-message-slide]").forEach((slide) => {
+      slide.hidden = slide.dataset.quickMessageSlide !== activeMessage;
+    });
+  });
+}
+
+function setupQuickMessageRotation() {
+  if (!elements.quickMessageButtons.length) return;
+  renderQuickMessage(0);
+  window.setInterval(() => {
+    const isPaused = document.hidden
+      || [...elements.quickMessageButtons].some((button) => button.matches(":hover, :focus-within"))
+      || elements.promoDialog.open;
+    if (!isPaused) renderQuickMessage(quickMessageIndex + 1);
+  }, 8000);
+}
+
+function openQuickMessage(message) {
+  const isRecurring = message === "recurring";
+  const activeMessage = isRecurring ? "recurring" : "tech";
+  const title = elements.promoDialog.querySelector("#promo-dialog-title");
+  const eyebrow = elements.promoDialog.querySelector("#promo-dialog-eyebrow");
+  if (title && !renderQuickMessageCopy(title, activeMessage, "title")) {
+    title.textContent = isRecurring ? "Vantaggi dell'ordine ricorrente" : "Il Buono Tech del mese";
+  }
+  if (eyebrow && !renderQuickMessageCopy(eyebrow, activeMessage, "eyebrow")) {
+    eyebrow.textContent = isRecurring ? "CONVENIENZA PER ORDINI B2B" : "PROMO PER ORDINI B2B";
+  }
+  elements.promoDialog.querySelectorAll("[data-quick-message-dialog]").forEach((panel) => {
+    panel.hidden = panel.dataset.quickMessageDialog !== activeMessage;
+  });
+  elements.promoDialog.setAttribute(
+    "aria-describedby",
+    isRecurring ? "recurring-order-description recurring-order-terms" : "promo-dialog-description promo-dialog-terms",
+  );
+  elements.promoDialog.showModal();
 }
 
 function updateRecurringControls() {
@@ -557,11 +712,12 @@ function productSheetRow(product) {
   const id = escapeHtml(product.id);
   const name = String(product.name || "Prodotto");
   const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
+  const image = productImages(product)[0] || fallbackImage;
   const pricePerUnit = productPricePerUnit(product);
   const quantity = normalizeSheetQuantity(state.sheetQuantities[product.id] || 0);
   return `
     <tr data-sheet-product-id="${id}">
-      <td class="product-sheet__product" data-label="Articolo"><a href="${escapeHtml(productUrl)}" data-open-product="${id}" aria-describedby="product-sheet-preview">${escapeHtml(name)}</a></td>
+      <td class="product-sheet__product" data-label="Articolo"><a href="${escapeHtml(productUrl)}" data-open-product="${id}"><img class="product-sheet__thumbnail" src="${escapeHtml(safeImageUrl(image))}" alt="" loading="lazy" decoding="async" /><span>${escapeHtml(name)}</span></a></td>
       <td class="product-sheet__format" data-label="Formato"><strong>${escapeHtml(productUnitLabel(product.unit) || "—")}</strong></td>
       <td class="product-sheet__category" data-label="Categoria" title="${escapeHtml(String(product.category || "Carta"))}">${escapeHtml(productCategoryLabel(product.category))}</td>
       <td class="product-sheet__price" data-label="Prezzo confezione">${escapeHtml(formatPrice(product.price))}</td>
@@ -615,55 +771,6 @@ function refreshProductSheetOrderBar() {
     if (decrease) decrease.disabled = quantity === 0;
     if (increase) increase.disabled = quantity === 999;
   });
-}
-
-let productSheetPreviewTimer = null;
-
-function hideProductSheetPreview() {
-  window.clearTimeout(productSheetPreviewTimer);
-  productSheetPreviewTimer = null;
-  if (elements.productSheetPreview) elements.productSheetPreview.hidden = true;
-}
-
-function scheduleProductSheetPreviewHide() {
-  window.clearTimeout(productSheetPreviewTimer);
-  productSheetPreviewTimer = window.setTimeout(() => {
-    if (elements.productSheetPreview) elements.productSheetPreview.hidden = true;
-    productSheetPreviewTimer = null;
-  }, 100);
-}
-
-function showProductSheetPreview(productId, anchor) {
-  const product = state.products.find((item) => item.id === productId && item.available !== false);
-  const preview = elements.productSheetPreview;
-  if (!product || !preview) return;
-
-  window.clearTimeout(productSheetPreviewTimer);
-  productSheetPreviewTimer = null;
-  const image = productImages(product)[0] || fallbackImage;
-  const pricePerUnit = productPricePerUnit(product);
-  preview.innerHTML = `
-    <img class="product-sheet-preview__image" src="${escapeHtml(safeImageUrl(image))}" alt="${escapeHtml(product.name || "Prodotto")}" />
-    <div class="product-sheet-preview__content">
-      <span class="product-sheet-preview__category">${escapeHtml(productCategoryLabel(product.category))}</span>
-      <strong class="product-sheet-preview__name">${escapeHtml(product.name || "Prodotto")}</strong>
-      <span class="product-sheet-preview__unit">${escapeHtml(productUnitLabel(product.unit) || "Formato non indicato")}</span>
-      <span class="product-sheet-preview__price">${escapeHtml(formatPrice(product.price))}${pricePerUnit === null ? "" : ` · ${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</span>
-      ${product.description ? `<span class="product-sheet-preview__description">${escapeHtml(product.description)}</span>` : ""}
-    </div>
-  `;
-  preview.hidden = false;
-
-  const margin = 12;
-  const anchorBounds = anchor.getBoundingClientRect();
-  const previewBounds = preview.getBoundingClientRect();
-  const left = Math.max(margin, Math.min(anchorBounds.left, window.innerWidth - previewBounds.width - margin));
-  let top = anchorBounds.bottom + 8;
-  if (top + previewBounds.height > window.innerHeight - margin) {
-    top = Math.max(margin, anchorBounds.top - previewBounds.height - 8);
-  }
-  preview.style.left = `${left}px`;
-  preview.style.top = `${top}px`;
 }
 
 function renderProductDialogImage(index = 0) {
@@ -865,6 +972,8 @@ function restoreCatalogStateFromUrl() {
 
   const params = new URLSearchParams(window.location.search);
   state.sharedOrder = params.get("order");
+  state.sharedSheet = params.get("sheet");
+  state.openSharedCart = params.get("openCart") === "1" && state.sharedOrder !== null;
   const categoryValues = new Set(
     elements.categoryTree ? [...elements.categoryTree.options].map((option) => option.value) : [],
   );
@@ -872,6 +981,11 @@ function restoreCatalogStateFromUrl() {
   const requestedCategory = params.get("category");
   state.category = categoryValues.has(requestedCategory) ? requestedCategory : "tutte";
   state.categorySubcategoriesExpanded = state.category.includes(" / ");
+
+  const profileValues = new Set(catalogProfiles.map(({ value }) => value));
+  const requestedProfile = params.get("profilo");
+  state.profile = profileValues.has(requestedProfile) ? requestedProfile : "tutte";
+  if (elements.productProfile) elements.productProfile.value = state.profile;
 
   const requestedSearch = params.get("q");
   state.search = requestedSearch || "";
@@ -895,8 +1009,9 @@ function syncCatalogUrl() {
   if (state.page !== "catalog") return;
 
   const url = new URL(window.location.href);
-  ["category", "q", "sort", "view"].forEach((key) => url.searchParams.delete(key));
+  ["category", "profilo", "q", "sort", "view"].forEach((key) => url.searchParams.delete(key));
   if (state.category !== "tutte") url.searchParams.set("category", state.category);
+  if (state.profile !== "tutte") url.searchParams.set("profilo", state.profile);
   if (state.search.trim()) url.searchParams.set("q", state.search.trim());
   if (state.sort !== "featured") url.searchParams.set("sort", state.sort);
   if (state.view !== "grid") url.searchParams.set("view", state.view);
@@ -935,6 +1050,38 @@ function parseSharedOrder(serializedOrder) {
   return sharedCart;
 }
 
+function parseSharedSheet(serializedSheet) {
+  if (serializedSheet === null) return {};
+
+  let entries;
+  try {
+    entries = JSON.parse(serializedSheet);
+  } catch {
+    return {};
+  }
+  if (!Array.isArray(entries)) return {};
+
+  const availableProductIds = new Set(
+    state.products
+      .filter((product) => product.available !== false)
+      .map((product) => String(product.id)),
+  );
+  const sheetQuantities = {};
+  entries.forEach((entry) => {
+    if (!Array.isArray(entry) || entry.length !== 2) return;
+    const [productId, quantity] = entry;
+    if (
+      typeof productId !== "string"
+      || !availableProductIds.has(productId)
+      || !Number.isSafeInteger(quantity)
+      || quantity < 1
+      || quantity > 999
+    ) return;
+    sheetQuantities[productId] = quantity;
+  });
+  return sheetQuantities;
+}
+
 function sortSheetColumn(column) {
   const ascendingSort = `${column}-asc`;
   const descendingSort = `${column}-desc`;
@@ -965,6 +1112,11 @@ function renderProducts() {
           || category === state.category
           || category.startsWith(`${state.category} /`);
       })
+  }
+
+  if (state.profile !== "tutte") {
+    visibleProducts = visibleProducts.filter((product) =>
+      Array.isArray(product.profiles) && product.profiles.includes(state.profile));
   }
 
   const normalizedSearch = normalizeText(state.search.trim());
@@ -1047,6 +1199,7 @@ function renderCart() {
   elements.cartCount.textContent = String(quantity);
   elements.cartOpen.setAttribute("aria-label", `Apri carrello, ${quantity} ${quantity === 1 ? "articolo" : "articoli"}`);
   if (elements.cartClear) elements.cartClear.disabled = entries.length === 0;
+  if (elements.cartShare) elements.cartShare.disabled = entries.length === 0;
   elements.cartItems.innerHTML = entries.map(({ product, quantity: itemQuantity }) => {
     const id = escapeHtml(product.id);
     const name = String(product.name || "Prodotto");
@@ -1317,15 +1470,15 @@ function renderSiteDetails() {
     const isCatalog = state.page === "catalog";
     const isHelp = state.page === "help";
     const title = isCatalog
-      ? `Catalogo carta per casa e ufficio a Montoro | ${brand}`
+      ? `Catalogo carta per la casa, il lavoro e l'ufficio a Montoro | ${brand}`
       : isHelp
         ? `Primi passi e FAQ | ${brand}`
-        : `${brand} | Carta per casa, cucina e ufficio a Montoro`;
+        : `${brand} | Carta per la casa, la cucina, il lavoro e l'ufficio a Montoro`;
     const description = isCatalog
-      ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per casa e ufficio, con consegna a Montoro e nei comuni vicini.`
+      ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per la casa, il lavoro e l'ufficio, con consegna a Montoro e nei comuni vicini.`
       : isHelp
         ? `Come ordinare da ${brand}, zone di consegna e risposte alle domande frequenti.`
-        : `Carta igienica, rotoli cucina e carta A4 per casa e ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
+        : `Carta igienica, rotoli cucina e carta A4 per la casa, il lavoro e l'ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
     const url = seoCanonicalUrl();
     updateSeoMetadata({ title, description, url, siteName: brand, pageType: "website" });
     updateSeoStructuredData(isCatalog
@@ -1743,7 +1896,7 @@ function setupHeroCarousel() {
       image: "https://images.unsplash.com/photo-1608494133726-bb93324274c8?auto=format&fit=crop&w=2000&q=88",
       imageAlt: "Prodotti in carta per la casa",
       eyebrow: "LA CARTA, VICINO A TE",
-      title: "Casa e ufficio, mai senza.",
+      title: "La casa, il lavoro e l'ufficio, mai senza.",
       intro: "Carta igienica, rotoli cucina e tutto l'essenziale. Ordini in pochi passaggi, noi te li portiamo.",
       action: "Scegli i prodotti",
       actionHref: "index.html",
@@ -1903,6 +2056,17 @@ function setupEvents() {
     });
   }
 
+  if (elements.productProfile) {
+    elements.productProfile.addEventListener("change", (event) => {
+      state.profile = event.currentTarget.value;
+      state.category = "tutte";
+      state.categorySubcategoriesExpanded = false;
+      renderCategoryFilters();
+      syncCatalogUrl();
+      renderProducts();
+    });
+  }
+
   if (elements.categorySidebarToggle) {
     elements.categorySidebarToggle.addEventListener("click", () => {
       state.categorySubcategoriesExpanded = !state.categorySubcategoriesExpanded;
@@ -1943,18 +2107,22 @@ function setupEvents() {
     elements.catalogShare.addEventListener("click", async () => {
       syncCatalogUrl();
       const shareUrl = new URL(window.location.href);
-      const orderEntries = cartEntries().map(({ product, quantity }) => [product.id, quantity]);
-      if (orderEntries.length > 0) {
-        shareUrl.searchParams.set("order", JSON.stringify(orderEntries));
-      } else {
-        shareUrl.searchParams.delete("order");
+      shareUrl.searchParams.delete("order");
+      shareUrl.searchParams.delete("openCart");
+      shareUrl.searchParams.delete("sheet");
+      const sheetEntries = Object.entries(state.sheetQuantities)
+        .map(([productId, quantity]) => [productId, normalizeSheetQuantity(quantity)])
+        .filter(([, quantity]) => quantity > 0);
+      if (sheetEntries.length > 0) {
+        shareUrl.searchParams.set("sheet", JSON.stringify(sheetEntries));
+        shareUrl.searchParams.set("view", "excel");
       }
       try {
         await navigator.clipboard.writeText(shareUrl.href);
         if (elements.catalogShareStatus) {
-          elements.catalogShareStatus.textContent = orderEntries.length > 0
-            ? "Link ordine copiato. Il carrello si ricreerà all'apertura."
-            : "Link catalogo copiato. Aggiungi prodotti al carrello per condividere un ordine.";
+          elements.catalogShareStatus.textContent = sheetEntries.length > 0
+            ? "Link Excel copiato. Verranno ripristinati filtri e quantità selezionate; il carrello resta separato."
+            : "Link catalogo copiato. Verranno ripristinati filtri e vista, senza importare il carrello.";
         }
       } catch {
         if (elements.catalogShareStatus) elements.catalogShareStatus.textContent = "Copia del link non disponibile in questo browser.";
@@ -1966,7 +2134,11 @@ function setupEvents() {
     elements.productSheetAddAll.addEventListener("click", addSelectedProductsToCart);
   }
 
-  elements.promoOpen.addEventListener("click", () => elements.promoDialog.showModal());
+  [elements.promoOpen, elements.promoOpenTop].forEach((button) => {
+    button?.addEventListener("click", () => {
+      openQuickMessage(button.dataset.activeQuickMessage || "tech");
+    });
+  });
   elements.promoDialog.addEventListener("click", (event) => {
     if (event.target === elements.promoDialog) elements.promoDialog.close();
   });
@@ -2018,25 +2190,6 @@ function setupEvents() {
       state.sheetQuantities[productId] = quantity;
       refreshProductSheetOrderBar();
     });
-    elements.productSheetBody.addEventListener("pointerover", (event) => {
-      if (event.pointerType !== "mouse") return;
-      const productLink = event.target.closest("[data-open-product]");
-      if (!productLink || productLink.contains(event.relatedTarget)) return;
-      showProductSheetPreview(productLink.dataset.openProduct, productLink);
-    });
-    elements.productSheetBody.addEventListener("pointerout", (event) => {
-      const productLink = event.target.closest("[data-open-product]");
-      if (!productLink || productLink.contains(event.relatedTarget)) return;
-      scheduleProductSheetPreviewHide();
-    });
-    elements.productSheetBody.addEventListener("focusin", (event) => {
-      const productLink = event.target.closest("[data-open-product]");
-      if (productLink) showProductSheetPreview(productLink.dataset.openProduct, productLink);
-    });
-    elements.productSheetBody.addEventListener("focusout", (event) => {
-      const productLink = event.target.closest("[data-open-product]");
-      if (productLink && !productLink.contains(event.relatedTarget)) scheduleProductSheetPreviewHide();
-    });
     elements.productSheetBody.addEventListener("click", (event) => {
       const stepButton = event.target.closest("[data-sheet-step]");
       if (stepButton) {
@@ -2054,11 +2207,8 @@ function setupEvents() {
       const productLink = event.target.closest("[data-open-product]");
       if (!productLink) return;
       event.preventDefault();
-      hideProductSheetPreview();
       openProductDialog(productLink.dataset.openProduct);
     });
-    elements.productSheet?.addEventListener("scroll", hideProductSheetPreview, true);
-    window.addEventListener("resize", hideProductSheetPreview);
   }
 
   if (elements.productSheet) {
@@ -2118,6 +2268,23 @@ function setupEvents() {
       clearCheckoutFeedback();
       renderCart();
       showMessage("Carrello svuotato.");
+    });
+  }
+
+  if (elements.cartShare) {
+    elements.cartShare.addEventListener("click", async () => {
+      const orderEntries = cartEntries().map(({ product, quantity }) => [product.id, quantity]);
+      if (!orderEntries.length) return;
+
+      const shareUrl = new URL("index.html", window.location.href);
+      shareUrl.searchParams.set("order", JSON.stringify(orderEntries));
+      shareUrl.searchParams.set("openCart", "1");
+      try {
+        await navigator.clipboard.writeText(shareUrl.href);
+        showMessage("Link del carrello copiato. Aprendolo, il carrello verrà ricreato e aperto.");
+      } catch {
+        showMessage("Copia del link non disponibile in questo browser.");
+      }
     });
   }
 
@@ -2364,6 +2531,7 @@ function setupEvents() {
 async function initializeShop() {
   restoreCatalogStateFromUrl();
   setupEvents();
+  setupQuickMessageRotation();
   renderCart();
 
   try {
@@ -2377,16 +2545,21 @@ async function initializeShop() {
     state.site = site;
     configureTechVoucher();
     configureRecurringOrder();
+    configureQuickMessages();
     updateRecurringControls();
     state.products = Array.isArray(catalog.products) ? catalog.products : [];
+    state.sheetQuantities = parseSharedSheet(state.sharedSheet);
     const sharedCart = parseSharedOrder(state.sharedOrder);
     if (sharedCart !== null) {
       state.cart = sharedCart;
+      state.openSharedCart = state.openSharedCart && Object.keys(sharedCart).length > 0;
       if (elements.catalogShareStatus) {
         elements.catalogShareStatus.textContent = Object.keys(sharedCart).length > 0
           ? "Ordine condiviso caricato nel carrello."
           : "Gli articoli dell'ordine condiviso non sono più disponibili.";
       }
+    } else {
+      state.openSharedCart = false;
     }
     state.cart = Object.fromEntries(
       Object.entries(state.cart).filter(([id]) =>
@@ -2399,6 +2572,10 @@ async function initializeShop() {
     renderProducts();
     renderProductDetail();
     renderCart();
+    if (state.openSharedCart && !elements.cartDialog.open) {
+      elements.cartDialog.showModal();
+      document.documentElement.classList.add("cart-is-open");
+    }
   } catch (error) {
     console.error(error);
     if (elements.productCount) elements.productCount.textContent = "Catalogo non disponibile. Riprova tra poco.";

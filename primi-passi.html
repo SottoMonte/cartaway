@@ -32,7 +32,7 @@
     />
     <link rel="stylesheet" href="shop.css?v=40" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=52" defer></script>
+    <script src="shop.js?v=63" defer></script>
   </head>
   <body data-page="help">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -40,7 +40,7 @@
     <div class="notice-bar">
       <div class="notice-bar__inner">
         <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
-        <button class="notice-bar__promo" id="promo-open" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</button>
+        <button class="notice-bar__promo" id="promo-open" data-quick-message-button type="button" aria-haspopup="dialog" aria-controls="promo-dialog"><span data-quick-message-slide="tech" data-quick-message-copy="tech.banner_message">🎁 Buono Tech: <span data-tech-voucher-standard-percent>25%</span> singolo · <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span> sul primo ordine del mese</span><span data-quick-message-slide="recurring" data-quick-message-copy="recurring.banner_message" hidden>Ordini ricorrenti: sconto <span data-recurring-discount-percent>5%</span> · prezzi bloccati per <span data-recurring-price-lock>12 mesi</span></span></button>
         <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
       </div>
     </div>
@@ -51,7 +51,7 @@
           <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
           <span class="brand__wordmark">
             <span class="brand__name" data-brand>Cartaway</span>
-            <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
+            <span class="brand__descriptor">CARTA PER LA CASA, IL LAVORO E L'UFFICIO</span>
           </span>
         </a>
         <button
@@ -94,7 +94,7 @@
         />
         <div class="hero__content">
           <p class="eyebrow"><span class="eyebrow__rule" aria-hidden="true"></span><span id="hero-eyebrow">LA CARTA, VICINO A TE</span></p>
-          <h1 id="hero-title">Casa e ufficio, mai senza.</h1>
+          <h1 id="hero-title">La casa, il lavoro e l'ufficio, mai senza.</h1>
           <p class="hero__intro" id="hero-intro">
             Carta igienica, rotoli cucina e tutto l'essenziale. Ordini in pochi passaggi, noi te li portiamo.
           </p>
@@ -220,7 +220,7 @@
             <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
             <span class="brand__wordmark">
               <span class="brand__name" data-brand>Cartaway</span>
-              <span class="brand__descriptor">CARTA PER CASA E UFFICIO</span>
+              <span class="brand__descriptor">CARTA PER LA CASA, IL LAVORO E L'UFFICIO</span>
             </span>
           </a>
           <p id="footer-business-copy">Carta per casa, ufficio e attività. Consegna locale a Montoro e dintorni.</p>
@@ -273,16 +273,32 @@
     <dialog class="promo-dialog" id="promo-dialog" aria-labelledby="promo-dialog-title" aria-describedby="promo-dialog-description promo-dialog-terms">
       <div class="promo-dialog__content">
         <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi promozione">×</button></form>
-        <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> PROMO PER ORDINI B2B</p>
-        <h2 id="promo-dialog-title">Il Buono Tech del mese</h2>
-        <p class="promo-dialog__description" id="promo-dialog-description">Il primo ordine del mese può ottenere un Buono Tech pari al <span data-tech-voucher-standard-percent>25%</span> della spesa se non ricorrente o al <span data-tech-voucher-recurring-percent>50%</span> se ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.</p>
-        <div class="promo-dialog__example" data-tech-voucher-example>
-          <span>Per ottenere il buono massimo con ordine non ricorrente</span>
-          <strong><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
-          <span>Per ottenere il buono massimo con ordine ricorrente</span>
-          <strong><span data-tech-voucher-recurring-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+        <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> <span id="promo-dialog-eyebrow" data-quick-message-copy="tech.eyebrow">PROMO PER ORDINI B2B</span></p>
+        <h2 id="promo-dialog-title" data-quick-message-copy="tech.title">Il Buono Tech del mese</h2>
+        <div data-quick-message-dialog="tech">
+          <p class="promo-dialog__description" id="promo-dialog-description" data-quick-message-copy="tech.description">Il primo ordine del mese può ottenere un Buono Tech pari al <span data-tech-voucher-standard-percent>25%</span> della spesa se non ricorrente o al <span data-tech-voucher-recurring-percent>50%</span> se ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.</p>
+          <div class="promo-dialog__example" data-tech-voucher-example>
+            <span data-quick-message-copy="tech.standard_example_label">Per ottenere il buono massimo con ordine non ricorrente</span>
+            <strong data-quick-message-copy="tech.standard_example_result"><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+            <span data-quick-message-copy="tech.recurring_example_label">Per ottenere il buono massimo con ordine ricorrente</span>
+            <strong data-quick-message-copy="tech.recurring_example_result"><span data-tech-voucher-recurring-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+          </div>
+          <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
         </div>
-        <p class="promo-dialog__terms" id="promo-dialog-terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
+        <div data-quick-message-dialog="recurring" hidden>
+          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture con una richiesta ogni <span data-recurring-frequency-days>30 o 60 giorni</span>: ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
+          <div class="promo-dialog__example">
+            <span data-quick-message-copy="recurring.discount_label">Sconto sugli ordini ricorrenti</span>
+            <strong data-quick-message-copy="recurring.discount_value"><span data-recurring-discount-percent>5%</span> in meno</strong>
+            <span data-quick-message-copy="recurring.price_lock_label">Prezzi bloccati</span>
+            <strong data-quick-message-copy="recurring.price_lock_value"><span data-recurring-price-lock>12 mesi</span></strong>
+            <span data-quick-message-copy="recurring.frequency_label">Frequenze disponibili</span>
+            <strong data-quick-message-copy="recurring.frequency_value">Ogni <span data-recurring-frequency-days>30 o 60 giorni</span></strong>
+            <span data-quick-message-copy="recurring.tech_voucher_label">Buono Tech sul primo ordine del mese</span>
+            <strong data-quick-message-copy="recurring.tech_voucher_value"><span data-tech-voucher-recurring-percent>50%</span> fino a <span data-tech-voucher-maximum>25 €</span></strong>
+          </div>
+          <p class="promo-dialog__terms" id="recurring-order-terms" data-quick-message-copy="recurring.terms">Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni.</p>
+        </div>
       </div>
     </dialog>
 
@@ -321,6 +337,12 @@
             <button class="cart-dialog__clear" id="cart-clear" type="button" aria-label="Svuota carrello" title="Svuota carrello" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                 <path d="M3 6h18M8 6V4h8v2m-11 0 1 15h12l1-15M10 11v6m4-6v6" />
+              </svg>
+            </button>
+            <button class="cart-dialog__share" id="cart-share" type="button" aria-label="Copia link del carrello" title="Copia link del carrello" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect x="8" y="8" width="12" height="12" rx="2" />
+                <path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H8" />
               </svg>
             </button>
             <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>

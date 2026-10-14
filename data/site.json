@@ -73,5 +73,35 @@
     "service_id": "service_retgqpj",
     "template_id": "template_4wxmf0m"
   },
-  "services": "Carta per casa, cucina e ufficio"
+  "services": "Carta per casa, cucina e ufficio",
+  "quick_messages": {
+    "tech": {
+      "banner_message": "🎁 Buono Tech: {standard_percent} singolo · {recurring_percent} ricorrente, fino a {maximum_amount} sul primo ordine del mese",
+      "eyebrow": "PROMO PER ORDINI B2B",
+      "title": "Il Buono Tech del mese",
+      "description": "Il primo ordine del mese può ottenere un Buono Tech pari al {standard_percent} della spesa se non ricorrente o al {recurring_percent} se ricorrente, fino a {maximum_amount}. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.",
+      "standard_example_label": "Per ottenere il buono massimo con ordine non ricorrente",
+      "standard_example_result": "{standard_example_amount} di spesa → {maximum_amount} di buono",
+      "recurring_example_label": "Per ottenere il buono massimo con ordine ricorrente",
+      "recurring_example_result": "{recurring_example_amount} di spesa → {maximum_amount} di buono",
+      "terms": "Un solo buono per cliente al mese. Valido {validity_days} dalla consegna; con un ordine ricorrente la validità si estende a {recurring_validity_days}. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su {link}.",
+      "link_label": "colosso.cloud",
+      "link_url": "https://colosso.cloud"
+    },
+    "recurring": {
+      "banner_message": "Ordini ricorrenti: sconto {discount_percent} · prezzi bloccati per {price_lock_months}",
+      "eyebrow": "CONVENIENZA PER ORDINI B2B",
+      "title": "Vantaggi dell'ordine ricorrente",
+      "description": "Organizza le forniture con una richiesta ogni {frequency_days}: ottieni {discount_percent} di sconto e prezzi bloccati per {price_lock_months}.",
+      "discount_label": "Sconto sugli ordini ricorrenti",
+      "discount_value": "{discount_percent} in meno",
+      "price_lock_label": "Prezzi bloccati",
+      "price_lock_value": "{price_lock_months}",
+      "frequency_label": "Frequenze disponibili",
+      "frequency_value": "Ogni {frequency_days}",
+      "tech_voucher_label": "Buono Tech sul primo ordine del mese",
+      "tech_voucher_value": "{tech_voucher_recurring_percent} fino a {maximum_amount}",
+      "terms": "Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni."
+    }
+  }
 }
