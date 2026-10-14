@@ -746,6 +746,7 @@ function refreshProductSheetOrderBar() {
       quantity: normalizeSheetQuantity(value),
     }))
     .filter(({ product, quantity }) => product && quantity > 0);
+  const maxQuantity = selectedProducts.reduce((maximum, entry) => Math.max(maximum, entry.quantity), 0);
   const totalQuantity = selectedProducts.reduce((sum, entry) => sum + entry.quantity, 0);
   const totalCents = selectedProducts.reduce(
     (sum, entry) => sum + priceInCents(entry.product.price) * entry.quantity,
@@ -772,7 +773,7 @@ function refreshProductSheetOrderBar() {
     if (row) {
       row.toggleAttribute("data-sheet-selected", quantity > 0);
       if (quantity > 0) {
-        const strength = 18 + ((Math.min(quantity, 100) - 1) / 99) * 40;
+        const strength = maxQuantity <= 1 ? 58 : 18 + ((quantity - 1) / (maxQuantity - 1)) * 40;
         row.style.setProperty("--sheet-quantity-strength", `${strength}%`);
       } else {
         row.style.removeProperty("--sheet-quantity-strength");
