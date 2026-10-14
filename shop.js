@@ -1061,6 +1061,18 @@ function parseSharedOrder(serializedOrder) {
   return sharedCart;
 }
 
+function buildCartShareUrl(items) {
+  const shareUrl = new URL("index.html", window.location.href);
+  shareUrl.search = "";
+  shareUrl.hash = "";
+  shareUrl.searchParams.set(
+    "order",
+    JSON.stringify(items.map(({ product, quantity }) => [product.id, quantity])),
+  );
+  shareUrl.searchParams.set("openCart", "1");
+  return shareUrl;
+}
+
 function parseSharedSheet(serializedSheet) {
   if (serializedSheet === null) return {};
 
@@ -2284,12 +2296,10 @@ function setupEvents() {
 
   if (elements.cartShare) {
     elements.cartShare.addEventListener("click", async () => {
-      const orderEntries = cartEntries().map(({ product, quantity }) => [product.id, quantity]);
-      if (!orderEntries.length) return;
+      const items = cartEntries();
+      if (!items.length) return;
 
-      const shareUrl = new URL("index.html", window.location.href);
-      shareUrl.searchParams.set("order", JSON.stringify(orderEntries));
-      shareUrl.searchParams.set("openCart", "1");
+      const shareUrl = buildCartShareUrl(items);
       try {
         await navigator.clipboard.writeText(shareUrl.href);
         showMessage("Link del carrello copiato. Aprendolo, il carrello verrà ricreato e aperto.");
@@ -2485,6 +2495,7 @@ function setupEvents() {
     const templateParams = {
       brand: String(state.site.brand || "Cartaway"),
       website_url: window.location.origin,
+      cart_url: buildCartShareUrl(items).href,
       order_id: orderId,
       orders: emailOrders,
       cost: { shipping: shippingCost, tax: "Da confermare", total: totalCost },
