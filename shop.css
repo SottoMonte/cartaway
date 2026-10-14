@@ -1107,8 +1107,16 @@ summary:focus-visible {
   border: 1px solid var(--line);
   border-radius: 2px;
   background: var(--white);
+  -moz-appearance: textfield;
+  appearance: textfield;
   font-size: 12px;
   text-align: center;
+}
+
+.product-sheet__quantity::-webkit-inner-spin-button,
+.product-sheet__quantity::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
 }
 
 .product-card {
@@ -3102,6 +3110,98 @@ html.cart-is-open {
     font-weight: 700;
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+}
+
+@media (min-width: 521px) and (max-width: 940px) {
+  .product-sheet__table {
+    width: 100%;
+    min-width: 0;
+    font-size: 10px;
+  }
+
+  .product-sheet__table th,
+  .product-sheet__table td {
+    padding: 7px 4px;
+  }
+
+  .product-sheet__table th {
+    font-size: 9px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .product-sheet__sort {
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 2px;
+    white-space: normal;
+  }
+
+  .product-sheet__table th:nth-child(1),
+  .product-sheet__table td:nth-child(1) {
+    width: 24%;
+  }
+
+  .product-sheet__table th:nth-child(2),
+  .product-sheet__table td:nth-child(2) {
+    width: 16%;
+  }
+
+  .product-sheet__table th:nth-child(3),
+  .product-sheet__table td:nth-child(3) {
+    width: 14%;
+  }
+
+  .product-sheet__table th:nth-child(4),
+  .product-sheet__table td:nth-child(4) {
+    width: 14%;
+  }
+
+  .product-sheet__table th:nth-child(5),
+  .product-sheet__table td:nth-child(5) {
+    width: 14%;
+  }
+
+  .product-sheet__table th:nth-child(6),
+  .product-sheet__table td:nth-child(6) {
+    width: 18%;
+  }
+
+  .product-sheet__category {
+    max-width: none;
+  }
+
+  .product-sheet__product a {
+    gap: 5px;
+  }
+
+  .product-sheet__thumbnail {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .product-sheet__price {
+    white-space: normal;
+  }
+
+  .product-sheet__stepper {
+    grid-template-columns: minmax(20px, 1fr) 34px minmax(20px, 1fr);
+    gap: 2px;
+  }
+
+  .product-sheet__step {
+    width: 100%;
+    height: 32px;
+    font-size: 15px;
+  }
+
+  .product-sheet__quantity {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    font-size: 11px;
   }
 }
 
