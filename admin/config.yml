@@ -93,7 +93,7 @@ collections:
                 name: recurring
                 widget: object
                 fields:
-                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Il simbolo 🏷️ viene mostrato automaticamente. Segnaposto: {discount_percent}, {price_lock_months}, {recurring_validity_days}." }
+                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "L'emoji 🏷️ fa parte del testo e si modifica qui. Segnaposto: {discount_percent}, {price_lock_months}, {recurring_validity_days}." }
                   - { label: Eyebrow del modale, name: eyebrow, widget: string }
                   - { label: Titolo del modale, name: title, widget: string }
                   - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {frequency_days}, {discount_percent}, {price_lock_months}." }

@@ -132,19 +132,6 @@ summary:focus-visible {
   text-align: center;
 }
 
-.notice-bar__promo [data-quick-message-slide="recurring"]:not([hidden]) {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.quick-message__discount-icon {
-  display: inline-block;
-  flex: 0 0 auto;
-  font-size: 16px;
-  line-height: 1;
-}
-
 .notice-bar__promo:hover {
   text-decoration: underline;
   text-underline-offset: 3px;

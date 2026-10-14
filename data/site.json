@@ -89,7 +89,7 @@
       "link_url": "https://colosso.cloud"
     },
     "recurring": {
-      "banner_message": "Ordini ricorrenti: sconto {discount_percent} · prezzi bloccati per {price_lock_months} · Buono Tech valido {recurring_validity_days}.",
+      "banner_message": "🏷️ Ordini ricorrenti: sconto {discount_percent} · prezzi bloccati per {price_lock_months} · Buono Tech valido {recurring_validity_days}.",
       "eyebrow": "CONVENIENZA PER ORDINI B2B",
       "title": "Vantaggi dell'ordine ricorrente",
       "description": "Organizza le forniture con una richiesta ogni {frequency_days}: ottieni {discount_percent} di sconto e prezzi bloccati per {price_lock_months}.",
