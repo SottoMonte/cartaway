@@ -2,7 +2,7 @@
 
 Negozio statico in italiano per prodotti di carta con consegna locale a Montoro e nei comuni vicini. Contatti e catalogo sono file JSON; Decap CMS li modifica senza database o server applicativo. Il carrello invia al cliente un riepilogo via email con EmailJS; non inoltra la richiesta all'attività. WhatsApp resta disponibile per i contatti diretti. Data e fascia oraria sono facoltative, e non sono attivi pagamenti online.
 
-`index.html` è la home e contiene il catalogo completo con ricerca, filtri e confronto dei prezzi. `catalogo.html` resta disponibile come URL compatibile. `primi-passi.html` raccoglie le modalità di consegna, i passaggi per ordinare e le FAQ; ogni scheda prodotto apre `prodotto.html?id=ID-PRODOTTO`.
+`index.html` è la pagina principale e ospita il catalogo completo con ricerca, filtri, carrello e confronto dei prezzi. `catalogo.html` è mantenuta come URL storico e reindirizzata alla pagina principale su Netlify. `chi-siamo.html` presenta il servizio, `primi-passi.html` spiega come ordinare e `faq.html` raccoglie le risposte frequenti. Ogni scheda prodotto apre `prodotto.html?id=ID-PRODOTTO`.
 
 ## Avvio locale
 
@@ -51,4 +51,4 @@ Per un sito commerciale non usare il piano Vercel Hobby: i termini attuali lo li
 
 ## SEO
 
-Le pagine pubbliche usano canonical assoluti su `https://cartaway.it/`, metadati Open Graph e dati strutturati aggiornati dal catalogo. Il `robots.txt` pubblica `sitemap.xml`; quando aggiungi, rimuovi o cambi l'ID di un prodotto nel CMS, aggiorna anche il relativo URL nella sitemap. Lo schema prodotto non dichiara offerte o prezzi acquistabili: il sito invia solo un riepilogo e disponibilità e importi vanno confermati.
+La pagina principale `/` è il catalogo e la sua canonical è l'URL principale. `_redirects` consolida `/index.html` e `/catalogo.html` su `/`. Le pagine pubbliche usano canonical assoluti, metadati Open Graph e dati strutturati specifici per catalogo, schede prodotto, guida e FAQ. Il `robots.txt` pubblica `sitemap.xml`; quando aggiungi, rimuovi o cambi l'ID di un prodotto nel CMS, aggiorna anche il relativo URL nella sitemap. Lo schema prodotto non dichiara offerte o prezzi acquistabili: il sito invia solo una richiesta e disponibilità e importi vanno confermati. I dati generici `Organization` non sostituiscono una scheda Google Business Profile verificata. Su Netlify, `_headers` applica `X-Robots-Tag: noindex` al frammento HTML usato come template email.

@@ -969,9 +969,8 @@ function renderProductDetail() {
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: brand, item: `${canonicalSiteOrigin}/` },
-          { "@type": "ListItem", position: 2, name: "Catalogo", item: `${canonicalSiteOrigin}/` },
-          { "@type": "ListItem", position: 3, name: productName, item: canonicalUrl },
+          { "@type": "ListItem", position: 1, name: "Catalogo", item: `${canonicalSiteOrigin}/` },
+          { "@type": "ListItem", position: 2, name: productName, item: canonicalUrl },
         ],
       },
     ],
@@ -984,7 +983,7 @@ function restoreCatalogStateFromUrl() {
   const params = new URLSearchParams(window.location.search);
   state.sharedOrder = params.get("order");
   state.sharedSheet = params.get("sheet");
-  state.openSharedCart = params.get("openCart") === "1" && state.sharedOrder !== null;
+  state.openSharedCart = params.get("openCart") === "1";
   const categoryValues = new Set(
     elements.categoryTree ? [...elements.categoryTree.options].map((option) => option.value) : [],
   );
@@ -1062,7 +1061,7 @@ function parseSharedOrder(serializedOrder) {
 }
 
 function buildCartShareUrl(items) {
-  const shareUrl = new URL("index.html", window.location.href);
+  const shareUrl = new URL("/", window.location.href);
   shareUrl.search = "";
   shareUrl.hash = "";
   shareUrl.searchParams.set(
@@ -1377,11 +1376,13 @@ function buildWhatsappUrl(message) {
 const canonicalSiteOrigin = "https://cartaway.it";
 
 function seoCanonicalUrl(page = state.page, productId = "") {
-  const pathname = page === "home" || page === "catalog"
+  const pathname = page === "catalog"
     ? "/"
     : page === "help"
       ? "/primi-passi.html"
-      : "/prodotto.html";
+      : page === "product"
+        ? "/prodotto.html"
+        : "/";
   const url = new URL(pathname, canonicalSiteOrigin);
   if (page === "product" && productId) url.searchParams.set("id", String(productId));
   return url.href;
@@ -1489,18 +1490,23 @@ function renderSiteDetails() {
   document.querySelectorAll("[data-brand]").forEach((element) => {
     element.textContent = brand;
   });
+  if (state.page === "cart") {
+    if (elements.currentYear) elements.currentYear.textContent = String(new Date().getFullYear());
+    renderDeliveryInfo();
+    return;
+  }
   if (state.page !== "product") {
     const isCatalog = state.page === "catalog";
     const isHelp = state.page === "help";
     const title = isCatalog
       ? `Catalogo carta per la casa, il lavoro e l'ufficio a Montoro | ${brand}`
       : isHelp
-        ? `Primi passi e FAQ | ${brand}`
+        ? `Come ordinare da ${brand} | Consegna a Montoro`
         : `${brand} | Carta per la casa, la cucina, il lavoro e l'ufficio a Montoro`;
     const description = isCatalog
       ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per la casa, il lavoro e l'ufficio, con consegna a Montoro e nei comuni vicini.`
       : isHelp
-        ? `Come ordinare da ${brand}, zone di consegna e risposte alle domande frequenti.`
+        ? `Guida per ordinare da ${brand}: come inviare una richiesta, costi e zone di consegna a Montoro e nei comuni vicini.`
         : `Carta igienica, rotoli cucina e carta A4 per la casa, il lavoro e l'ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
     const url = seoCanonicalUrl();
     updateSeoMetadata({ title, description, url, siteName: brand, pageType: "website" });
@@ -1509,22 +1515,52 @@ function renderSiteDetails() {
       : isHelp
         ? {
             "@context": "https://schema.org",
-            "@type": "WebPage",
-            "@id": `${url}#webpage`,
+            "@type": "HowTo",
+            "@id": `${url}#howto`,
             url,
             name: title,
             description,
             inLanguage: "it-IT",
-            isPartOf: { "@id": `${canonicalSiteOrigin}/#website` },
+            step: [
+              {
+                "@type": "HowToStep",
+                position: 1,
+                name: "Scegli i prodotti",
+                text: "Aggiungi al carrello carta e prodotti dal catalogo.",
+              },
+              {
+                "@type": "HowToStep",
+                position: 2,
+                name: "Invia la richiesta",
+                text: "Inserisci i dati e ricevi via email il riepilogo della richiesta.",
+              },
+              {
+                "@type": "HowToStep",
+                position: 3,
+                name: "Conferma i dettagli",
+                text: "Cartaway verifica disponibilità, consegna e pagamento con te.",
+              },
+            ],
           }
         : {
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          "@id": `${canonicalSiteOrigin}/#website`,
-          url: `${canonicalSiteOrigin}/`,
-          name: brand,
-          inLanguage: "it-IT",
-        });
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": `${canonicalSiteOrigin}/#organization`,
+                name: brand,
+                url: `${canonicalSiteOrigin}/`,
+              },
+              {
+                "@type": "WebSite",
+                "@id": `${canonicalSiteOrigin}/#website`,
+                url: `${canonicalSiteOrigin}/`,
+                name: brand,
+                inLanguage: "it-IT",
+                publisher: { "@id": `${canonicalSiteOrigin}/#organization` },
+              },
+            ],
+          });
   }
 
   const email = String(state.site.email || "").trim();
@@ -1922,7 +1958,7 @@ function setupHeroCarousel() {
       title: "La casa, il lavoro e l'ufficio, mai senza.",
       intro: "Carta igienica, rotoli cucina e tutto l'essenziale. Ordini in pochi passaggi, noi te li portiamo.",
       action: "Scegli i prodotti",
-      actionHref: "index.html",
+      actionHref: "/",
       openPromo: false,
       deliveryHighlight: "Montoro: circa 2 ore",
       deliverySecondary: "Comuni vicini: in giornata",
@@ -2162,26 +2198,32 @@ function setupEvents() {
       openQuickMessage(button.dataset.activeQuickMessage || "tech");
     });
   });
-  elements.promoDialog.addEventListener("click", (event) => {
-    if (event.target === elements.promoDialog) elements.promoDialog.close();
-  });
-  elements.promoDialog.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    elements.promoDialog.close();
-  });
+  if (elements.promoDialog) {
+    elements.promoDialog.addEventListener("click", (event) => {
+      if (event.target === elements.promoDialog) elements.promoDialog.close();
+    });
+    elements.promoDialog.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      elements.promoDialog.close();
+    });
+  }
 
-  elements.deliveryOpen.addEventListener("click", () => {
-    elements.deliveryDialog.showModal();
-    void initializeDeliveryMap();
-  });
-  elements.deliveryDialog.addEventListener("click", (event) => {
-    if (event.target === elements.deliveryDialog) elements.deliveryDialog.close();
-  });
-  elements.deliveryDialogZones.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-delivery-zone]");
-    if (button) selectDeliveryZone(button.dataset.deliveryZone);
-  });
+  if (elements.deliveryOpen && elements.deliveryDialog) {
+    elements.deliveryOpen.addEventListener("click", () => {
+      elements.deliveryDialog.showModal();
+      void initializeDeliveryMap();
+    });
+    elements.deliveryDialog.addEventListener("click", (event) => {
+      if (event.target === elements.deliveryDialog) elements.deliveryDialog.close();
+    });
+  }
+  if (elements.deliveryDialogZones) {
+    elements.deliveryDialogZones.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-delivery-zone]");
+      if (button) selectDeliveryZone(button.dataset.deliveryZone);
+    });
+  }
 
   if (elements.productGrid) {
     elements.productGrid.addEventListener("click", (event) => {
@@ -2340,7 +2382,7 @@ function setupEvents() {
     if (productsSection) {
       productsSection.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.location.assign("index.html");
+      window.location.assign("/");
     }
   });
 
@@ -2553,6 +2595,10 @@ function setupEvents() {
 async function initializeShop() {
   restoreCatalogStateFromUrl();
   setupEvents();
+  const promoFaq = document.querySelector("#buono-tech-faq");
+  if (window.location.hash === "#buono-tech-faq" && promoFaq instanceof HTMLDetailsElement) {
+    promoFaq.open = true;
+  }
   setupQuickMessageRotation();
   renderCart();
 
@@ -2580,7 +2626,7 @@ async function initializeShop() {
           ? "Ordine condiviso caricato nel carrello."
           : "Gli articoli dell'ordine condiviso non sono più disponibili.";
       }
-    } else {
+    } else if (state.sharedOrder !== null) {
       state.openSharedCart = false;
     }
     state.cart = Object.fromEntries(
@@ -2590,7 +2636,7 @@ async function initializeShop() {
     );
     saveCart();
     renderSiteDetails();
-    if (elements.deliveryDialog.open) void initializeDeliveryMap();
+    if (elements.deliveryDialog?.open) void initializeDeliveryMap();
     renderProducts();
     renderProductDetail();
     renderCart();

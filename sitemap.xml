@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://cartaway.it/</loc></url>
+  <url><loc>https://cartaway.it/chi-siamo.html</loc></url>
   <url><loc>https://cartaway.it/primi-passi.html</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=carta-igienica-12-rotoli</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=asciugatutto-2-rotoli</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=carta-a4-500-fogli</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=fazzoletti-tascabili-10</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=tovaglioli-100</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=rotolo-industriale-800</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=carta-forno-8m</loc></url>
-  <url><loc>https://cartaway.it/prodotto.html?id=carta-igienica-maxi-4</loc></url>
+  <url><loc>https://cartaway.it/faq.html</loc></url>
+  <url><loc>https://cartaway.it/prodotto.html?id=rotoloni-asciugatutto-splash-2000</loc></url>
+  <url><loc>https://cartaway.it/prodotto.html?id=rotoloni-asciugatutto-splash-2000-6</loc></url>
+  <url><loc>https://cartaway.it/prodotto.html?id=carta-igienica-lavanda-singolo</loc></url>
+  <url><loc>https://cartaway.it/prodotto.html?id=carta-igienica-lavanda-40-rotoli</loc></url>
 </urlset>
