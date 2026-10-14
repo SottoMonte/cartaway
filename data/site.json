@@ -76,7 +76,7 @@
   "services": "Carta per casa, cucina e ufficio",
   "quick_messages": {
     "tech": {
-      "banner_message": "🎁 Buono Tech: {standard_percent} singolo · {recurring_percent} ricorrente, fino a {maximum_amount} sul primo ordine del mese",
+      "banner_message": "🎁 Con il primo ordine del mese ricevi il Buono Tech: fino a {maximum_amount} di assistenza informatica su Colosso.",
       "eyebrow": "PROMO PER ORDINI B2B",
       "title": "Il Buono Tech del mese",
       "description": "Il primo ordine del mese può ottenere un Buono Tech pari al {standard_percent} della spesa se non ricorrente o al {recurring_percent} se ricorrente, fino a {maximum_amount}. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.",
@@ -89,7 +89,7 @@
       "link_url": "https://colosso.cloud"
     },
     "recurring": {
-      "banner_message": "Ordini ricorrenti: sconto {discount_percent} · prezzi bloccati per {price_lock_months}",
+      "banner_message": "Ordini ricorrenti: sconto {discount_percent} · prezzi bloccati per {price_lock_months} · Buono Tech valido {recurring_validity_days}.",
       "eyebrow": "CONVENIENZA PER ORDINI B2B",
       "title": "Vantaggi dell'ordine ricorrente",
       "description": "Organizza le forniture con una richiesta ogni {frequency_days}: ottieni {discount_percent} di sconto e prezzi bloccati per {price_lock_months}.",
@@ -100,8 +100,8 @@
       "frequency_label": "Frequenze disponibili",
       "frequency_value": "Ogni {frequency_days}",
       "tech_voucher_label": "Buono Tech sul primo ordine del mese",
-      "tech_voucher_value": "{tech_voucher_recurring_percent} fino a {maximum_amount}",
-      "terms": "Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni."
+      "tech_voucher_value": "{tech_voucher_recurring_percent} fino a {maximum_amount} · valido {recurring_validity_days} dalla consegna",
+      "terms": "Con l'ordine ricorrente il Buono Tech è valido {recurring_validity_days} dalla consegna. Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni."
     }
   }
 }

@@ -78,7 +78,7 @@ collections:
                 name: tech
                 widget: object
                 fields:
-                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Segnaposto: {standard_percent}, {recurring_percent}, {maximum_amount}." }
+                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Scrivi il beneficio per il cliente. Segnaposto: {maximum_amount}." }
                   - { label: Eyebrow del modale, name: eyebrow, widget: string }
                   - { label: Titolo del modale, name: title, widget: string }
                   - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {standard_percent}, {recurring_percent}, {maximum_amount}." }
@@ -93,7 +93,7 @@ collections:
                 name: recurring
                 widget: object
                 fields:
-                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Segnaposto: {discount_percent}, {price_lock_months}." }
+                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Il simbolo 🏷️ viene mostrato automaticamente. Segnaposto: {discount_percent}, {price_lock_months}, {recurring_validity_days}." }
                   - { label: Eyebrow del modale, name: eyebrow, widget: string }
                   - { label: Titolo del modale, name: title, widget: string }
                   - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {frequency_days}, {discount_percent}, {price_lock_months}." }
@@ -104,8 +104,8 @@ collections:
                   - { label: Etichetta delle frequenze, name: frequency_label, widget: string }
                   - { label: Testo delle frequenze, name: frequency_value, widget: string, hint: "Segnaposto: {frequency_days}." }
                   - { label: Etichetta del Buono Tech, name: tech_voucher_label, widget: string }
-                  - { label: Testo del Buono Tech, name: tech_voucher_value, widget: string, hint: "Segnaposto: {tech_voucher_recurring_percent}, {maximum_amount}." }
-                  - { label: Condizioni, name: terms, widget: text }
+                  - { label: Testo del Buono Tech, name: tech_voucher_value, widget: string, hint: "Segnaposto: {tech_voucher_recurring_percent}, {maximum_amount}, {recurring_validity_days}." }
+                  - { label: Condizioni, name: terms, widget: text, hint: "Segnaposto: {recurring_validity_days}." }
           - { label: Indirizzo pubblico, name: address, widget: string, required: false }
           - { label: Telefono, name: phone, widget: string, required: false }
           - label: Numero WhatsApp

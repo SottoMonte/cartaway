@@ -388,6 +388,7 @@ function quickMessageTemplateValues(message) {
     price_lock_months: `${priceLockMonths} mesi`,
     frequency_days: `${recurringFrequencyDays().join(" o ")} giorni`,
     tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
+    recurring_validity_days: techVoucherValidityText(true),
     maximum_amount: maximumAmount,
   };
 }
