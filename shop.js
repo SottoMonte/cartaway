@@ -769,6 +769,15 @@ function refreshProductSheetOrderBar() {
     const row = input.closest("tr");
     const decrease = row?.querySelector('[data-sheet-step="-1"]');
     const increase = row?.querySelector('[data-sheet-step="1"]');
+    if (row) {
+      row.toggleAttribute("data-sheet-selected", quantity > 0);
+      if (quantity > 0) {
+        const strength = 18 + ((Math.min(quantity, 100) - 1) / 99) * 40;
+        row.style.setProperty("--sheet-quantity-strength", `${strength}%`);
+      } else {
+        row.style.removeProperty("--sheet-quantity-strength");
+      }
+    }
     if (decrease) decrease.disabled = quantity === 0;
     if (increase) increase.disabled = quantity === 999;
   });

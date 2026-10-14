@@ -1006,6 +1006,10 @@ summary:focus-visible {
   background: var(--paper);
 }
 
+.product-sheet__table tbody tr[data-sheet-selected] td {
+  background-color: color-mix(in srgb, var(--lime) var(--sheet-quantity-strength), var(--white));
+}
+
 .product-sheet__table tbody tr:last-child td {
   border-bottom: 0;
 }
