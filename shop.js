@@ -33,6 +33,7 @@ const state = {
   deliveryMarkers: new Map(),
   selectedDeliveryZoneId: null,
 };
+let preferredTimeToAutoFilled = false;
 
 const elements = {
   cartClear: document.querySelector("#cart-clear"),
@@ -46,13 +47,18 @@ const elements = {
   cartSubtotalLabel: document.querySelector("#cart-subtotal-label"),
   cartDeliveryCost: document.querySelector("#cart-delivery-cost"),
   cartDeliveryNote: document.querySelector("#cart-delivery-note"),
+  cartDeliveryRules: document.querySelector("#cart-delivery-rules"),
   cartEstimatedTotal: document.querySelector("#cart-estimated-total"),
+  cartTotalLabel: document.querySelector("#cart-total-label"),
   cartDiscountRow: document.querySelector("#cart-discount-row"),
   cartDiscountAmount: document.querySelector("#cart-discount-amount"),
   cartCashback: document.querySelector("#cart-cashback"),
   cartCashbackAmount: document.querySelector("#cart-cashback-amount"),
   cartCashbackLabel: document.querySelector("#cart-cashback-label"),
   cartCashbackNote: document.querySelector("#cart-cashback-note"),
+  cartCashbackMore: document.querySelector("#cart-cashback-more"),
+  cartMobileTotal: document.querySelector("#cart-mobile-total"),
+  cartMobileTotalLabel: document.querySelector("#cart-mobile-total-label"),
   catalogResultsLayout: document.querySelector("#catalog-results-layout"),
   categorySidebar: document.querySelector("#category-sidebar"),
   categorySidebarToggle: document.querySelector("#category-sidebar-toggle"),
@@ -61,13 +67,31 @@ const elements = {
   categorySelect: document.querySelector("#product-category"),
   checkoutFeedback: document.querySelector("#checkout-feedback"),
   checkoutForm: document.querySelector("#checkout-form"),
+  checkoutMobileDock: document.querySelector("#checkout-mobile-dock"),
+  checkoutConfirmation: document.querySelector("#checkout-confirmation"),
+  checkoutConfirmationOrder: document.querySelector("#checkout-confirmation-order"),
+  checkoutConfirmationItems: document.querySelector("#checkout-confirmation-items"),
+  checkoutConfirmationTotal: document.querySelector("#checkout-confirmation-total"),
+  checkoutConfirmationDelivery: document.querySelector("#checkout-confirmation-delivery"),
+  checkoutConfirmationClose: document.querySelector("#checkout-confirmation-close"),
+  checkoutWhatsapp: document.querySelector("#checkout-whatsapp"),
+  deliveryPreference: document.querySelector("#delivery-preference"),
+  invoiceRequest: document.querySelector("#invoice-request"),
+  invoiceFields: document.querySelector("#invoice-fields"),
+  invoiceBusinessName: document.querySelector('[name="billing-business-name"]'),
+  invoiceVatNumber: document.querySelector('[name="billing-vat-number"]'),
+  invoiceRecipient: document.querySelector('[name="billing-recipient"]'),
   contactAddress: document.querySelector("#contact-address"),
   contactEmail: document.querySelector("#contact-email"),
   contactPhone: document.querySelector("#contact-phone"),
   contactWhatsapp: document.querySelector("#contact-whatsapp"),
   currentYear: document.querySelector("#current-year"),
+  preferredDeliveryFields: document.querySelector("#preferred-delivery-fields"),
   preferredDate: document.querySelector("#preferred-date"),
-  deliveryEstimate: document.querySelector("#delivery-estimate"),
+  preferredDateField: document.querySelector("#preferred-date-field"),
+  preferredTimeRange: document.querySelector("#preferred-time-range"),
+  preferredTimeFrom: document.querySelector("#preferred-time-from"),
+  preferredTimeTo: document.querySelector("#preferred-time-to"),
   deliveryDialog: document.querySelector("#delivery-dialog"),
   deliveryDialogZones: document.querySelector("#delivery-dialog-zones"),
   deliveryMap: document.querySelector("#delivery-map"),
@@ -115,8 +139,6 @@ const elements = {
   catalogShare: document.querySelector("#catalog-share"),
   catalogShare: document.querySelector("#catalog-share"),
   catalogShareStatus: document.querySelector("#catalog-share-status"),
-  preferredTimeStart: document.querySelector("#preferred-time-start"),
-  preferredTimeEnd: document.querySelector("#preferred-time-end"),
   promoDialog: document.querySelector("#promo-dialog"),
   promoOpen: document.querySelector("#promo-open"),
   promoOpenTop: document.querySelector("#promo-open-top"),
@@ -159,6 +181,7 @@ const elements = {
   recurringOptions: document.querySelector("#recurring-options"),
   recurringFrequency: document.querySelector("#recurring-frequency"),
   recurringDay: document.querySelector("#recurring-day"),
+  recurringDayLabel: document.querySelector("#recurring-day-label"),
   recurringDayField: document.querySelector("#recurring-day-field"),
   recurringHint: document.querySelector("#recurring-hint"),
   recurringPriceLockNote: document.querySelector("#recurring-price-lock-note"),
@@ -358,11 +381,24 @@ function techVoucherMaximumCents() {
   return optionalPriceInCents(state.site.tech_voucher?.maximum_amount) ?? 2500;
 }
 
+function techVoucherMinimumCents() {
+  return optionalPriceInCents(state.site.tech_voucher?.minimum_order_amount) ?? 2500;
+}
+
 function techVoucherExampleOrderCents(recurring = false) {
   const percent = techVoucherPercent(recurring);
   const maximumCents = techVoucherMaximumCents();
-  return percent > 0 && maximumCents > 0
-    ? Math.ceil(maximumCents * 100 / percent)
+  if (percent <= 0 || maximumCents <= 0) return null;
+
+  const spendAfterDiscountCents = Math.max(
+    techVoucherMinimumCents(),
+    Math.ceil(maximumCents * 100 / percent),
+  );
+  if (!recurring) return spendAfterDiscountCents;
+
+  const remainingPercent = 100 - getRecurringDiscountPercent();
+  return remainingPercent > 0
+    ? Math.ceil((spendAfterDiscountCents - 0.5) * 100 / remainingPercent)
     : null;
 }
 
@@ -380,6 +416,7 @@ function techVoucherValidityText(recurring = false) {
 }
 
 function techVoucherAmountCents(subtotalCents, recurring = false) {
+  if (subtotalCents < techVoucherMinimumCents()) return 0;
   return Math.min(Math.round(subtotalCents * techVoucherPercent(recurring) / 100), techVoucherMaximumCents());
 }
 
@@ -432,7 +469,8 @@ function configureRecurringOrder() {
   }
   elements.recurringHint.textContent = `${formatPercentage(discount)}% di sconto · prezzo bloccato per ${priceLockMonths} mesi`;
   elements.recurringPriceLockNote.textContent = `Prezzi bloccati per ${priceLockMonths} mesi.`;
-  elements.recurringDayField.hidden = config.fixed_delivery_day === false;
+  configureRecurringDayOptions();
+  elements.recurringDayField.hidden = config.fixed_delivery_day === false || !elements.recurringOrder.checked;
 
   if (elements.recurringDiscountFaq) elements.recurringDiscountFaq.textContent = `${formatPercentage(discount)}%`;
   if (elements.recurringPriceLockFaq) elements.recurringPriceLockFaq.textContent = `${priceLockMonths} mesi`;
@@ -457,6 +495,7 @@ function quickMessageTemplateValues(message) {
       standard_percent: `${formatPercentage(techVoucherPercent(false))}%`,
       recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
       maximum_amount: maximumAmount,
+      minimum_amount: formatPrice(techVoucherMinimumCents() / 100),
       validity_days: techVoucherValidityText(false),
       recurring_validity_days: techVoucherValidityText(true),
       standard_example_amount: formatPrice((techVoucherExampleOrderCents(false) ?? 0) / 100),
@@ -589,7 +628,89 @@ function updateRecurringControls() {
   elements.recurringOptions.hidden = !enabled;
   elements.recurringFrequency.required = enabled;
   elements.recurringDay.required = enabled && fixedDeliveryDay;
+  elements.recurringDayField.hidden = !enabled || !fixedDeliveryDay;
   renderCart();
+}
+
+function configureRecurringDayOptions() {
+  const weekly = [7, 14].includes(Number(elements.recurringFrequency.value));
+  const previousValue = elements.recurringDay.value;
+  const days = weekly
+    ? [
+        ["monday", "Lunedì"],
+        ["tuesday", "Martedì"],
+        ["wednesday", "Mercoledì"],
+        ["thursday", "Giovedì"],
+        ["friday", "Venerdì"],
+        ["saturday", "Sabato"],
+        ["sunday", "Domenica"],
+      ]
+    : Array.from({ length: 28 }, (_, index) => [String(index + 1), String(index + 1)]);
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Seleziona un giorno";
+  const options = days.map(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    return option;
+  });
+  elements.recurringDay.replaceChildren(placeholder, ...options);
+  if (days.some(([value]) => value === previousValue)) elements.recurringDay.value = previousValue;
+  elements.recurringDayLabel.textContent = weekly ? "Giorno della settimana" : "Giorno del mese";
+}
+
+function updateDeliveryPreferenceControls() {
+  const preference = elements.deliveryPreference.value;
+  const needsDate = preference === "date" || preference === "date-time";
+  const needsTimeRange = preference === "time" || preference === "date-time";
+  elements.preferredDeliveryFields.hidden = !needsDate && !needsTimeRange;
+  elements.preferredDateField.hidden = !needsDate;
+  elements.preferredDate.required = needsDate;
+  elements.preferredTimeRange.hidden = !needsTimeRange;
+  elements.preferredTimeFrom.required = needsTimeRange;
+  elements.preferredTimeTo.required = needsTimeRange;
+  elements.preferredDeliveryFields.classList.toggle("form-row--date-only", preference === "date");
+  elements.preferredDeliveryFields.classList.toggle("form-row--time-only", preference === "time");
+  if (!needsDate) elements.preferredDate.value = "";
+  if (!needsTimeRange) {
+    elements.preferredTimeFrom.value = "";
+    elements.preferredTimeTo.value = "";
+    preferredTimeToAutoFilled = false;
+  }
+  updateDeliveryTimeRangeValidity();
+}
+
+function updateDeliveryTimeRangeValidity() {
+  const from = elements.preferredTimeFrom.value;
+  const to = elements.preferredTimeTo.value;
+  const rangeIsValid = !from || !to || from <= to;
+  elements.preferredTimeFrom.setCustomValidity(rangeIsValid ? "" : "L'orario iniziale deve precedere quello finale.");
+  elements.preferredTimeTo.setCustomValidity(rangeIsValid ? "" : "L'orario finale deve essere successivo all'orario iniziale.");
+}
+
+function updatePreferredTimeFrom() {
+  const from = elements.preferredTimeFrom.value;
+  if (!from && preferredTimeToAutoFilled) {
+    elements.preferredTimeTo.value = "";
+    preferredTimeToAutoFilled = false;
+  } else if (from && (preferredTimeToAutoFilled || !elements.preferredTimeTo.value)) {
+    elements.preferredTimeTo.value = from;
+    preferredTimeToAutoFilled = true;
+  }
+  updateDeliveryTimeRangeValidity();
+}
+
+function updatePreferredTimeTo() {
+  preferredTimeToAutoFilled = false;
+  updateDeliveryTimeRangeValidity();
+}
+
+function updateInvoiceControls() {
+  const requested = elements.invoiceRequest.checked;
+  elements.invoiceFields.hidden = !requested;
+  [elements.invoiceBusinessName, elements.invoiceVatNumber, elements.invoiceRecipient]
+    .forEach((field) => { field.required = requested; });
 }
 
 function productImages(product) {
@@ -1321,6 +1442,47 @@ function cartEntries() {
     .filter(({ product }) => product && product.available !== false);
 }
 
+function deliveryRulesSummary(subtotalCents) {
+  return getDeliveryZones().map((zone) => {
+    const name = String(zone.name || deliveryZoneLabel(zone)).trim();
+    const feeCents = optionalPriceInCents(zone.delivery_fee);
+    if (zone.delivery_policy === "free") {
+      const minimumCents = optionalPriceInCents(zone.minimum_order_amount);
+      return `${name}: gratuita${minimumCents !== null && minimumCents > 0 ? ` da ${formatPrice(minimumCents / 100)}` : ""}`;
+    }
+    if (zone.delivery_policy === "threshold") {
+      const thresholdCents = optionalPriceInCents(zone.free_delivery_minimum)
+        ?? optionalPriceInCents(zone.minimum_order_amount);
+      if (thresholdCents === null) return `${name}: soglia gratuita da definire`;
+      const fee = feeCents === null ? "costo da concordare" : `${formatPrice(feeCents / 100)} sotto ${formatPrice(thresholdCents / 100)}`;
+      const remainingCents = Math.max(0, thresholdCents - subtotalCents);
+      const remaining = remainingCents > 0 ? ` (mancano ${formatPrice(remainingCents / 100)})` : "";
+      return `${name}: ${fee}; gratis da ${formatPrice(thresholdCents / 100)}${remaining}`;
+    }
+    return `${name}: ${feeCents === null ? "costo da concordare" : formatPrice(feeCents / 100)}`;
+  }).join(" · ");
+}
+
+function cartDeliveryStatusNote(town, zone, quote, subtotalCents) {
+  if (!town) return "Scegli il comune per calcolare la consegna. Il totale definitivo sarà confermato prima dell'ordine.";
+  if (!zone) return `Verifichiamo la consegna per ${town}. Il totale definitivo sarà confermato prima dell'ordine.`;
+
+  const delivery = quote.costCents === null
+    ? quote.label.toLowerCase()
+    : quote.costCents === 0
+      ? "gratuita"
+      : formatPrice(quote.costCents / 100);
+  const timing = String(zone.delivery_time || "").trim();
+  const details = [`Consegna ${delivery}`, timing].filter(Boolean);
+  if (zone.delivery_policy === "threshold") {
+    const thresholdCents = optionalPriceInCents(zone.free_delivery_minimum);
+    if (thresholdCents !== null && subtotalCents < thresholdCents) {
+      details.push(`gratis da ${formatPrice(thresholdCents / 100)}: mancano ${formatPrice((thresholdCents - subtotalCents) / 100)}`);
+    }
+  }
+  return `${details.join(" · ")}.`;
+}
+
 function renderCart() {
   const entries = cartEntries();
   const quantity = entries.reduce((total, entry) => total + entry.quantity, 0);
@@ -1382,47 +1544,48 @@ function renderCart() {
     `;
   }).join("");
 
-  elements.cartEmpty.hidden = entries.length > 0;
+  const showingConfirmation = elements.checkoutConfirmation && !elements.checkoutConfirmation.hidden;
+  elements.cartEmpty.hidden = entries.length > 0 || showingConfirmation;
   elements.cartSummary.hidden = entries.length === 0;
-  elements.checkoutForm.hidden = entries.length === 0;
+  elements.checkoutForm.hidden = entries.length === 0 || showingConfirmation;
+  if (elements.checkoutMobileDock) elements.checkoutMobileDock.hidden = entries.length === 0 || showingConfirmation;
   elements.orderSubmit.disabled = state.orderSubmitting || entries.length === 0 || !minimumReached || priceConfigurationMissing;
   elements.orderSubmit.setAttribute("aria-busy", String(state.orderSubmitting));
-  elements.cartSubtotalLabel.textContent = recurring && discountPercent > 0 ? "Subtotale scontato" : "Subtotale articoli";
-  elements.cartSubtotal.textContent = priceConfigurationMissing ? "Aliquote IVA da configurare" : formatPrice(subtotalCents / 100);
-  elements.cartDeliveryCost.textContent = deliveryQuote.label;
+  elements.cartSubtotalLabel.textContent = "Prodotti";
+  elements.cartSubtotal.textContent = priceConfigurationMissing ? "Aliquote IVA da configurare" : formatPrice(fullSubtotalCents / 100);
+  elements.cartDeliveryCost.textContent = selectedTown
+    ? deliveryZone ? deliveryQuote.label : "Da verificare"
+    : "Scegli il comune";
   elements.cartDeliveryCost.dataset.deliveryState = deliveryQuote.state;
-  elements.cartDeliveryNote.textContent = deliveryQuote.note;
+  elements.cartDeliveryNote.textContent = cartDeliveryStatusNote(selectedTown, deliveryZone, deliveryQuote, fullSubtotalCents);
+  if (elements.cartDeliveryRules) elements.cartDeliveryRules.textContent = deliveryRulesSummary(fullSubtotalCents);
+  const deliveryIsKnown = deliveryQuote.costCents !== null;
+  if (elements.cartTotalLabel) elements.cartTotalLabel.textContent = deliveryIsKnown ? "Totale" : "Totale prodotti";
+  if (elements.cartMobileTotalLabel) elements.cartMobileTotalLabel.textContent = deliveryIsKnown ? "Totale" : "Totale prodotti";
+  if (elements.cartMobileTotal) elements.cartMobileTotal.textContent = priceConfigurationMissing
+    ? "Configura le aliquote IVA"
+    : formatPrice((subtotalCents + (deliveryQuote.costCents ?? 0)) / 100);
   elements.cartEstimatedTotal.textContent = priceConfigurationMissing
     ? "Configura le aliquote IVA"
-    : deliveryQuote.costCents === null
-      ? minimumReached ? "Da confermare" : "Minimo non raggiunto"
-      : formatPrice((subtotalCents + deliveryQuote.costCents) / 100);
+    : formatPrice((subtotalCents + (deliveryQuote.costCents ?? 0)) / 100);
   elements.cartDiscountRow.hidden = !recurring || savingsCents <= 0;
   elements.cartDiscountAmount.textContent = `−${formatPrice(savingsCents / 100)}`;
+  const voucherMinimumCents = techVoucherMinimumCents();
+  const voucherEligibleByAmount = subtotalCents >= voucherMinimumCents;
   elements.cartCashbackAmount.textContent = priceConfigurationMissing
     ? "Da configurare"
-    : formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100);
+    : voucherEligibleByAmount
+      ? formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100)
+      : `Da ${formatPrice(voucherMinimumCents / 100)}`;
   if (elements.cartCashbackLabel) {
-    elements.cartCashbackLabel.textContent = recurring
-      ? "Buono Tech stimato per un ordine ricorrente, se è il primo del mese"
-      : "Buono Tech stimato per un ordine singolo, se è il primo del mese";
+    elements.cartCashbackLabel.textContent = "Buono Tech stimato";
   }
   if (elements.cartCashbackNote) {
-    const voucherValidity = recurring
-      ? `valido ${techVoucherValidityText(true)} dalla consegna grazie all'ordine ricorrente`
-      : `valido ${techVoucherValidityText()} dalla consegna`;
-    elements.cartCashbackNote.textContent = `Stima pari al ${formatPercentage(techVoucherPercent(recurring))}% della spesa, fino a ${formatPrice(techVoucherMaximumCents() / 100)}, senza minimo. Un buono per cliente al mese, ${voucherValidity} e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni; idoneità da verificare con l'attività.`;
+    elements.cartCashbackNote.textContent = voucherEligibleByAmount
+      ? "Valore calcolato sui prodotti; idoneità per il primo ordine del mese da verificare."
+      : `Da ${formatPrice(voucherMinimumCents / 100)} di prodotti dopo lo sconto; idoneità da verificare con l'attività.`;
   }
   elements.cartCashback.hidden = entries.length === 0;
-
-  if (!selectedTown) {
-    elements.deliveryEstimate.textContent = "Seleziona il comune per stimare consegna e costo.";
-  } else if (!deliveryZone) {
-    elements.deliveryEstimate.textContent = "Verifichiamo copertura e costo per questo comune prima di confermare.";
-  } else {
-    const timing = String(deliveryZone.delivery_time || "").trim();
-    elements.deliveryEstimate.textContent = `${selectedTown}: ${timing ? `${timing}. ` : ""}${deliveryQuote.note}`;
-  }
 }
 
 function showMessage(message) {
@@ -2176,7 +2339,7 @@ function setupHeroCarousel() {
     elements.heroEyebrow.textContent = slide.eyebrow;
     elements.heroTitle.textContent = slide.title;
     elements.heroIntro.textContent = slide.voucher
-      ? `Sul primo ordine del mese: ${standardVoucherPercent}% con un ordine singolo e ${recurringVoucherPercent}% con un ordine ricorrente, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. L'attivazione è verificata dall'attività.`
+      ? `Buono Tech dal primo ordine del mese da ${formatPrice(techVoucherMinimumCents() / 100)}: fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Idoneità verificata dall'attività.`
       : slide.recurringVoucher
       ? `${slide.intro.replace("{frequency_days}", formatRecurringFrequencyList())} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
         : slide.intro;
@@ -2352,6 +2515,7 @@ function setupEvents() {
       openQuickMessage(button.dataset.activeQuickMessage || "tech");
     });
   });
+  elements.cartCashbackMore.addEventListener("click", () => openQuickMessage("tech"));
   if (elements.promoDialog) {
     elements.promoDialog.addEventListener("click", (event) => {
       if (event.target === elements.promoDialog) elements.promoDialog.close();
@@ -2527,7 +2691,12 @@ function setupEvents() {
   });
   elements.cartDialog.addEventListener("close", () => {
     document.documentElement.classList.remove("cart-is-open");
+    if (!elements.checkoutConfirmation.hidden) {
+      elements.checkoutConfirmation.hidden = true;
+      renderCart();
+    }
   });
+  elements.checkoutConfirmationClose.addEventListener("click", () => elements.cartDialog.close());
 
   document.querySelector("#continue-shopping").addEventListener("click", () => {
     elements.cartDialog.close();
@@ -2551,6 +2720,14 @@ function setupEvents() {
   elements.otherTown.addEventListener("input", updateDeliveryEstimate);
 
   elements.recurringOrder.addEventListener("change", updateRecurringControls);
+  elements.recurringFrequency.addEventListener("change", () => {
+    configureRecurringDayOptions();
+    updateRecurringControls();
+  });
+  elements.deliveryPreference.addEventListener("change", updateDeliveryPreferenceControls);
+  elements.preferredTimeFrom.addEventListener("input", updatePreferredTimeFrom);
+  elements.preferredTimeTo.addEventListener("input", updatePreferredTimeTo);
+  elements.invoiceRequest.addEventListener("change", updateInvoiceControls);
 
   if (elements.preferredDate) {
     const today = new Date();
@@ -2561,27 +2738,8 @@ function setupEvents() {
     ].join("-");
   }
 
-  if (elements.preferredTimeStart && elements.preferredTimeEnd) {
-    let autoFilledTimeField = null;
-    const fillEmptyTimeField = (source, target) => {
-      const targetWasAutoFilled = autoFilledTimeField === target;
-      if (source.value && (!target.value || targetWasAutoFilled)) {
-        target.value = source.value;
-        autoFilledTimeField = target;
-      } else if (!source.value && targetWasAutoFilled) {
-        target.value = "";
-        autoFilledTimeField = null;
-      } else if (autoFilledTimeField === source) {
-        autoFilledTimeField = null;
-      }
-    };
-    elements.preferredTimeStart.addEventListener("change", () => {
-      fillEmptyTimeField(elements.preferredTimeStart, elements.preferredTimeEnd);
-    });
-    elements.preferredTimeEnd.addEventListener("change", () => {
-      fillEmptyTimeField(elements.preferredTimeEnd, elements.preferredTimeStart);
-    });
-  }
+  updateDeliveryPreferenceControls();
+  updateInvoiceControls();
 
   elements.menuToggle.addEventListener("click", () => {
     const expanded = elements.menuToggle.getAttribute("aria-expanded") === "true";
@@ -2629,18 +2787,36 @@ function setupEvents() {
     const selectedTown = String(formData.get("city") || "");
     const town = selectedTown === "altro" ? String(formData.get("other-town") || "").trim() : selectedTown;
     const preferredDate = String(formData.get("preferred-date") || "").trim();
-    const preferredTimeStart = String(formData.get("preferred-time-start") || "").trim();
-    const preferredTimeEnd = String(formData.get("preferred-time-end") || "").trim();
-    const preferredTimeSlot = preferredTimeStart && preferredTimeEnd
-      ? `${preferredTimeStart} - ${preferredTimeEnd}`
-      : preferredTimeStart
-        ? `dalle ${preferredTimeStart}`
-        : preferredTimeEnd
-          ? `entro le ${preferredTimeEnd}`
-          : "";
+    const preferredTimeFrom = String(formData.get("preferred-time-from") || "").trim();
+    const preferredTimeTo = String(formData.get("preferred-time-to") || "").trim();
+    const preferredTimeRange = preferredTimeFrom && preferredTimeTo
+      ? preferredTimeFrom === preferredTimeTo
+        ? preferredTimeFrom
+        : `dalle ${preferredTimeFrom} alle ${preferredTimeTo}`
+      : "";
+    const deliveryPreference = String(formData.get("delivery-preference") || "first");
+    const singleRequestedTime = preferredTimeFrom && preferredTimeFrom === preferredTimeTo;
+    const deliveryPreferenceLabels = {
+      first: "Prima disponibilità",
+      morning: "Mattina",
+      afternoon: "Pomeriggio",
+      date: "Una data specifica",
+      time: singleRequestedTime ? "Un orario specifico" : "Una fascia oraria specifica",
+      "date-time": singleRequestedTime ? "Una data e un orario specifici" : "Una data e una fascia oraria specifiche",
+    };
+    const deliveryPreferenceLabel = deliveryPreferenceLabels[deliveryPreference] || "Prima disponibilità";
+    const preferredDeliveryTime = preferredTimeRange
+      ? `${deliveryPreferenceLabel}: ${preferredTimeRange}`
+      : deliveryPreferenceLabel;
     const recurringOrder = formData.get("recurring-order") === "yes";
     const recurringFrequency = String(formData.get("recurring-frequency") || "").trim();
     const recurringDay = String(formData.get("recurring-day") || "").trim();
+    const recurringDayLabel = elements.recurringDay.selectedOptions[0]?.textContent?.trim() || recurringDay;
+    const invoiceRequested = formData.get("invoice-request") === "yes";
+    const invoiceBusinessName = invoiceRequested ? String(formData.get("billing-business-name") || "").trim() : "";
+    const invoiceVatNumber = invoiceRequested ? String(formData.get("billing-vat-number") || "").trim() : "";
+    const invoiceRecipient = invoiceRequested ? String(formData.get("billing-recipient") || "").trim() : "";
+    const emailRecipient = customerEmail || String(state.site.email || "").trim();
     const notes = String(formData.get("notes") || "").trim();
     const discountPercent = getRecurringDiscountPercent();
     const recurringConfig = state.site.recurring_order || {};
@@ -2660,10 +2836,12 @@ function setupEvents() {
       showCheckoutFeedback(`Ordine minimo ${formatPrice(deliveryQuote.minimumOrderCents / 100)}: aggiungi altri prodotti per continuare.`, "error");
       return;
     }
-    const voucherId = window.crypto?.randomUUID
-      ? `BT-${window.crypto.randomUUID().toUpperCase()}`
-      : `BT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
     const voucherValueCents = techVoucherAmountCents(subtotalCents, recurringOrder);
+    const voucherId = voucherValueCents > 0
+      ? window.crypto?.randomUUID
+        ? `BT-${window.crypto.randomUUID().toUpperCase()}`
+        : `BT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+      : "Non maturato";
     const orderId = window.crypto?.randomUUID
       ? window.crypto.randomUUID().slice(0, 8).toUpperCase()
       : `CW-${Date.now()}`;
@@ -2694,6 +2872,11 @@ function setupEvents() {
     const preferredDeliveryDate = preferredDate
       ? new Date(`${preferredDate}T00:00:00`).toLocaleDateString("it-IT")
       : "Non indicata";
+    const preferredDeliverySummary = [
+      deliveryPreferenceLabel,
+      preferredDate ? preferredDeliveryDate : "",
+      preferredTimeRange,
+    ].filter(Boolean).join(" · ");
     const deliveryZoneName = deliveryZone
       ? `${deliveryZoneLabel(deliveryZone)} - ${String(deliveryZone.name || "").trim()}`
       : "Da verificare";
@@ -2706,24 +2889,38 @@ function setupEvents() {
       orders: emailOrders,
       cost: { shipping: shippingCost, tax: vatSummary, total: totalCost },
       tech_voucher_id: voucherId,
-      tech_voucher_value: formatPrice(voucherValueCents / 100),
+      tech_voucher_value: voucherValueCents > 0
+        ? formatPrice(voucherValueCents / 100)
+        : "Non maturato",
+      tech_voucher_minimum: formatPrice(techVoucherMinimumCents() / 100),
+      tech_voucher_note: voucherValueCents > 0
+        ? "Il codice non è attivo. L'attività verifica che questo sia il primo ordine del mese e invierà una seconda email se il buono viene riconosciuto."
+        : `Spesa minima non raggiunta (${formatPrice(techVoucherMinimumCents() / 100)}); nessun codice è stato generato.`,
+      tech_voucher_status: voucherValueCents > 0
+        ? "Il buono non è ancora attivo: attendi la conferma dell'attività."
+        : `Il buono non è maturato; la spesa minima è ${formatPrice(techVoucherMinimumCents() / 100)}.`,
       tech_voucher_percent: `${formatPercentage(techVoucherPercent(recurringOrder))}%`,
       tech_voucher_standard_percent: `${formatPercentage(techVoucherPercent(false))}%`,
       tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
       tech_voucher_maximum: formatPrice(techVoucherMaximumCents() / 100),
       tech_voucher_validity: techVoucherValidityText(recurringOrder),
       customer_name: name || "Cliente",
-      customer_email: customerEmail,
+      customer_email: customerEmail || "Non fornita",
       customer_phone: phone,
       delivery_city: town || "Da specificare",
       delivery_address: address || "Da specificare",
       delivery_zone: deliveryZoneName,
       estimated_delivery_time: estimatedDeliveryTime,
       preferred_delivery_date: preferredDeliveryDate,
-      preferred_delivery_time: preferredTimeSlot || "Non indicata",
+      preferred_delivery_time: preferredDeliveryTime,
+      billing_requested: invoiceRequested ? "Sì" : "No",
+      billing_business_name: invoiceBusinessName || "Non richiesta",
+      billing_vat_number: invoiceVatNumber || "Non richiesta",
+      billing_recipient: invoiceRecipient || "Non richiesto",
+      payment_information: "Nessun pagamento richiesto con questa richiesta; totale e modalità saranno confermati prima dell'ordine.",
       recurring_order: recurringOrder ? "Sì" : "No",
       recurring_frequency: recurringOrder ? formatRecurringFrequency(Number(recurringFrequency)) : "Non applicabile",
-      recurring_day: recurringOrder && recurringDay ? recurringDay : "Non indicato",
+      recurring_day: recurringOrder && recurringDay ? recurringDayLabel : "Non indicato",
       recurring_discount: recurringOrder ? `${formatPercentage(discountPercent)}%` : "Nessuno",
       price_lock_months: recurringOrder ? `${priceLockMonths} mesi` : "Non applicabile",
       delivery_notes: notes || "Nessuna",
@@ -2736,27 +2933,64 @@ function setupEvents() {
       window.emailjs.init({ publicKey });
       await window.emailjs.send(serviceId, templateId, {
         ...templateParams,
-        email: customerEmail,
-        reply_to: String(state.site.email || "").trim(),
+        email: emailRecipient,
+        reply_to: customerEmail || emailRecipient,
       });
+      elements.checkoutConfirmationOrder.textContent = orderId;
+      elements.checkoutConfirmationDelivery.textContent = `Consegna richiesta: ${preferredDeliverySummary}`;
+      const confirmationRows = emailOrders.map((item) => {
+        const row = document.createElement("li");
+        row.textContent = `${item.units} × ${item.name}: ${item.line_total}`;
+        return row;
+      });
+      elements.checkoutConfirmationItems.replaceChildren(...confirmationRows);
+      const savingsCents = fullSubtotalCents - subtotalCents;
+      const confirmationCosts = [
+        `Prodotti ${formatPrice(fullSubtotalCents / 100)}`,
+        ...(savingsCents > 0 ? [`Sconto ricorrente −${formatPrice(savingsCents / 100)}`] : []),
+        `Consegna ${shippingCost}`,
+        `Totale ${totalCost}`,
+      ];
+      elements.checkoutConfirmationTotal.textContent = confirmationCosts.join(" · ");
+      let whatsappNumber = String(state.site.whatsapp || "").replace(/\D/g, "");
+      if (whatsappNumber.startsWith("00")) whatsappNumber = whatsappNumber.slice(2);
+      const nationalPhone = whatsappNumber.startsWith("39") ? whatsappNumber.slice(2) : whatsappNumber;
+      const whatsappConfigured = nationalPhone.length >= 8 && /[1-9]/.test(nationalPhone);
+      elements.checkoutWhatsapp.hidden = !whatsappConfigured;
+      if (whatsappConfigured) {
+        const whatsappPhone = whatsappNumber.startsWith("39") ? whatsappNumber : `39${whatsappNumber}`;
+        const whatsappMessage = [
+          `Ciao, ho inviato la richiesta d'ordine Cartaway #${orderId}.`,
+          `Consegna richiesta: ${preferredDeliverySummary}`,
+          ...emailOrders.map((item) => `${item.units} × ${item.name}: ${item.line_total}`),
+          ...confirmationCosts,
+        ].join("\n");
+        elements.checkoutWhatsapp.href = `https://wa.me/${whatsappPhone}?${new URLSearchParams({ text: whatsappMessage })}`;
+      } else {
+        elements.checkoutWhatsapp.removeAttribute("href");
+      }
       state.cart = {};
       saveCart();
       elements.checkoutForm.reset();
       elements.otherTownField.hidden = true;
       elements.otherTown.required = false;
+      elements.checkoutConfirmation.hidden = false;
+      elements.checkoutFeedback.hidden = true;
+      updateDeliveryPreferenceControls();
+      updateInvoiceControls();
       updateRecurringControls();
-      showCheckoutFeedback(`Riepilogo inviato a ${customerEmail} e all'attività. Il carrello è stato svuotato. Verificheremo la disponibilità; se un prodotto non è disponibile, ti contatteremo noi.`, "success");
     } catch {
       showCheckoutFeedback("Invio email non riuscito. Il carrello è stato conservato; riprova tra poco.", "error");
     } finally {
       state.orderSubmitting = false;
-      elements.orderSubmitLabel.textContent = "Ricevi riepilogo via email";
+      elements.orderSubmitLabel.textContent = "Invia richiesta d'ordine";
       renderCart();
     }
   });
 }
 
 async function initializeShop() {
+  elements.recurringOrder.checked = false;
   setupEvents();
   const promoFaq = document.querySelector("#buono-tech-faq");
   if (window.location.hash === "#buono-tech-faq" && promoFaq instanceof HTMLDetailsElement) {

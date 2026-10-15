@@ -56,6 +56,7 @@ collections:
             fields:
               - { label: Percentuale Buono Tech non ricorrente, name: percent, widget: number, value_type: float, min: 0, max: 100, step: 0.1 }
               - { label: Importo massimo (euro), name: maximum_amount, widget: number, value_type: float, min: 0, step: 0.01 }
+              - { label: Spesa minima per il Buono Tech (euro), name: minimum_order_amount, widget: number, value_type: float, min: 0, step: 0.01 }
               - { label: Durata dalla consegna (giorni), name: validity_days, widget: number, value_type: int, min: 1, step: 1 }
           - label: Ordine ricorrente
             name: recurring_order
@@ -81,10 +82,10 @@ collections:
                 name: tech
                 widget: object
                 fields:
-                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Scrivi il beneficio per il cliente. Segnaposto: {maximum_amount}." }
+                  - { label: Testo nella barra, name: banner_message, widget: string, hint: "Scrivi il beneficio per il cliente. Segnaposto: {minimum_amount}, {maximum_amount}." }
                   - { label: Eyebrow del modale, name: eyebrow, widget: string }
                   - { label: Titolo del modale, name: title, widget: string }
-                  - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {standard_percent}, {recurring_percent}, {maximum_amount}." }
+                  - { label: Descrizione, name: description, widget: text, hint: "Segnaposto: {minimum_amount}, {standard_percent}, {recurring_percent}, {maximum_amount}." }
                   - { label: Etichetta esempio ordine singolo, name: standard_example_label, widget: string }
                   - { label: Testo esempio ordine singolo, name: standard_example_result, widget: string, hint: "Segnaposto: {standard_example_amount}, {maximum_amount}." }
                   - { label: Etichetta esempio ordine ricorrente, name: recurring_example_label, widget: string }

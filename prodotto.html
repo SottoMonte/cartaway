@@ -27,9 +27,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=68" />
+    <link rel="stylesheet" href="shop.css?v=70" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=76" defer></script>
+      <script src="shop.js?v=80" defer></script>
   </head>
   <body data-page="product">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -167,12 +167,12 @@
         <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> <span id="promo-dialog-eyebrow" data-quick-message-copy="tech.eyebrow">PROMO PER ORDINI B2B</span></p>
         <h2 id="promo-dialog-title" data-quick-message-copy="tech.title">Il Buono Tech del mese</h2>
         <div data-quick-message-dialog="tech">
-          <p class="promo-dialog__description" id="promo-dialog-description" data-quick-message-copy="tech.description">Il primo ordine del mese può ottenere un Buono Tech pari al <span data-tech-voucher-standard-percent>25%</span> della spesa se non ricorrente o al <span data-tech-voucher-recurring-percent>50%</span> se ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.</p>
+          <p class="promo-dialog__description" id="promo-dialog-description" data-quick-message-copy="tech.description">Dal primo ordine del mese con almeno 25 € di spesa: <span data-tech-voucher-standard-percent>25%</span> singolo o <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Idoneità verificata dall'attività.</p>
           <div class="promo-dialog__example" data-tech-voucher-example>
             <span data-quick-message-copy="tech.standard_example_label">Per ottenere il buono massimo con ordine non ricorrente</span>
             <strong data-quick-message-copy="tech.standard_example_result"><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
             <span data-quick-message-copy="tech.recurring_example_label">Per ottenere il buono massimo con ordine ricorrente</span>
-            <strong data-quick-message-copy="tech.recurring_example_result"><span data-tech-voucher-recurring-example-order>50 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+            <strong data-quick-message-copy="tech.recurring_example_result"><span data-tech-voucher-recurring-example-order>52,63 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
           </div>
           <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
         </div>
@@ -236,7 +236,7 @@
                 <path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H8" />
               </svg>
             </button>
-            <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello">×</button></form>
+            <form method="dialog"><button class="dialog-close" type="submit" aria-label="Chiudi carrello" title="Chiudi carrello">×</button></form>
           </div>
         </header>
         <div class="cart-items" id="cart-items"></div>
@@ -247,19 +247,21 @@
           <button class="text-button" id="continue-shopping" type="button">Torna ai prodotti <span aria-hidden="true">↗</span></button>
         </div>
         <div class="cart-summary" id="cart-summary">
-          <p><span id="cart-subtotal-label">Subtotale articoli</span><strong id="cart-subtotal">€0,00</strong></p>
+          <p><span id="cart-subtotal-label">Prodotti</span><strong id="cart-subtotal">€0,00</strong></p>
           <p class="cart-discount-row" id="cart-discount-row" hidden><span>Sconto ricorrente</span><strong id="cart-discount-amount">−€0,00</strong></p>
-          <p class="cart-shipping-row"><span>Consegna</span><strong id="cart-delivery-cost" data-delivery-state="unknown">Da stimare</strong></p>
-          <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Seleziona il comune per conoscere costo e modalità di consegna.</small>
-          <p class="cart-total-row"><span>Totale stimato</span><strong id="cart-estimated-total">Da confermare</strong></p>
+          <p class="cart-shipping-row"><span>Consegna</span><strong id="cart-delivery-cost" data-delivery-state="unknown">Scegli il comune</strong></p>
+          <small class="cart-delivery-rules" id="cart-delivery-rules"></small>
+          <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Scegli il comune per calcolare la consegna. Il totale definitivo sarà confermato prima dell'ordine.</small>
+          <p class="cart-total-row"><span id="cart-total-label">Totale prodotti</span><strong id="cart-estimated-total">€0,00</strong></p>
           <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
-            <p>🎁 <span id="cart-cashback-label">Buono Tech stimato per un ordine singolo, se è il primo del mese</span>: <strong id="cart-cashback-amount">€0,00</strong>.</p>
-            <small id="cart-cashback-note">Stima pari al 25% della spesa con ordine non ricorrente o al 50% con ordine ricorrente, fino a 25 €, senza spesa minima. Un buono per cliente al mese, valido 60 giorni dalla consegna (90 con ordine ricorrente) e per un solo intervento. Non convertibile in denaro né cumulabile con altri buoni.</small>
+            <p><span id="cart-cashback-label">Buono Tech stimato</span>: <strong id="cart-cashback-amount">€0,00</strong></p>
+            <small id="cart-cashback-note">Da 25 € di spesa; importo e idoneità vengono verificati dall'attività.</small>
+            <button class="text-button cart-cashback__more" id="cart-cashback-more" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">Come funziona</button>
           </div>
         </div>
         <form class="checkout-form" id="checkout-form">
-          <h3>Dati per la consegna</h3>
-          <label class="form-field"><span>Email per la conferma della richiesta</span><input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" /></label>
+          <h3>Contatti e consegna</h3>
+          <label class="form-field"><span>Email <span class="form-field__optional">facoltativa</span></span><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" /></label>
           <label class="form-field"><span>Telefono per ricontatto</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" /></label>
           <div class="form-row">
             <label class="form-field">
@@ -279,14 +281,14 @@
             <label class="form-field" id="other-town-field" hidden><span>Scrivi il comune</span><input id="other-town" name="other-town" type="text" autocomplete="address-level2" maxlength="80" /></label>
           </div>
           <label class="form-field"><span>Via e numero civico</span><input name="address" type="text" autocomplete="street-address" required maxlength="140" /></label>
-          <p class="delivery-estimate" id="delivery-estimate" role="status" aria-live="polite">Seleziona il comune per stimare la consegna.</p>
-          <div class="form-row">
-            <label class="form-field"><span>Data preferita <span class="form-field__optional">facoltativa</span></span><input id="preferred-date" name="preferred-date" type="date" /></label>
-            <div class="form-field preferred-time-range">
-              <span>Fascia oraria preferita <span class="form-field__optional">facoltativa</span></span>
-              <div class="preferred-time-range__inputs">
-                <label class="form-field"><span>Dalle</span><input id="preferred-time-start" name="preferred-time-start" type="time" /></label>
-                <label class="form-field"><span>Alle</span><input id="preferred-time-end" name="preferred-time-end" type="time" /></label>
+          <label class="form-field"><span>Preferenza di consegna</span><select id="delivery-preference" name="delivery-preference"><option value="first">Prima disponibilità</option><option value="morning">Mattina</option><option value="afternoon">Pomeriggio</option><option value="time">Una fascia oraria specifica</option><option value="date">Una data specifica</option><option value="date-time">Una data e una fascia oraria specifiche</option></select></label>
+          <div class="form-row form-row--delivery-range" id="preferred-delivery-fields" hidden>
+            <label class="form-field" id="preferred-date-field" hidden><span>Data desiderata</span><input id="preferred-date" name="preferred-date" type="date" /></label>
+            <div class="form-field" id="preferred-time-range" hidden>
+              <span>Fascia oraria</span>
+              <div class="form-row form-row--time-range">
+                <label class="form-field"><span>Dalle</span><input id="preferred-time-from" name="preferred-time-from" type="time" /></label>
+                <label class="form-field"><span>Alle</span><input id="preferred-time-to" name="preferred-time-to" type="time" /></label>
               </div>
             </div>
           </div>
@@ -299,15 +301,39 @@
           </label>
           <div class="recurring-order__options" id="recurring-options" hidden>
             <label class="form-field"><span>Frequenza di consegna</span><select id="recurring-frequency" name="recurring-frequency"></select></label>
-            <label class="form-field" id="recurring-day-field"><span>Giorno fisso del mese (1-28)</span><input id="recurring-day" name="recurring-day" type="number" min="1" max="28" step="1" inputmode="numeric" /></label>
+            <label class="form-field" id="recurring-day-field" hidden><span id="recurring-day-label">Giorno del mese</span><select id="recurring-day" name="recurring-day"></select></label>
             <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
           </div>
           <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
           <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>
-          <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled><span id="order-submit-label">Ricevi riepilogo via email</span> <span aria-hidden="true">↗</span></button>
-          <p class="checkout-note">Riceverai via email un riepilogo e l'attività riceverà la richiesta. L'ordine non è ancora confermato: verificheremo disponibilità, consegna e pagamento. Se un prodotto non è disponibile, ti contatteremo noi; non devi fare nulla.</p>
+          <label class="invoice-request"><input id="invoice-request" name="invoice-request" type="checkbox" value="yes" /><span>Richiedo fattura</span></label>
+          <fieldset class="invoice-fields" id="invoice-fields" hidden>
+            <legend>Dati per fattura</legend>
+            <label class="form-field"><span>Ragione sociale</span><input name="billing-business-name" type="text" autocomplete="organization" maxlength="120" /></label>
+            <label class="form-field"><span>Partita IVA</span><input name="billing-vat-number" type="text" maxlength="20" /></label>
+            <label class="form-field"><span>Codice SDI o PEC</span><input name="billing-recipient" type="text" maxlength="254" /></label>
+          </fieldset>
+          <section class="checkout-payment" aria-labelledby="checkout-payment-title">
+            <h4 id="checkout-payment-title">Pagamento</h4>
+            <p>Non paghi nulla ora. Dopo la verifica riceverai il totale definitivo e le modalità disponibili prima di confermare l'acquisto.</p>
+          </section>
+          <p class="checkout-privacy">I dati saranno usati per gestire la richiesta. Consulta l'<a href="privacy.html" target="_blank" rel="noopener noreferrer">informativa privacy</a>.</p>
+          <div class="checkout-mobile-dock" id="checkout-mobile-dock">
+            <p class="checkout-mobile-dock__total"><span id="cart-mobile-total-label">Totale prodotti</span><strong id="cart-mobile-total">€0,00</strong></p>
+            <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled><span id="order-submit-label">Invia richiesta d'ordine</span></button>
+          </div>
         </form>
         <p class="checkout-feedback" id="checkout-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+        <section class="checkout-confirmation" id="checkout-confirmation" aria-labelledby="checkout-confirmation-title" hidden>
+          <h3 id="checkout-confirmation-title">Richiesta inviata</h3>
+          <p>Il riepilogo è stato inviato all'attività. La disponibilità, la consegna e il totale definitivo saranno confermati prima dell'ordine.</p>
+          <p class="checkout-confirmation__reference">Riferimento <strong id="checkout-confirmation-order"></strong></p>
+          <p id="checkout-confirmation-delivery"></p>
+          <ul id="checkout-confirmation-items"></ul>
+          <p class="checkout-confirmation__total" id="checkout-confirmation-total"></p>
+          <a class="button button--dark checkout-confirmation__whatsapp" id="checkout-whatsapp" href="#" target="_blank" rel="noopener noreferrer">Invia il riepilogo su WhatsApp</a>
+          <button class="text-button" id="checkout-confirmation-close" type="button">Chiudi</button>
+        </section>
       </div>
     </dialog>
 

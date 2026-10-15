@@ -1,9 +1,9 @@
 {
   "brand": "Cartaway",
   "city": "Montoro (AV)",
-  "phone": "+39 000 0000000",
+  "phone": "+39 347 7095289",
   "tagline": "La carta che ti serve, consegnata vicino a te.",
-  "whatsapp": "000 0000000",
+  "whatsapp": "+39 347 7095289",
   "address": "Via Roma, 1, Torchiati di Montoro (AV)",
   "legal": {
     "holder": "MARIO ROSSI",
@@ -180,6 +180,7 @@
   "tech_voucher": {
     "percent": 25,
     "maximum_amount": 25,
+    "minimum_order_amount": 25,
     "validity_days": 60
   },
   "recurring_order": {
@@ -195,7 +196,7 @@
     "tech_voucher_validity_days": 90,
     "fixed_delivery_day": true
   },
-  "email": "example@gmail.com",
+  "email": "nicolagal33@gmail.com",
   "emailjs": {
     "public_key": "khfx-WKeKM91KZmnj",
     "service_id": "service_retgqpj",
@@ -204,10 +205,10 @@
   "services": "Carta per casa, cucina e ufficio",
   "quick_messages": {
     "tech": {
-      "banner_message": "🎁 Con il primo ordine del mese ricevi il Buono Tech: fino a {maximum_amount} di assistenza informatica su Colosso.",
+      "banner_message": "🎁 Buono Tech dal primo ordine del mese, da {minimum_amount} e fino a {maximum_amount}.",
       "eyebrow": "PROMO PER ORDINI B2B",
       "title": "Il Buono Tech del mese",
-      "description": "Il primo ordine del mese può ottenere un Buono Tech pari al {standard_percent} della spesa se non ricorrente o al {recurring_percent} se ricorrente, fino a {maximum_amount}. Nessuna spesa minima; attivazione soggetta a verifica dell'attività.",
+      "description": "Dal primo ordine del mese con spesa di almeno {minimum_amount}: {standard_percent} della spesa (ordine singolo) o {recurring_percent} (ricorrente), fino a {maximum_amount}. Idoneità da verificare con l'attività.",
       "standard_example_label": "Per ottenere il buono massimo con ordine non ricorrente",
       "standard_example_result": "{standard_example_amount} di spesa → {maximum_amount} di buono",
       "recurring_example_label": "Per ottenere il buono massimo con ordine ricorrente",
