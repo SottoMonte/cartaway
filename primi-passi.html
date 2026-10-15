@@ -30,9 +30,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=67" />
+    <link rel="stylesheet" href="shop.css?v=68" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=70" defer></script>
+    <script src="shop.js?v=76" defer></script>
   </head>
   <body data-page="help">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -84,7 +84,7 @@
     </header>
 
     <main id="main">
-      <section class="hero" id="inizio" aria-labelledby="hero-title">
+      <section class="hero" id="inizio" aria-labelledby="hero-title" aria-roledescription="carosello">
         <img
           class="hero__image"
           id="hero-image"
@@ -105,6 +105,12 @@
         </div>
         <p class="hero__caption">
           <span id="hero-caption">UNA RICHIESTA, TRE PASSAGGI</span>
+          <span class="hero__controls" role="group" aria-label="Controlli carosello">
+            <button id="hero-previous" type="button" aria-label="Slide precedente" title="Slide precedente">←</button>
+            <button id="hero-toggle" type="button" aria-label="Metti in pausa lo scorrimento automatico" title="Metti in pausa">⏸</button>
+            <button id="hero-next" type="button" aria-label="Slide successiva" title="Slide successiva">→</button>
+            <span id="hero-slide-count">01 / 04</span>
+          </span>
         </p>
       </section>
 
@@ -205,6 +211,13 @@
           <p id="contact-address">Via Biagio de Giovanni, 1, Torchiati di Montoro (AV)</p>
         </div>
       </div>
+      <nav class="site-footer__documents" aria-label="Documenti legali">
+        <a href="condizioni-vendita.html">Condizioni di vendita</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="cookie.html">Cookie</a>
+        <a href="resi.html">Resi</a>
+        <a href="recesso.html">Recesso</a>
+      </nav>
       <section class="site-footer__legal" id="legal-details" aria-labelledby="legal-details-title">
         <h2 id="legal-details-title">Dati dell'impresa</h2>
         <dl class="site-footer__legal-list" id="legal-details-list"></dl>
@@ -233,6 +246,7 @@
           <h2 id="product-dialog-title"></h2>
           <p class="product-dialog__unit" id="product-dialog-unit"></p>
           <p class="product-dialog__price" id="product-dialog-price"></p>
+          <p class="product-price-set__label" data-vat-status>IVA da confermare</p>
           <p class="product-dialog__description" id="product-dialog-description"></p>
           <div class="product-dialog__actions">
             <button class="button button--dark product-dialog__add" id="product-dialog-add" type="button">Aggiungi al carrello <span aria-hidden="true">+</span></button>
@@ -258,14 +272,14 @@
           <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
         </div>
         <div data-quick-message-dialog="recurring" hidden>
-          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture con una richiesta ogni <span data-recurring-frequency-days>30 o 60 giorni</span>: ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
+          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture scegliendo una cadenza adatta. Ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
           <div class="promo-dialog__example">
             <span data-quick-message-copy="recurring.discount_label">Sconto sugli ordini ricorrenti</span>
             <strong data-quick-message-copy="recurring.discount_value"><span data-recurring-discount-percent>5%</span> in meno</strong>
             <span data-quick-message-copy="recurring.price_lock_label">Prezzi bloccati</span>
             <strong data-quick-message-copy="recurring.price_lock_value"><span data-recurring-price-lock>12 mesi</span></strong>
             <span data-quick-message-copy="recurring.frequency_label">Frequenze disponibili</span>
-            <strong data-quick-message-copy="recurring.frequency_value">Ogni <span data-recurring-frequency-days>30 o 60 giorni</span></strong>
+            <strong data-quick-message-copy="recurring.frequency_value">Frequenze disponibili: consulta le opzioni del modulo.</strong>
             <span data-quick-message-copy="recurring.tech_voucher_label">Buono Tech sul primo ordine del mese</span>
             <strong data-quick-message-copy="recurring.tech_voucher_value"><span data-tech-voucher-recurring-percent>50%</span> fino a <span data-tech-voucher-maximum>25 €</span></strong>
           </div>

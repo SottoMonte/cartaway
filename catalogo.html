@@ -30,9 +30,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=67" />
+    <link rel="stylesheet" href="shop.css?v=68" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=70" defer></script>
+    <script src="shop.js?v=75" defer></script>
   </head>
   <body data-page="catalog">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -92,10 +92,6 @@
               <span class="visually-hidden">Filtra per attività</span>
               <select id="product-profile" aria-label="Filtra per attività">
                 <option value="tutte">Tutte le attività</option>
-                <option value="parrucchiere">Parrucchiere</option>
-                <option value="meccanico">Meccanico</option>
-                <option value="panificio">Panificio</option>
-                <option value="ufficio">Ufficio</option>
               </select>
             </label>
             <label class="sort-field category-filter__select">
@@ -104,93 +100,6 @@
                 <option value="tutte">Tutte le categorie</option>
               </select>
             </label>
-            <select id="product-category-tree" aria-hidden="true" hidden>
-              <option value="tutte">Tutte le categorie</option>
-              <optgroup label="Avvolgenti Alimentari">
-                <option value="Avvolgenti Alimentari">Tutta la categoria</option>
-                <option value="Avvolgenti Alimentari / Carta e Veline alimentari">Carta e Veline alimentari</option>
-                <option value="Avvolgenti Alimentari / Carta sovrainvolto">Carta sovrainvolto</option>
-                <option value="Avvolgenti Alimentari / Ideabrill">Ideabrill</option>
-                <option value="Avvolgenti Alimentari / Rotoli pellicola, alluminio e carta forno">Rotoli pellicola, alluminio e carta forno</option>
-                <option value="Avvolgenti Alimentari / Sacchetti di carta">Sacchetti di carta</option>
-                <option value="Avvolgenti Alimentari / Sacchetti in plastica per alimenti">Sacchetti in plastica per alimenti</option>
-                <option value="Avvolgenti Alimentari / Sacchetti sottovuoto">Sacchetti sottovuoto</option>
-                <option value="Avvolgenti Alimentari / Shoppers Bio-compostabili">Shoppers Bio-compostabili</option>
-                <option value="Avvolgenti Alimentari / Shoppers in carta">Shoppers in carta</option>
-              </optgroup>
-              <optgroup label="Cancelleria e Ufficio">
-                <option value="Cancelleria e Ufficio">Tutta la categoria</option>
-                <option value="Cancelleria e Ufficio / Accessori">Accessori</option>
-                <option value="Cancelleria e Ufficio / Blocchi e fogli A4">Blocchi e fogli A4</option>
-                <option value="Cancelleria e Ufficio / Rotoli per cassa">Rotoli per cassa</option>
-                <option value="Cancelleria e Ufficio / Rotoli termici adesivi">Rotoli termici adesivi</option>
-              </optgroup>
-              <optgroup label="Contenitori cibo asporto">
-                <option value="Contenitori cibo asporto">Tutta la categoria</option>
-                <option value="Contenitori cibo asporto / Box fritti e panino">Box fritti e panino</option>
-                <option value="Contenitori cibo asporto / Box pizza e Teglie in cartone">Box pizza e Teglie in cartone</option>
-                <option value="Contenitori cibo asporto / Contenitori alluminio con coperchio bordo G">Contenitori alluminio con coperchio bordo G</option>
-                <option value="Contenitori cibo asporto / Contenitori alluminio con coperchio bordo L">Contenitori alluminio con coperchio bordo L</option>
-                <option value="Contenitori cibo asporto / Contenitori Bio-Compostabili">Contenitori Bio-Compostabili</option>
-                <option value="Contenitori cibo asporto / Contenitori fast food con coperchio">Contenitori fast food con coperchio</option>
-                <option value="Contenitori cibo asporto / Contenitori in plastica con coperchio">Contenitori in plastica con coperchio</option>
-                <option value="Contenitori cibo asporto / Contenitori laccati con coperchio">Contenitori laccati con coperchio</option>
-              </optgroup>
-              <option value="Dispenser">Dispenser</option>
-              <optgroup label="Dispositivi di sicurezza">
-                <option value="Dispositivi di sicurezza">Tutta la categoria</option>
-                <option value="Dispositivi di sicurezza / Guanti">Guanti</option>
-                <option value="Dispositivi di sicurezza / Scarpe da lavoro">Scarpe da lavoro</option>
-              </optgroup>
-              <optgroup label="Igiene e Pulizia">
-                <option value="Igiene e Pulizia">Tutta la categoria</option>
-                <option value="Igiene e Pulizia / Detergenti stoviglie">Detergenti stoviglie</option>
-                <option value="Igiene e Pulizia / Detergenti superfici">Detergenti superfici</option>
-                <option value="Igiene e Pulizia / Materiale per la pulizia">Materiale per la pulizia</option>
-                <option value="Igiene e Pulizia / Sacchi spazzatura">Sacchi spazzatura</option>
-                <option value="Igiene e Pulizia / Sapone mani">Sapone mani</option>
-              </optgroup>
-              <optgroup label="Imballaggi">
-                <option value="Imballaggi">Tutta la categoria</option>
-                <option value="Imballaggi / Carta gommata">Carta gommata</option>
-                <option value="Imballaggi / Estensibile">Estensibile</option>
-                <option value="Imballaggi / Nastri adesivi">Nastri adesivi</option>
-              </optgroup>
-              <option value="Insetticida">Insetticida</option>
-              <optgroup label="Itissue - Monouso in carta">
-                <option value="Itissue - Monouso in carta">Tutta la categoria</option>
-                <option value="Itissue - Monouso in carta / Asciugamani piegati">Asciugamani piegati</option>
-                <option value="Itissue - Monouso in carta / Carta igienica">Carta igienica</option>
-                <option value="Itissue - Monouso in carta / EcoNatural">EcoNatural</option>
-                <option value="Itissue - Monouso in carta / Lenzuolino medico">Lenzuolino medico</option>
-                <option value="Itissue - Monouso in carta / Mini jumbo">Mini jumbo</option>
-                <option value="Itissue - Monouso in carta / Rotoloni">Rotoloni</option>
-                <option value="Itissue - Monouso in carta / Tovaglioli">Tovaglioli</option>
-              </optgroup>
-              <optgroup label="Pasticceria e Gelateria">
-                <option value="Pasticceria e Gelateria">Tutta la categoria</option>
-                <option value="Pasticceria e Gelateria / Basi e Accessori">Basi e Accessori</option>
-                <option value="Pasticceria e Gelateria / Porta torte">Porta torte</option>
-                <option value="Pasticceria e Gelateria / Vaschette EPS gelato">Vaschette EPS gelato</option>
-                <option value="Pasticceria e Gelateria / Vassoi in cartone">Vassoi in cartone</option>
-              </optgroup>
-              <optgroup label="Stoviglie monouso">
-                <option value="Stoviglie monouso">Tutta la categoria</option>
-                <option value="Stoviglie monouso / Accessori monouso">Accessori monouso</option>
-                <option value="Stoviglie monouso / Bicchieri in cartoncino con coperchio">Bicchieri in cartoncino con coperchio</option>
-                <option value="Stoviglie monouso / Bicchieri in plastica con coperchio">Bicchieri in plastica con coperchio</option>
-                <option value="Stoviglie monouso / Cannucce e Agitatori">Cannucce e Agitatori</option>
-                <option value="Stoviglie monouso / Piatti e Scodelle">Piatti e Scodelle</option>
-                <option value="Stoviglie monouso / Posate e Kit posate">Posate e Kit posate</option>
-              </optgroup>
-              <optgroup label="Tovaglie e Tovaglioli">
-                <option value="Tovaglie e Tovaglioli">Tutta la categoria</option>
-                <option value="Tovaglie e Tovaglioli / Porta posate">Porta posate</option>
-                <option value="Tovaglie e Tovaglioli / Tovaglia TNT">Tovaglia TNT</option>
-                <option value="Tovaglie e Tovaglioli / Tovaglietta">Tovaglietta</option>
-                <option value="Tovaglie e Tovaglioli / Tovaglioli colorati">Tovaglioli colorati</option>
-              </optgroup>
-            </select>
           </div>
           <div class="catalog-tools">
             <label class="search-field">
@@ -253,7 +162,7 @@
             <div class="product-grid" id="product-grid"></div>
             <div class="product-sheet" id="product-sheet" hidden>
           <div class="product-sheet__toolbar">
-            <p class="product-sheet__vat-note">Prezzi indicativi · IVA da confermare</p>
+            <p class="product-sheet__vat-note">Prezzi indicativi · <span data-vat-status>IVA da confermare</span></p>
           </div>
           <div class="product-sheet__scroll" role="region" aria-label="Catalogo in vista Excel" tabindex="0">
             <table class="product-sheet__table">
@@ -282,7 +191,7 @@
           <div class="product-sheet__order-bar" id="product-sheet-order-bar" hidden>
             <div class="product-sheet__order-copy">
               <strong id="product-sheet-order-summary" role="status" aria-live="polite">0 articoli · €0,00</strong>
-              <span>IVA da confermare</span>
+              <span data-vat-status>IVA da confermare</span>
             </div>
             <button class="product-sheet__add-all" id="product-sheet-add-all" type="button" disabled>Aggiungi al carrello (0)</button>
           </div>
@@ -292,7 +201,7 @@
               <h3>Nessun prodotto trovato.</h3>
               <p>Prova un'altra ricerca o categoria.</p>
             </div>
-            <p class="price-disclaimer">Catalogo e prezzi iniziali indicativi: disponibilità, totale e consegna vengono confermati prima dell'ordine.</p>
+            <p class="price-disclaimer">Catalogo e prezzi iniziali indicativi · <span data-vat-status>IVA da confermare</span>. Disponibilità, totale e consegna vengono confermati prima dell'ordine.</p>
           </div>
         </div>
       </section>
@@ -319,6 +228,13 @@
           <p id="contact-address">Via Biagio de Giovanni, 1, Torchiati di Montoro (AV)</p>
         </div>
       </div>
+      <nav class="site-footer__documents" aria-label="Documenti legali">
+        <a href="condizioni-vendita.html">Condizioni di vendita</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="cookie.html">Cookie</a>
+        <a href="resi.html">Resi</a>
+        <a href="recesso.html">Recesso</a>
+      </nav>
       <section class="site-footer__legal" id="legal-details" aria-labelledby="legal-details-title">
         <h2 id="legal-details-title">Dati dell'impresa</h2>
         <dl class="site-footer__legal-list" id="legal-details-list"></dl>
@@ -349,6 +265,7 @@
           <div class="product-price-set product-dialog__prices">
             <div class="product-price-set__item product-price-set__item--total">
               <p class="product-price-set__value product-dialog__price" id="product-dialog-price"></p>
+              <span class="product-price-set__label" data-vat-status>IVA da confermare</span>
             </div>
             <div class="product-price-set__item product-price-set__item--unit" id="product-dialog-unit-price-wrap" hidden>
               <span class="product-price-set__label">Prezzo unitario</span>
@@ -380,14 +297,14 @@
           <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
         </div>
         <div data-quick-message-dialog="recurring" hidden>
-          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture con una richiesta ogni <span data-recurring-frequency-days>30 o 60 giorni</span>: ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
+          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture scegliendo una cadenza adatta. Ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
           <div class="promo-dialog__example">
             <span data-quick-message-copy="recurring.discount_label">Sconto sugli ordini ricorrenti</span>
             <strong data-quick-message-copy="recurring.discount_value"><span data-recurring-discount-percent>5%</span> in meno</strong>
             <span data-quick-message-copy="recurring.price_lock_label">Prezzi bloccati</span>
             <strong data-quick-message-copy="recurring.price_lock_value"><span data-recurring-price-lock>12 mesi</span></strong>
             <span data-quick-message-copy="recurring.frequency_label">Frequenze disponibili</span>
-            <strong data-quick-message-copy="recurring.frequency_value">Ogni <span data-recurring-frequency-days>30 o 60 giorni</span></strong>
+            <strong data-quick-message-copy="recurring.frequency_value">Frequenze disponibili: consulta le opzioni del modulo.</strong>
             <span data-quick-message-copy="recurring.tech_voucher_label">Buono Tech sul primo ordine del mese</span>
             <strong data-quick-message-copy="recurring.tech_voucher_value"><span data-tech-voucher-recurring-percent>50%</span> fino a <span data-tech-voucher-maximum>25 €</span></strong>
           </div>

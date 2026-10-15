@@ -12,6 +12,129 @@
     "vat_number": "00000000000",
     "rea": "AV - 313427"
   },
+  "prices_include_vat": true,
+  "profiles": [
+    { "value": "parrucchiere", "label": "Parrucchiere" },
+    { "value": "meccanico", "label": "Meccanico" },
+    { "value": "panificio", "label": "Panificio" },
+    { "value": "ufficio", "label": "Ufficio" }
+  ],
+  "categories": [
+    {
+      "name": "Avvolgenti Alimentari",
+      "vat_rate": null,
+      "children": [
+        { "name": "Carta e Veline alimentari", "vat_rate": null },
+        { "name": "Carta sovrainvolto", "vat_rate": null },
+        { "name": "Ideabrill", "vat_rate": null },
+        { "name": "Rotoli pellicola, alluminio e carta forno", "vat_rate": null },
+        { "name": "Sacchetti di carta", "vat_rate": null },
+        { "name": "Sacchetti in plastica per alimenti", "vat_rate": null },
+        { "name": "Sacchetti sottovuoto", "vat_rate": null },
+        { "name": "Shoppers Bio-compostabili", "vat_rate": null },
+        { "name": "Shoppers in carta", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Cancelleria e Ufficio",
+      "vat_rate": null,
+      "children": [
+        { "name": "Accessori", "vat_rate": null },
+        { "name": "Blocchi e fogli A4", "vat_rate": null },
+        { "name": "Rotoli per cassa", "vat_rate": null },
+        { "name": "Rotoli termici adesivi", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Contenitori cibo asporto",
+      "vat_rate": null,
+      "children": [
+        { "name": "Box fritti e panino", "vat_rate": null },
+        { "name": "Box pizza e Teglie in cartone", "vat_rate": null },
+        { "name": "Contenitori Bio-Compostabili", "vat_rate": null },
+        { "name": "Contenitori alluminio con coperchio bordo G", "vat_rate": null },
+        { "name": "Contenitori alluminio con coperchio bordo L", "vat_rate": null },
+        { "name": "Contenitori fast food con coperchio", "vat_rate": null },
+        { "name": "Contenitori in plastica con coperchio", "vat_rate": null },
+        { "name": "Contenitori laccati con coperchio", "vat_rate": null }
+      ]
+    },
+    { "name": "Dispenser", "vat_rate": null },
+    {
+      "name": "Dispositivi di sicurezza",
+      "vat_rate": null,
+      "children": [
+        { "name": "Guanti", "vat_rate": null },
+        { "name": "Scarpe da lavoro", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Igiene e Pulizia",
+      "vat_rate": null,
+      "children": [
+        { "name": "Detergenti stoviglie", "vat_rate": null },
+        { "name": "Detergenti superfici", "vat_rate": null },
+        { "name": "Materiale per la pulizia", "vat_rate": null },
+        { "name": "Sacchi spazzatura", "vat_rate": null },
+        { "name": "Sapone mani", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Imballaggi",
+      "vat_rate": null,
+      "children": [
+        { "name": "Carta gommata", "vat_rate": null },
+        { "name": "Estensibile", "vat_rate": null },
+        { "name": "Nastri adesivi", "vat_rate": null }
+      ]
+    },
+    { "name": "Insetticida", "vat_rate": null },
+    {
+      "name": "Monouso in carta",
+      "vat_rate": null,
+      "children": [
+        { "name": "Asciugamani piegati", "vat_rate": null },
+        { "name": "Carta igienica", "vat_rate": null },
+        { "name": "EcoNatural", "vat_rate": null },
+        { "name": "Lenzuolino medico", "vat_rate": null },
+        { "name": "Mini jumbo", "vat_rate": null },
+        { "name": "Rotoloni", "vat_rate": null },
+        { "name": "Tovaglioli", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Pasticceria e Gelateria",
+      "vat_rate": null,
+      "children": [
+        { "name": "Basi e Accessori", "vat_rate": null },
+        { "name": "Porta torte", "vat_rate": null },
+        { "name": "Vaschette EPS gelato", "vat_rate": null },
+        { "name": "Vassoi in cartone", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Stoviglie monouso",
+      "vat_rate": null,
+      "children": [
+        { "name": "Accessori monouso", "vat_rate": null },
+        { "name": "Bicchieri in cartoncino con coperchio", "vat_rate": null },
+        { "name": "Bicchieri in plastica con coperchio", "vat_rate": null },
+        { "name": "Cannucce e Agitatori", "vat_rate": null },
+        { "name": "Piatti e Scodelle", "vat_rate": null },
+        { "name": "Posate e Kit posate", "vat_rate": null }
+      ]
+    },
+    {
+      "name": "Tovaglie e Tovaglioli",
+      "vat_rate": null,
+      "children": [
+        { "name": "Porta posate", "vat_rate": null },
+        { "name": "Tovaglia TNT", "vat_rate": null },
+        { "name": "Tovaglietta", "vat_rate": null },
+        { "name": "Tovaglioli colorati", "vat_rate": null }
+      ]
+    }
+  ],
   "service_note": "Consegna locale a Montoro e nei comuni vicini. Tempi da confermare prima dell'ordine.",
   "delivery_note": "Tempi e disponibilità sono indicativi. Le condizioni di consegna sono indicate per zona e il totale dell'ordine viene confermato dopo l'invio della richiesta.",
   "delivery_zones": [
@@ -63,7 +186,12 @@
     "discount_percent": 5,
     "tech_voucher_percent": 50,
     "price_lock_months": 12,
-    "frequency_days": [30, 60],
+    "frequency_days": [
+      { "days": 7, "label": "Ogni settimana" },
+      { "days": 14, "label": "Ogni 2 settimane" },
+      { "days": 30, "label": "Ogni mese" },
+      { "days": 60, "label": "Ogni 2 mesi" }
+    ],
     "tech_voucher_validity_days": 90,
     "fixed_delivery_day": true
   },
@@ -92,13 +220,13 @@
       "banner_message": "🏷️ Ordini ricorrenti: sconto {discount_percent} · prezzi bloccati per {price_lock_months} · Buono Tech valido {recurring_validity_days}.",
       "eyebrow": "CONVENIENZA PER ORDINI B2B",
       "title": "Vantaggi dell'ordine ricorrente",
-      "description": "Organizza le forniture con una richiesta ogni {frequency_days}: ottieni {discount_percent} di sconto e prezzi bloccati per {price_lock_months}.",
+      "description": "Organizza le forniture scegliendo tra queste cadenze: {frequency_days}. Ottieni {discount_percent} di sconto e prezzi bloccati per {price_lock_months}.",
       "discount_label": "Sconto sugli ordini ricorrenti",
       "discount_value": "{discount_percent} in meno",
       "price_lock_label": "Prezzi bloccati",
       "price_lock_value": "{price_lock_months}",
       "frequency_label": "Frequenze disponibili",
-      "frequency_value": "Ogni {frequency_days}",
+      "frequency_value": "Frequenze disponibili: {frequency_days}",
       "tech_voucher_label": "Buono Tech sul primo ordine del mese",
       "tech_voucher_value": "{tech_voucher_recurring_percent} fino a {maximum_amount} · valido {recurring_validity_days} dalla consegna",
       "terms": "Con l'ordine ricorrente il Buono Tech è valido {recurring_validity_days} dalla consegna. Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni."

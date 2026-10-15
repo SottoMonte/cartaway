@@ -6,12 +6,6 @@ const euro = new Intl.NumberFormat("it-IT", {
   currency: "EUR",
 });
 const unitNumber = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 3 });
-const catalogProfiles = [
-  { value: "parrucchiere", label: "Parrucchiere" },
-  { value: "meccanico", label: "Meccanico" },
-  { value: "panificio", label: "Panificio" },
-  { value: "ufficio", label: "Ufficio" },
-];
 
 const state = {
   page: document.body.dataset.page || "home",
@@ -65,7 +59,6 @@ const elements = {
   categorySubtabs: document.querySelector("#category-subtabs"),
   productProfile: document.querySelector("#product-profile"),
   categorySelect: document.querySelector("#product-category"),
-  categoryTree: document.querySelector("#product-category-tree"),
   checkoutFeedback: document.querySelector("#checkout-feedback"),
   checkoutForm: document.querySelector("#checkout-form"),
   contactAddress: document.querySelector("#contact-address"),
@@ -249,16 +242,107 @@ function priceInCents(value) {
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0;
 }
 
+function pricesIncludeVat() {
+  return state.site.prices_include_vat !== false;
+}
+
+function configuredCategoryPath(path) {
+  const categories = Array.isArray(state.site.categories) ? state.site.categories : [];
+  const flatCategory = categories.find((category) =>
+    category && typeof category === "object" && category.name === path.join(" / "));
+  if (flatCategory) return [flatCategory];
+
+  let currentCategories = categories;
+  const matchedCategories = [];
+  for (const name of path) {
+    const currentCategory = currentCategories.find((category) =>
+      category && typeof category === "object" && category.name === name);
+    if (!currentCategory) return [];
+    matchedCategories.push(currentCategory);
+    currentCategories = Array.isArray(currentCategory.children) ? currentCategory.children : [];
+  }
+  return matchedCategories;
+}
+
+function productVatRate(product) {
+  const categories = configuredCategoryPath(productCategories(product.category));
+  for (let index = categories.length - 1; index >= 0; index -= 1) {
+    const value = categories[index].vat_rate;
+    if (value === null || value === undefined || (typeof value === "string" && !value.trim())) continue;
+    const rate = Number(value);
+    return Number.isFinite(rate) && rate >= 0 && rate <= 100 ? rate : null;
+  }
+  return null;
+}
+
+function productPriceInCents(product) {
+  const price = priceInCents(product.price);
+  if (pricesIncludeVat()) return price;
+  const rate = productVatRate(product);
+  return rate === null ? null : price + Math.round(price * rate / 100);
+}
+
 function recurringPriceInCents(price) {
   return Math.round(priceInCents(price) * (100 - getRecurringDiscountPercent()) / 100);
 }
 
-function recurringFrequencyDays() {
+function productRecurringPriceInCents(product) {
+  const price = productPriceInCents(product);
+  return price === null ? null : Math.round(price * (100 - getRecurringDiscountPercent()) / 100);
+}
+
+function orderVatAmountCents(entries, recurring = false) {
+  let total = 0;
+  for (const { product, quantity } of entries) {
+    const rate = productVatRate(product);
+    const price = productPriceInCents(product);
+    if (rate === null || price === null) return null;
+    const grossPrice = recurring
+      ? Math.round(price * (100 - getRecurringDiscountPercent()) / 100)
+      : price;
+    total += Math.round(grossPrice * rate / (100 + rate)) * quantity;
+  }
+  return total;
+}
+
+function formatProductPrice(product) {
+  const price = productPriceInCents(product);
+  return price === null ? "Aliquota IVA da configurare" : formatPrice(price / 100);
+}
+
+function recurringFrequencyOptions() {
   const configuredDays = state.site.recurring_order?.frequency_days;
-  const days = Array.isArray(configuredDays)
-    ? [...new Set(configuredDays.map(Number).filter((value) => Number.isInteger(value) && value > 0))]
+  const legacyLabels = state.site.recurring_order?.frequency_labels || {};
+  const seenDays = new Set();
+  return Array.isArray(configuredDays)
+    ? configuredDays.map((entry) => {
+        const option = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : null;
+        const days = Number(option ? option.days : entry);
+        const label = (option && option.label) || legacyLabels[`day_${days}`];
+        return { days, label: typeof label === "string" ? label.trim() : "" };
+      }).filter(({ days }) => {
+        if (!Number.isInteger(days) || days <= 0 || seenDays.has(days)) return false;
+        seenDays.add(days);
+        return true;
+      })
     : [];
-  return days.length ? days : [30, 60];
+}
+
+function recurringFrequencyDays() {
+  return recurringFrequencyOptions().map(({ days }) => days);
+}
+
+function formatRecurringFrequency(days) {
+  const dayCount = Number(days);
+  const option = recurringFrequencyOptions().find(({ days: configuredDays }) => configuredDays === dayCount);
+  return option?.label || `Ogni ${dayCount} giorni`;
+}
+
+function formatRecurringFrequencyList(frequencies = recurringFrequencyDays()) {
+  const labels = frequencies.map((days) => formatRecurringFrequency(days).replace(/^Ogni /, "ogni "));
+  if (!labels.length) return "";
+  const lastLabel = labels.pop();
+  return labels.length ? `${labels.join(", ")} o ${lastLabel}` : lastLabel;
 }
 
 function techVoucherPercent(recurring = false) {
@@ -338,7 +422,7 @@ function configureRecurringOrder() {
   const options = frequencies.map((days) => {
     const option = document.createElement("option");
     option.value = String(days);
-    option.textContent = `Ogni ${days} giorni`;
+    option.textContent = formatRecurringFrequency(days);
     return option;
   });
 
@@ -352,9 +436,8 @@ function configureRecurringOrder() {
 
   if (elements.recurringDiscountFaq) elements.recurringDiscountFaq.textContent = `${formatPercentage(discount)}%`;
   if (elements.recurringPriceLockFaq) elements.recurringPriceLockFaq.textContent = `${priceLockMonths} mesi`;
-  if (elements.recurringFrequencyFaq) {
-    elements.recurringFrequencyFaq.textContent = `${frequencies.join(" o ")} giorni`;
-  }
+  const frequencyText = formatRecurringFrequencyList(frequencies);
+  if (elements.recurringFrequencyFaq) elements.recurringFrequencyFaq.textContent = frequencyText;
   document.querySelectorAll("[data-recurring-discount-percent]").forEach((element) => {
     element.textContent = `${formatPercentage(discount)}%`;
   });
@@ -362,7 +445,7 @@ function configureRecurringOrder() {
     element.textContent = `${priceLockMonths} mesi`;
   });
   document.querySelectorAll("[data-recurring-frequency-days]").forEach((element) => {
-    element.textContent = `${frequencies.join(" o ")} giorni`;
+    element.textContent = frequencyText;
   });
 }
 
@@ -386,7 +469,7 @@ function quickMessageTemplateValues(message) {
   return {
     discount_percent: `${formatPercentage(getRecurringDiscountPercent())}%`,
     price_lock_months: `${priceLockMonths} mesi`,
-    frequency_days: `${recurringFrequencyDays().join(" o ")} giorni`,
+    frequency_days: formatRecurringFrequencyList(),
     tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
     recurring_validity_days: techVoucherValidityText(true),
     maximum_amount: maximumAmount,
@@ -516,38 +599,47 @@ function productImages(product) {
     .filter(Boolean))];
 }
 
+function productCategories(category) {
+  const values = Array.isArray(category) ? category : [category];
+  return values
+    .flatMap((value) => typeof value === "string" ? value.split(" / ") : [])
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 function productCategoryLabel(category) {
-  const value = String(category || "Carta");
-  const separator = value.lastIndexOf(" / ");
-  return separator === -1 ? value : value.slice(separator + 3);
+  const path = productCategories(category);
+  return path[path.length - 1] || "Carta";
 }
 
 function productCategoryGroups() {
-  if (!elements.categoryTree) return [];
+  const groups = new Map();
 
-  return [...elements.categoryTree.children].flatMap((entry) => {
-    if (entry.tagName === "OPTGROUP") {
-      const options = [...entry.querySelectorAll(":scope > option")];
-      const parent = options.find((option) => option.value === entry.label);
-      if (!parent) {
-        return options.map((option) => ({
-          value: option.value,
-          label: option.textContent.trim(),
-          children: [],
-        }));
-      }
-      return [{
-        value: parent.value,
-        label: entry.label,
-        children: options
-          .filter((option) => option !== parent)
-          .map((option) => ({ value: option.value, label: option.textContent.trim() })),
-      }];
+  const addPath = (path) => {
+    if (!path.length || path[0] === "tutte") return;
+    const parentValue = path[0];
+    const parent = groups.get(parentValue) || { value: parentValue, label: parentValue, children: [] };
+    const value = path.join(" / ");
+    if (path.length > 1 && !parent.children.some((child) => child.value === value)) {
+      parent.children.push({ value, label: path.slice(1).join(" / "), parentValue });
     }
+    groups.set(parentValue, parent);
+  };
 
-    if (entry.tagName !== "OPTION" || entry.value === "tutte") return [];
-    return [{ value: entry.value, label: entry.textContent.trim(), children: [] }];
-  });
+  const addCategory = (category, parentPath = []) => {
+    const name = typeof category === "string" ? category : category?.name;
+    const path = [...parentPath, ...productCategories(name)];
+    if (!path.length) return;
+    addPath(path);
+    if (Array.isArray(category?.children)) {
+      category.children.forEach((child) => addCategory(child, path));
+    }
+  };
+
+  const configuredCategories = Array.isArray(state.site.categories) ? state.site.categories : [];
+  configuredCategories.forEach((category) => addCategory(category));
+
+  return [...groups.values()];
 }
 
 function categoryFilterButton(category, pressed) {
@@ -557,7 +649,7 @@ function categoryFilterButton(category, pressed) {
   button.dataset.category = category.value;
   button.setAttribute("aria-pressed", String(pressed));
   button.addEventListener("click", () => {
-    state.category = pressed ? category.value.split(" / ", 1)[0] : category.value;
+    state.category = pressed ? category.parentValue : category.value;
     renderCategoryFilters();
     syncCatalogUrl();
     renderProducts();
@@ -569,7 +661,7 @@ function renderCategoryFilters() {
   if (!elements.categorySelect || !elements.categorySubtabs) return;
 
   const categories = productCategoryGroups();
-  const parentValue = state.category.split(" / ", 1)[0];
+  const parentValue = productCategories(state.category)[0];
   const activeGroup = categories.find((category) => category.value === parentValue);
   const mainOptions = [
     { value: "tutte", label: "Tutte le categorie" },
@@ -654,13 +746,13 @@ function productNameWithFormat(product) {
 
 function productPricePerUnit(product) {
   const unit = product.unit;
-  const price = Number(product.price);
+  const price = productPriceInCents(product);
   if (!unit || typeof unit !== "object" || Array.isArray(unit)) return null;
 
   const quantity = Number(unit.quantity);
   const label = String(unit.pricePer || "").trim();
-  if (!label || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price)) return null;
-  return { amount: Math.round((price / quantity) * 100) / 100, label };
+  if (!label || !Number.isFinite(quantity) || quantity <= 0 || price === null) return null;
+  return { amount: Math.round(price / quantity) / 100, label };
 }
 
 function productCard(product) {
@@ -671,6 +763,7 @@ function productCard(product) {
   const imageCount = images.length;
   const unitLabel = productUnitLabel(product.unit);
   const pricePerUnit = productPricePerUnit(product);
+  const priceAvailable = productPriceInCents(product) !== null;
   return `
     <article class="product-card">
       <div class="product-card__visual">
@@ -691,7 +784,7 @@ function productCard(product) {
         <div class="product-card__purchase">
           <div class="product-price-set product-card__price-set">
             <div class="product-price-set__item product-price-set__item--total">
-              <strong class="product-price-set__value product-card__total-price">${escapeHtml(formatPrice(product.price))}</strong>
+              <strong class="product-price-set__value product-card__total-price">${escapeHtml(formatProductPrice(product))}</strong>
             </div>
             ${pricePerUnit === null ? "" : `
               <div class="product-price-set__item product-price-set__item--unit">
@@ -700,7 +793,7 @@ function productCard(product) {
               </div>
             `}
           </div>
-          <button class="add-button" type="button" data-add-to-cart="${id}" aria-label="Aggiungi ${escapeHtml(name)} al carrello">
+          <button class="add-button" type="button" data-add-to-cart="${id}" aria-label="Aggiungi ${escapeHtml(name)} al carrello"${priceAvailable ? "" : " disabled"}>
             <span class="add-button__plus" aria-hidden="true">+</span><span>Aggiungi</span>
           </button>
         </div>
@@ -715,13 +808,14 @@ function productSheetRow(product) {
   const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
   const image = productImages(product)[0] || fallbackImage;
   const pricePerUnit = productPricePerUnit(product);
+  const price = formatProductPrice(product);
   const quantity = normalizeSheetQuantity(state.sheetQuantities[product.id] || 0);
   return `
     <tr data-sheet-product-id="${id}">
       <td class="product-sheet__product" data-label="Articolo"><a href="${escapeHtml(productUrl)}" data-open-product="${id}"><img class="product-sheet__thumbnail" src="${escapeHtml(safeImageUrl(image))}" alt="" loading="lazy" decoding="async" /><span>${escapeHtml(name)}</span></a></td>
       <td class="product-sheet__format" data-label="Formato"><strong>${escapeHtml(productUnitLabel(product.unit) || "—")}</strong></td>
-      <td class="product-sheet__category" data-label="Categoria" title="${escapeHtml(String(product.category || "Carta"))}">${escapeHtml(productCategoryLabel(product.category))}</td>
-      <td class="product-sheet__price" data-label="Prezzo confezione">${escapeHtml(formatPrice(product.price))}</td>
+      <td class="product-sheet__category" data-label="Categoria" title="${escapeHtml(productCategories(product.category).join(", ") || "Carta")}">${escapeHtml(productCategoryLabel(product.category))}</td>
+      <td class="product-sheet__price" data-label="Prezzo confezione">${escapeHtml(price)}</td>
       <td class="product-sheet__price" data-label="Prezzo unitario">${pricePerUnit === null ? "—" : `${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</td>
       <td class="product-sheet__quantity-cell" data-label="Quantità">
         <div class="product-sheet__stepper">
@@ -748,8 +842,9 @@ function refreshProductSheetOrderBar() {
     .filter(({ product, quantity }) => product && quantity > 0);
   const maxQuantity = selectedProducts.reduce((maximum, entry) => Math.max(maximum, entry.quantity), 0);
   const totalQuantity = selectedProducts.reduce((sum, entry) => sum + entry.quantity, 0);
+  const priceConfigurationMissing = selectedProducts.some(({ product }) => productPriceInCents(product) === null);
   const totalCents = selectedProducts.reduce(
-    (sum, entry) => sum + priceInCents(entry.product.price) * entry.quantity,
+    (sum, entry) => sum + (productPriceInCents(entry.product) ?? 0) * entry.quantity,
     0,
   );
 
@@ -758,10 +853,12 @@ function refreshProductSheetOrderBar() {
   }
   if (elements.productSheetOrderSummary) {
     const itemLabel = totalQuantity === 1 ? "articolo" : "articoli";
-    elements.productSheetOrderSummary.textContent = `${totalQuantity} ${itemLabel} · ${formatPrice(totalCents / 100)}`;
+    elements.productSheetOrderSummary.textContent = priceConfigurationMissing
+      ? `${totalQuantity} ${itemLabel} · Aliquote IVA da configurare`
+      : `${totalQuantity} ${itemLabel} · ${formatPrice(totalCents / 100)}`;
   }
   if (elements.productSheetAddAll) {
-    elements.productSheetAddAll.disabled = totalQuantity === 0;
+    elements.productSheetAddAll.disabled = totalQuantity === 0 || priceConfigurationMissing;
     elements.productSheetAddAll.textContent = `Aggiungi al carrello (${totalQuantity})`;
     elements.productSheetAddAll.setAttribute("aria-label", `Aggiungi al carrello, ${totalQuantity} ${totalQuantity === 1 ? "articolo" : "articoli"}`);
   }
@@ -824,7 +921,7 @@ function openProductDialog(productId) {
   elements.productDialogTitle.textContent = product.name || "Prodotto";
   elements.productDialogCategory.textContent = productCategoryLabel(product.category);
   elements.productDialogUnit.textContent = productUnitLabel(product.unit);
-  elements.productDialogPrice.textContent = formatPrice(product.price);
+  elements.productDialogPrice.textContent = formatProductPrice(product);
   const pricePerUnit = productPricePerUnit(product);
   if (elements.productDialogUnitPriceWrap && elements.productDialogUnitPrice) {
     elements.productDialogUnitPriceWrap.hidden = pricePerUnit === null;
@@ -900,7 +997,7 @@ function renderProductDetail() {
   elements.detailTitle.textContent = productName;
   elements.detailCategory.textContent = productCategoryLabel(product.category);
   elements.detailUnit.textContent = productUnit;
-  elements.detailPrice.textContent = formatPrice(product.price);
+  elements.detailPrice.textContent = formatProductPrice(product);
   const pricePerUnit = productPricePerUnit(product);
   if (elements.detailUnitPriceWrap && elements.detailUnitPrice) {
     elements.detailUnitPriceWrap.hidden = pricePerUnit === null;
@@ -953,7 +1050,7 @@ function renderProductDetail() {
         "@id": `${canonicalUrl}#product`,
         name: productNameForMetadata,
         url: canonicalUrl,
-        ...(product.category ? { category: String(product.category) } : {}),
+        ...(product.category ? { category: productCategories(product.category).join(", ") } : {}),
         ...(product.description ? { description: String(product.description) } : {}),
         ...(productImageUrls.length ? { image: productImageUrls } : {}),
         ...(specifications.length
@@ -977,6 +1074,32 @@ function renderProductDetail() {
   });
 }
 
+function siteProfiles() {
+  const profiles = Array.isArray(state.site.profiles) ? state.site.profiles : [];
+  return profiles
+    .filter((profile) => profile && typeof profile.value === "string" && profile.value.trim()
+      && typeof profile.label === "string" && profile.label.trim())
+    .map((profile) => ({ value: profile.value.trim(), label: profile.label.trim() }));
+}
+
+function renderProfileFilter() {
+  if (!elements.productProfile) return;
+
+  const options = [
+    { value: "tutte", label: "Tutte le attività" },
+    ...siteProfiles(),
+  ].map(({ value, label }) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    return option;
+  });
+  elements.productProfile.replaceChildren(...options);
+  elements.productProfile.value = options.some((option) => option.value === state.profile)
+    ? state.profile
+    : "tutte";
+}
+
 function restoreCatalogStateFromUrl() {
   if (state.page !== "catalog") return;
 
@@ -984,15 +1107,16 @@ function restoreCatalogStateFromUrl() {
   state.sharedOrder = params.get("order");
   state.sharedSheet = params.get("sheet");
   state.openSharedCart = params.get("openCart") === "1";
-  const categoryValues = new Set(
-    elements.categoryTree ? [...elements.categoryTree.options].map((option) => option.value) : [],
-  );
+  const categoryValues = new Set(productCategoryGroups().flatMap((category) => [
+    category.value,
+    ...category.children.map((child) => child.value),
+  ]));
   categoryValues.add("tutte");
   const requestedCategory = params.get("category");
   state.category = categoryValues.has(requestedCategory) ? requestedCategory : "tutte";
   state.categorySubcategoriesExpanded = state.category.includes(" / ");
 
-  const profileValues = new Set(catalogProfiles.map(({ value }) => value));
+  const profileValues = new Set(siteProfiles().map(({ value }) => value));
   const requestedProfile = params.get("profilo");
   state.profile = profileValues.has(requestedProfile) ? requestedProfile : "tutte";
   if (elements.productProfile) elements.productProfile.value = state.profile;
@@ -1126,13 +1250,13 @@ function renderProducts() {
   });
 
   let visibleProducts = state.products.filter((product) => product.available !== false);
+  const selectedCategoryPath = productCategories(state.category);
   if (state.page !== "home") {
     visibleProducts = visibleProducts
       .filter((product) => {
-        const category = String(product.category || "");
+        const categories = productCategories(product.category);
         return state.category === "tutte"
-          || category === state.category
-          || category.startsWith(`${state.category} /`);
+          || selectedCategoryPath.every((segment, index) => categories[index] === segment);
       })
   }
 
@@ -1143,7 +1267,7 @@ function renderProducts() {
 
   const normalizedSearch = normalizeText(state.search.trim());
   visibleProducts = visibleProducts.filter((product) => {
-    const searchable = normalizeText([product.name, product.category, productUnitLabel(product.unit), product.description].join(" "));
+    const searchable = normalizeText([product.name, ...productCategories(product.category), productUnitLabel(product.unit), product.description].join(" "));
     return searchable.includes(normalizedSearch);
   });
 
@@ -1157,9 +1281,9 @@ function renderProducts() {
       return (firstPrice - secondPrice) * direction;
     });
   } else if (state.sort === "price-asc") {
-    visibleProducts.sort((first, second) => Number(first.price) - Number(second.price));
+    visibleProducts.sort((first, second) => (productPriceInCents(first) ?? Infinity) - (productPriceInCents(second) ?? Infinity));
   } else if (state.sort === "price-desc") {
-    visibleProducts.sort((first, second) => Number(second.price) - Number(first.price));
+    visibleProducts.sort((first, second) => (productPriceInCents(second) ?? -Infinity) - (productPriceInCents(first) ?? -Infinity));
   } else {
     visibleProducts.sort((first, second) => Number(second.featured === true) - Number(first.featured === true));
   }
@@ -1202,12 +1326,16 @@ function renderCart() {
   const quantity = entries.reduce((total, entry) => total + entry.quantity, 0);
   const recurring = elements.recurringOrder.checked;
   const discountPercent = getRecurringDiscountPercent();
+  const priceConfigurationMissing = entries.some(({ product }) => productPriceInCents(product) === null);
   const fullSubtotalCents = entries.reduce(
-    (total, entry) => total + priceInCents(entry.product.price) * entry.quantity,
+    (total, entry) => total + (productPriceInCents(entry.product) ?? 0) * entry.quantity,
     0,
   );
   const subtotalCents = entries.reduce(
-    (total, entry) => total + (recurring ? recurringPriceInCents(entry.product.price) : priceInCents(entry.product.price)) * entry.quantity,
+    (total, entry) => {
+      const price = recurring ? productRecurringPriceInCents(entry.product) : productPriceInCents(entry.product);
+      return total + (price ?? 0) * entry.quantity;
+    },
     0,
   );
   const savingsCents = fullSubtotalCents - subtotalCents;
@@ -1225,13 +1353,15 @@ function renderCart() {
   elements.cartItems.innerHTML = entries.map(({ product, quantity: itemQuantity }) => {
     const id = escapeHtml(product.id);
     const name = String(product.name || "Prodotto");
-    const fullUnitPriceCents = priceInCents(product.price);
-    const unitPriceCents = recurring ? recurringPriceInCents(product.price) : fullUnitPriceCents;
-    const unitPrice = recurring && discountPercent > 0
-      ? `<del>${escapeHtml(formatPrice(fullUnitPriceCents / 100))}</del> <strong>${escapeHtml(formatPrice(unitPriceCents / 100))}</strong>`
-      : escapeHtml(formatPrice(unitPriceCents / 100));
+    const fullUnitPriceCents = productPriceInCents(product);
+    const unitPriceCents = recurring ? productRecurringPriceInCents(product) : fullUnitPriceCents;
+    const unitPrice = unitPriceCents === null
+      ? "Aliquota IVA da configurare"
+      : recurring && discountPercent > 0
+        ? `<del>${escapeHtml(formatPrice(fullUnitPriceCents / 100))}</del> <strong>${escapeHtml(formatPrice(unitPriceCents / 100))}</strong>`
+        : escapeHtml(formatPrice(unitPriceCents / 100));
     const pricePerUnit = productPricePerUnit(product);
-    const comparableUnitPrice = pricePerUnit === null
+    const comparableUnitPrice = pricePerUnit === null || unitPriceCents === null
       ? ""
       : `<p class="cart-item__unit-price">Prezzo unitario: ${escapeHtml(formatPrice(unitPriceCents / 100 / Number(product.unit.quantity)))} / ${escapeHtml(pricePerUnit.label)}</p>`;
     return `
@@ -1247,7 +1377,7 @@ function renderCart() {
             <button type="button" data-cart-change="1" data-product-id="${id}" aria-label="Aumenta ${escapeHtml(name)} di uno">+</button>
           </div>
         </div>
-        <strong class="cart-item__amount">${escapeHtml(formatPrice(unitPriceCents * itemQuantity / 100))}</strong>
+        <strong class="cart-item__amount">${escapeHtml(unitPriceCents === null ? "Aliquota IVA da configurare" : formatPrice(unitPriceCents * itemQuantity / 100))}</strong>
       </article>
     `;
   }).join("");
@@ -1255,19 +1385,23 @@ function renderCart() {
   elements.cartEmpty.hidden = entries.length > 0;
   elements.cartSummary.hidden = entries.length === 0;
   elements.checkoutForm.hidden = entries.length === 0;
-  elements.orderSubmit.disabled = state.orderSubmitting || entries.length === 0 || !minimumReached;
+  elements.orderSubmit.disabled = state.orderSubmitting || entries.length === 0 || !minimumReached || priceConfigurationMissing;
   elements.orderSubmit.setAttribute("aria-busy", String(state.orderSubmitting));
   elements.cartSubtotalLabel.textContent = recurring && discountPercent > 0 ? "Subtotale scontato" : "Subtotale articoli";
-  elements.cartSubtotal.textContent = formatPrice(subtotalCents / 100);
+  elements.cartSubtotal.textContent = priceConfigurationMissing ? "Aliquote IVA da configurare" : formatPrice(subtotalCents / 100);
   elements.cartDeliveryCost.textContent = deliveryQuote.label;
   elements.cartDeliveryCost.dataset.deliveryState = deliveryQuote.state;
   elements.cartDeliveryNote.textContent = deliveryQuote.note;
-  elements.cartEstimatedTotal.textContent = deliveryQuote.costCents === null
-    ? minimumReached ? "Da confermare" : "Minimo non raggiunto"
-    : formatPrice((subtotalCents + deliveryQuote.costCents) / 100);
+  elements.cartEstimatedTotal.textContent = priceConfigurationMissing
+    ? "Configura le aliquote IVA"
+    : deliveryQuote.costCents === null
+      ? minimumReached ? "Da confermare" : "Minimo non raggiunto"
+      : formatPrice((subtotalCents + deliveryQuote.costCents) / 100);
   elements.cartDiscountRow.hidden = !recurring || savingsCents <= 0;
   elements.cartDiscountAmount.textContent = `−${formatPrice(savingsCents / 100)}`;
-  elements.cartCashbackAmount.textContent = formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100);
+  elements.cartCashbackAmount.textContent = priceConfigurationMissing
+    ? "Da configurare"
+    : formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100);
   if (elements.cartCashbackLabel) {
     elements.cartCashbackLabel.textContent = recurring
       ? "Buono Tech stimato per un ordine ricorrente, se è il primo del mese"
@@ -1316,6 +1450,10 @@ function showCheckoutFeedback(message, type) {
 function addToCart(productId) {
   const product = state.products.find((item) => item.id === productId && item.available !== false);
   if (!product) return;
+  if (productPriceInCents(product) === null) {
+    showMessage("Configura l'aliquota IVA della categoria prima di aggiungere questo prodotto.");
+    return;
+  }
   clearCheckoutFeedback();
   state.cart[productId] = (state.cart[productId] || 0) + 1;
   saveCart();
@@ -1341,6 +1479,10 @@ function addSelectedProductsToCart() {
       quantity: normalizeSheetQuantity(value),
     }))
     .filter(({ product, quantity }) => product && quantity > 0);
+  if (selectedProducts.some(({ product }) => productPriceInCents(product) === null)) {
+    showMessage("Configura le aliquote IVA delle categorie prima di aggiungere i prodotti selezionati.");
+    return;
+  }
   if (selectedProducts.length === 0) {
     showMessage("Seleziona almeno una quantità da aggiungere.");
     return;
@@ -1478,7 +1620,7 @@ function catalogStructuredData(title, description, url) {
         const images = productImages(product).map(safeImageUrl);
         if (images.length) item.image = images;
         if (product.description) item.description = String(product.description);
-        if (product.category) item.category = String(product.category);
+        if (product.category) item.category = productCategories(product.category).join(" / ");
         return { "@type": "ListItem", position: index + 1, item };
       }),
     },
@@ -1487,6 +1629,18 @@ function catalogStructuredData(title, description, url) {
 
 function renderSiteDetails() {
   const brand = String(state.site.brand || "Cartaway").trim();
+  const categories = Array.isArray(state.site.categories) ? state.site.categories : [];
+  const allVatRatesConfigured = categories.length > 0
+    && state.products.length > 0
+    && state.products.every((product) => productVatRate(product) !== null);
+  const vatStatus = pricesIncludeVat()
+    ? "IVA inclusa"
+    : allVatRatesConfigured
+      ? "IVA aggiunta in base alla categoria"
+      : "IVA esclusa · aliquote da configurare";
+  document.querySelectorAll("[data-vat-status]").forEach((element) => {
+    element.textContent = vatStatus;
+  });
   document.querySelectorAll("[data-brand]").forEach((element) => {
     element.textContent = brand;
   });
@@ -1982,14 +2136,14 @@ function setupHeroCarousel() {
       imageAlt: "Scatole in magazzino, pronte per la consegna",
       eyebrow: "CONSEGNA LOCALE · ORDINI RICORRENTI",
       title: "La tua scorta, al ritmo giusto.",
-      intro: "Scegli una consegna ogni 30 o 60 giorni: hai il 5% di sconto, prezzi bloccati per 12 mesi e puoi indicare un giorno fisso.",
+      intro: "Scegli una consegna {frequency_days}: hai il 5% di sconto, prezzi bloccati per 12 mesi e puoi indicare un giorno fisso.",
       recurringVoucher: true,
       action: "Scopri le zone",
       actionHref: "#consegna",
       openPromo: false,
       deliveryHighlight: "Zona 01: gratuita, senza minimo",
       deliverySecondary: "Zona 02: 5 € sotto 30 €, gratuita da 30 € · Zona 03: spedizione a pagamento, 5 €",
-      caption: "CONSEGNE PER ZONA · ORDINI OGNI 30 O 60 GIORNI",
+      caption: "CONSEGNE PER ZONA · ORDINI RICORRENTI",
     },
     {
       image: "https://images.unsplash.com/photo-1608494133726-bb93324274c8?auto=format&fit=crop&w=2000&q=88",
@@ -2024,7 +2178,7 @@ function setupHeroCarousel() {
     elements.heroIntro.textContent = slide.voucher
       ? `Sul primo ordine del mese: ${standardVoucherPercent}% con un ordine singolo e ${recurringVoucherPercent}% con un ordine ricorrente, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. L'attivazione è verificata dall'attività.`
       : slide.recurringVoucher
-        ? `${slide.intro} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
+      ? `${slide.intro.replace("{frequency_days}", formatRecurringFrequencyList())} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
         : slide.intro;
     elements.heroActionLabel.textContent = slide.action;
     elements.heroAction.href = slide.actionHref;
@@ -2449,6 +2603,10 @@ function setupEvents() {
     clearCheckoutFeedback();
     const items = cartEntries();
     if (!items.length) return;
+    if (items.some(({ product }) => productPriceInCents(product) === null)) {
+      showCheckoutFeedback("Configura le aliquote IVA delle categorie prima di inviare la richiesta.", "error");
+      return;
+    }
 
     const emailSettings = state.site.emailjs || {};
     const publicKey = String(emailSettings.public_key || "").trim();
@@ -2489,11 +2647,11 @@ function setupEvents() {
     const configuredMonths = Number(recurringConfig.price_lock_months);
     const priceLockMonths = Number.isInteger(configuredMonths) && configuredMonths > 0 ? configuredMonths : 12;
     const fullSubtotalCents = items.reduce(
-      (total, item) => total + priceInCents(item.product.price) * item.quantity,
+      (total, item) => total + productPriceInCents(item.product) * item.quantity,
       0,
     );
     const subtotalCents = items.reduce(
-      (total, item) => total + (recurringOrder ? recurringPriceInCents(item.product.price) : priceInCents(item.product.price)) * item.quantity,
+      (total, item) => total + (recurringOrder ? productRecurringPriceInCents(item.product) : productPriceInCents(item.product)) * item.quantity,
       0,
     );
     const deliveryZone = findDeliveryZoneForTown(town);
@@ -2510,7 +2668,7 @@ function setupEvents() {
       ? window.crypto.randomUUID().slice(0, 8).toUpperCase()
       : `CW-${Date.now()}`;
     const emailOrders = items.map(({ product, quantity }) => {
-      const unitPriceCents = recurringOrder ? recurringPriceInCents(product.price) : priceInCents(product.price);
+      const unitPriceCents = recurringOrder ? productRecurringPriceInCents(product) : productPriceInCents(product);
       return {
         name: productNameWithFormat(product),
         units: quantity,
@@ -2519,6 +2677,12 @@ function setupEvents() {
         image_url: safeImageUrl(product.image || fallbackImage),
       };
     });
+    const vatAmountCents = orderVatAmountCents(items, recurringOrder);
+    const vatSummary = vatAmountCents === null
+      ? pricesIncludeVat()
+        ? "Inclusa nei prezzi; aliquote per categoria da configurare"
+        : "Aliquote IVA per categoria da configurare"
+      : `${pricesIncludeVat() ? "Inclusa nei prezzi: " : ""}${formatPrice(vatAmountCents / 100)}`;
     const shippingCost = deliveryQuote.costCents === null
       ? "Da confermare"
       : deliveryQuote.costCents === 0
@@ -2540,7 +2704,7 @@ function setupEvents() {
       cart_url: buildCartShareUrl(items).href,
       order_id: orderId,
       orders: emailOrders,
-      cost: { shipping: shippingCost, tax: "Da confermare", total: totalCost },
+      cost: { shipping: shippingCost, tax: vatSummary, total: totalCost },
       tech_voucher_id: voucherId,
       tech_voucher_value: formatPrice(voucherValueCents / 100),
       tech_voucher_percent: `${formatPercentage(techVoucherPercent(recurringOrder))}%`,
@@ -2558,7 +2722,7 @@ function setupEvents() {
       preferred_delivery_date: preferredDeliveryDate,
       preferred_delivery_time: preferredTimeSlot || "Non indicata",
       recurring_order: recurringOrder ? "Sì" : "No",
-      recurring_frequency: recurringOrder ? `Ogni ${recurringFrequency} giorni` : "Non applicabile",
+      recurring_frequency: recurringOrder ? formatRecurringFrequency(Number(recurringFrequency)) : "Non applicabile",
       recurring_day: recurringOrder && recurringDay ? recurringDay : "Non indicato",
       recurring_discount: recurringOrder ? `${formatPercentage(discountPercent)}%` : "Nessuno",
       price_lock_months: recurringOrder ? `${priceLockMonths} mesi` : "Non applicabile",
@@ -2593,7 +2757,6 @@ function setupEvents() {
 }
 
 async function initializeShop() {
-  restoreCatalogStateFromUrl();
   setupEvents();
   const promoFaq = document.querySelector("#buono-tech-faq");
   if (window.location.hash === "#buono-tech-faq" && promoFaq instanceof HTMLDetailsElement) {
@@ -2611,11 +2774,13 @@ async function initializeShop() {
 
     const [site, catalog] = await Promise.all([siteResponse.json(), productsResponse.json()]);
     state.site = site;
+    renderProfileFilter();
     configureTechVoucher();
     configureRecurringOrder();
     configureQuickMessages();
     updateRecurringControls();
     state.products = Array.isArray(catalog.products) ? catalog.products : [];
+    restoreCatalogStateFromUrl();
     state.sheetQuantities = parseSharedSheet(state.sharedSheet);
     const sharedCart = parseSharedOrder(state.sharedOrder);
     if (sharedCart !== null) {

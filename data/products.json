@@ -4,7 +4,7 @@
       "id": "rotoloni-asciugatutto-splash-2000",
       "profiles": ["meccanico"],
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 2 rotoli",
-      "category": "Itissue - Monouso in carta / Rotoloni",
+      "category": ["Monouso in carta","Rotoloni"],
       "unit": {
         "quantity": 2,
         "measure": "rotoli",
@@ -54,7 +54,7 @@
       "id": "rotoloni-asciugatutto-splash-2000-6",
       "profiles": ["meccanico"],
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 6 rotoli",
-      "category": "Itissue - Monouso in carta / Rotoloni",
+      "category": ["Monouso in carta","Rotoloni"],
       "unit": {
         "quantity": 6,
         "measure": "rotoli",
@@ -103,7 +103,7 @@
     {
       "id": "carta-igienica-lavanda-singolo",
       "name": "Carta igienica lavanda · 4 rotoli, 2 veli",
-      "category": "Itissue - Monouso in carta / Carta igienica",
+      "category": ["Monouso in carta","Carta igienica"],
       "unit": {
         "quantity": 4,
         "measure": "rotoli",
@@ -150,7 +150,7 @@
       "id": "carta-igienica-lavanda-40-rotoli",
       "profiles": ["parrucchiere", "ufficio"],
       "name": "Carta igienica lavanda Carta Corona · 40 rotoli, 2 veli",
-      "category": "Itissue - Monouso in carta / Carta igienica",
+      "category": ["Monouso in carta","Carta igienica"],
       "unit": {
         "quantity": 40,
         "measure": "rotoli",
@@ -197,7 +197,7 @@
       "id": "carta-velina-alimentare-hemoton",
       "profiles": ["panificio"],
       "name": "Fogli di carta velina per alimenti HEMOTON",
-      "category": "Avvolgenti Alimentari / Carta e Veline alimentari",
+      "category": ["Avvolgenti Alimentari","Carta e Veline alimentari"],
       "unit": {
         "quantity": 24,
         "measure": "pezzi",
@@ -214,7 +214,7 @@
       "id": "carta-sovrainvolto-alimentare-hejo",
       "profiles": ["panificio"],
       "name": "Carta oleata alimentare HEJO",
-      "category": "Avvolgenti Alimentari / Carta sovrainvolto",
+      "category": ["Avvolgenti Alimentari","Carta sovrainvolto"],
       "unit": {
         "quantity": 100,
         "measure": "fogli",
@@ -231,7 +231,7 @@
       "id": "incarto-ideabrill-so4-1000",
       "profiles": ["panificio"],
       "name": "Incarto alimentare IDEABRILL SO4",
-      "category": "Avvolgenti Alimentari / Ideabrill",
+      "category": ["Avvolgenti Alimentari","Ideabrill"],
       "unit": {
         "quantity": 1000,
         "measure": "pezzi",
@@ -248,7 +248,7 @@
       "id": "set-rotoli-cucina-frio-3-pezzi",
       "profiles": ["panificio"],
       "name": "Set cucina FRIO: alluminio, pellicola e carta forno",
-      "category": "Avvolgenti Alimentari / Rotoli pellicola, alluminio e carta forno",
+      "category": ["Avvolgenti Alimentari","Rotoli pellicola, alluminio e carta forno"],
       "unit": {
         "quantity": 1,
         "measure": "set",
@@ -265,7 +265,7 @@
       "id": "sacchetti-carta-kraft-alimenti-1000",
       "profiles": ["panificio"],
       "name": "Sacchetti per alimenti in carta kraft",
-      "category": "Avvolgenti Alimentari / Sacchetti di carta",
+      "category": ["Avvolgenti Alimentari","Sacchetti di carta"],
       "unit": {
         "quantity": 1000,
         "measure": "pezzi",
@@ -281,7 +281,7 @@
     {
       "id": "sacchetti-plastica-alimenti-zip",
       "name": "Buste alimentari trasparenti con chiusura zip",
-      "category": "Avvolgenti Alimentari / Sacchetti in plastica per alimenti",
+      "category": ["Avvolgenti Alimentari","Sacchetti in plastica per alimenti"],
       "unit": {
         "quantity": 1,
         "measure": "confezione",
@@ -297,7 +297,7 @@
     {
       "id": "sacchetti-sottovuoto-laica-tr1000",
       "name": "Sacchetti sottovuoto LAICA TR1000",
-      "category": "Avvolgenti Alimentari / Sacchetti sottovuoto",
+      "category": ["Avvolgenti Alimentari","Sacchetti sottovuoto"],
       "unit": {
         "quantity": 30,
         "measure": "pezzi",
@@ -314,7 +314,7 @@
       "id": "shopper-bio-compostabili-cf-carta",
       "profiles": ["panificio"],
       "name": "Shopper bio-compostabili CF Carta",
-      "category": "Avvolgenti Alimentari / Shoppers Bio-compostabili",
+      "category": ["Avvolgenti Alimentari","Shoppers Bio-compostabili"],
       "unit": {
         "quantity": 4,
         "measure": "kg",
@@ -331,7 +331,7 @@
       "id": "shopper-carta-kraft-manici-250",
       "profiles": ["panificio"],
       "name": "Shopper in carta kraft con manici",
-      "category": "Avvolgenti Alimentari / Shoppers in carta",
+      "category": ["Avvolgenti Alimentari","Shoppers in carta"],
       "unit": {
         "quantity": 250,
         "measure": "pezzi",
@@ -348,7 +348,7 @@
       "id": "organizer-scrivania-supporto-monitor",
       "profiles": ["ufficio"],
       "name": "Organizer da scrivania con supporto monitor",
-      "category": "Cancelleria e Ufficio / Accessori",
+      "category": ["Cancelleria e Ufficio","Accessori"],
       "unit": {
         "quantity": 1,
         "measure": "pezzo",
@@ -365,7 +365,7 @@
       "id": "blocchi-appunti-a4-staufen-5",
       "profiles": ["ufficio"],
       "name": "Blocchi appunti A4 Staufen",
-      "category": "Cancelleria e Ufficio / Blocchi e fogli A4",
+      "category": ["Cancelleria e Ufficio","Blocchi e fogli A4"],
       "unit": {
         "quantity": 5,
         "measure": "blocchi",
@@ -382,7 +382,7 @@
       "id": "carta-a4-stampante-75g-500-fogli",
       "profiles": ["ufficio"],
       "name": "Risma carta A4 75 g/m² per stampanti",
-      "category": "Cancelleria e Ufficio / Blocchi e fogli A4",
+      "category": ["Cancelleria e Ufficio","Blocchi e fogli A4"],
       "unit": {
         "quantity": 1,
         "measure": "risma",
@@ -399,7 +399,7 @@
       "id": "rotoli-cassa-termici-80x80-10",
       "profiles": ["parrucchiere", "meccanico", "panificio", "ufficio"],
       "name": "Rotoli termici 80 × 80 per cassa",
-      "category": "Cancelleria e Ufficio / Rotoli per cassa",
+      "category": ["Cancelleria e Ufficio","Rotoli per cassa"],
       "unit": {
         "quantity": 10,
         "measure": "rotoli",
@@ -416,7 +416,7 @@
       "id": "rotoli-termici-adesivi-bilancia-4",
       "profiles": ["panificio"],
       "name": "Rotoli termici adesivi per bilancia",
-      "category": "Cancelleria e Ufficio / Rotoli termici adesivi",
+      "category": ["Cancelleria e Ufficio","Rotoli termici adesivi"],
       "unit": {
         "quantity": 4,
         "measure": "rotoli",
@@ -433,7 +433,7 @@
       "id": "box-hamburger-asporto-50",
       "profiles": ["panificio"],
       "name": "Box in cartoncino per hamburger e panini",
-      "category": "Contenitori cibo asporto / Box fritti e panino",
+      "category": ["Contenitori cibo asporto","Box fritti e panino"],
       "unit": {
         "quantity": 50,
         "measure": "pezzi",
@@ -450,7 +450,7 @@
       "id": "scatole-pizza-cartone-24x24-200",
       "profiles": ["panificio"],
       "name": "Scatole pizza in cartone 24 × 24 cm",
-      "category": "Contenitori cibo asporto / Box pizza e Teglie in cartone",
+      "category": ["Contenitori cibo asporto","Box pizza e Teglie in cartone"],
       "unit": {
         "quantity": 200,
         "measure": "pezzi",
@@ -466,7 +466,7 @@
     {
       "id": "vaschette-alluminio-bordo-g",
       "name": "Vaschette in alluminio bordo G",
-      "category": "Contenitori cibo asporto / Contenitori alluminio con coperchio bordo G",
+      "category": ["Contenitori cibo asporto","Contenitori alluminio con coperchio bordo G"],
       "unit": {
         "quantity": 1,
         "measure": "confezione",
@@ -482,7 +482,7 @@
     {
       "id": "vaschette-alluminio-bordo-l-r95",
       "name": "Vaschette in alluminio R95 bordo L",
-      "category": "Contenitori cibo asporto / Contenitori alluminio con coperchio bordo L",
+      "category": ["Contenitori cibo asporto","Contenitori alluminio con coperchio bordo L"],
       "unit": {
         "quantity": 100,
         "measure": "pezzi",
@@ -498,7 +498,7 @@
     {
       "id": "insalatiere-carta-avana-compostabili-50",
       "name": "Insalatiere compostabili in carta avana",
-      "category": "Contenitori cibo asporto / Contenitori Bio-Compostabili",
+      "category": ["Contenitori cibo asporto","Contenitori Bio-Compostabili"],
       "unit": {
         "quantity": 50,
         "measure": "pezzi",
@@ -514,7 +514,7 @@
     {
       "id": "contenitori-fast-food-bio-50",
       "name": "Contenitori fast food in polpa di cellulosa",
-      "category": "Contenitori cibo asporto / Contenitori fast food con coperchio",
+      "category": ["Contenitori cibo asporto","Contenitori fast food con coperchio"],
       "unit": {
         "quantity": 50,
         "measure": "pezzi",
@@ -530,7 +530,7 @@
     {
       "id": "contenitori-plastica-asporto-450ml-100",
       "name": "Contenitori trasparenti da asporto con coperchio",
-      "category": "Contenitori cibo asporto / Contenitori in plastica con coperchio",
+      "category": ["Contenitori cibo asporto","Contenitori in plastica con coperchio"],
       "unit": {
         "quantity": 100,
         "measure": "pezzi",
@@ -546,7 +546,7 @@
     {
       "id": "contenitori-alluminio-laccati-497cc",
       "name": "Contenitori in alluminio laccato con coperchio",
-      "category": "Contenitori cibo asporto / Contenitori laccati con coperchio",
+      "category": ["Contenitori cibo asporto","Contenitori laccati con coperchio"],
       "unit": {
         "quantity": 1,
         "measure": "confezione",
@@ -563,7 +563,7 @@
       "id": "dispenser-asciugamani-piega-z-aike",
       "profiles": ["parrucchiere", "panificio", "ufficio"],
       "name": "Dispenser carta asciugamani AIKE",
-      "category": "Dispenser",
+      "category": ["Dispenser"],
       "unit": {
         "quantity": 1,
         "measure": "pezzo",
@@ -580,7 +580,7 @@
       "id": "guanti-nitrile-ansell-microflex",
       "profiles": ["parrucchiere", "meccanico"],
       "name": "Guanti monouso in nitrile Ansell Microflex",
-      "category": "Dispositivi di sicurezza / Guanti",
+      "category": ["Dispositivi di sicurezza","Guanti"],
       "unit": {
         "quantity": 1,
         "measure": "confezione",
@@ -597,7 +597,7 @@
       "id": "scarpe-antinfortunistiche-lavoro",
       "profiles": ["meccanico"],
       "name": "Scarpe antinfortunistiche da lavoro",
-      "category": "Dispositivi di sicurezza / Scarpe da lavoro",
+      "category": ["Dispositivi di sicurezza","Scarpe da lavoro"],
       "unit": {
         "quantity": 1,
         "measure": "paio",
@@ -614,7 +614,7 @@
       "id": "detersivo-lavastoviglie-matic-l-20kg",
       "profiles": ["panificio"],
       "name": "Detersivo professionale lavastoviglie MATIC L",
-      "category": "Igiene e Pulizia / Detergenti stoviglie",
+      "category": ["Igiene e Pulizia","Detergenti stoviglie"],
       "unit": {
         "quantity": 4,
         "measure": "taniche",
@@ -631,7 +631,7 @@
       "id": "detergente-superfici-horeca-5l",
       "profiles": ["parrucchiere", "panificio", "ufficio"],
       "name": "Detergente professionale superfici HoReCa",
-      "category": "Igiene e Pulizia / Detergenti superfici",
+      "category": ["Igiene e Pulizia","Detergenti superfici"],
       "unit": {
         "quantity": 5,
         "measure": "litri",
@@ -647,7 +647,7 @@
     {
       "id": "mocio-industriale-pavimenti-90cm",
       "name": "Mocio industriale per pavimenti da 90 cm",
-      "category": "Igiene e Pulizia / Materiale per la pulizia",
+      "category": ["Igiene e Pulizia","Materiale per la pulizia"],
       "unit": {
         "quantity": 1,
         "measure": "mocio",
@@ -664,7 +664,7 @@
       "id": "sacchi-spazzatura-150l-10",
       "profiles": ["meccanico", "panificio"],
       "name": "Sacchi neri per spazzatura da 150 litri",
-      "category": "Igiene e Pulizia / Sacchi spazzatura",
+      "category": ["Igiene e Pulizia","Sacchi spazzatura"],
       "unit": {
         "quantity": 10,
         "measure": "pezzi",
@@ -681,7 +681,7 @@
       "id": "office-products-sacchetti-60l-10",
       "profiles": ["parrucchiere", "ufficio"],
       "name": "Sacchetti neri Office Products da 60 litri",
-      "category": "Igiene e Pulizia / Sacchi spazzatura",
+      "category": ["Igiene e Pulizia","Sacchi spazzatura"],
       "unit": {
         "quantity": 10,
         "measure": "pezzi",
@@ -698,7 +698,7 @@
       "id": "sapone-liquido-mani-idea-home-5l",
       "profiles": ["parrucchiere", "panificio", "ufficio"],
       "name": "Sapone liquido mani IDEA HOME AROMÉA",
-      "category": "Igiene e Pulizia / Sapone mani",
+      "category": ["Igiene e Pulizia","Sapone mani"],
       "unit": {
         "quantity": 5,
         "measure": "litri",
@@ -714,7 +714,7 @@
     {
       "id": "nastro-imballaggio-carta-kraft-adhes",
       "name": "Nastro da imballaggio in carta kraft ADHES",
-      "category": "Imballaggi / Carta gommata",
+      "category": ["Imballaggi","Carta gommata"],
       "unit": {
         "quantity": 1,
         "measure": "rotolo",
@@ -730,7 +730,7 @@
     {
       "id": "film-estensibile-imballaggi-2000",
       "name": "Film estensibile manuale trasparente",
-      "category": "Imballaggi / Estensibile",
+      "category": ["Imballaggi","Estensibile"],
       "unit": {
         "quantity": 1,
         "measure": "rotolo",
@@ -746,7 +746,7 @@
     {
       "id": "nastro-adesivo-pacchi-gianto-6",
       "name": "Nastro adesivo avana GIANTO",
-      "category": "Imballaggi / Nastri adesivi",
+      "category": ["Imballaggi","Nastri adesivi"],
       "unit": {
         "quantity": 6,
         "measure": "rotoli",
@@ -763,7 +763,7 @@
       "id": "asciugamani-piegati-z-imballaggi-2000",
       "profiles": ["parrucchiere", "panificio", "ufficio"],
       "name": "Asciugamani di carta piegati a Z",
-      "category": "Itissue - Monouso in carta / Asciugamani piegati",
+      "category": ["Monouso in carta","Asciugamani piegati"],
       "unit": {
         "quantity": 3750,
         "measure": "salviette",
@@ -780,7 +780,7 @@
       "id": "asciugamani-lucart-econatural-190",
       "profiles": ["parrucchiere", "panificio", "ufficio"],
       "name": "Asciugamani piegati Lucart EcoNatural",
-      "category": "Itissue - Monouso in carta / EcoNatural",
+      "category": ["Monouso in carta","EcoNatural"],
       "unit": {
         "quantity": 190,
         "measure": "pezzi",
@@ -796,7 +796,7 @@
     {
       "id": "lenzuolino-medico-6-rotoli",
       "name": "Lenzuolino medico in rotolo a 2 veli",
-      "category": "Itissue - Monouso in carta / Lenzuolino medico",
+      "category": ["Monouso in carta","Lenzuolino medico"],
       "unit": {
         "quantity": 6,
         "measure": "rotoli",
@@ -812,7 +812,7 @@
     {
       "id": "carta-igienica-mini-jumbo-12-rotoli",
       "name": "Carta igienica Mini Jumbo a 2 veli",
-      "category": "Itissue - Monouso in carta / Mini jumbo",
+      "category": ["Monouso in carta","Mini jumbo"],
       "unit": {
         "quantity": 12,
         "measure": "rotoli",
@@ -828,7 +828,7 @@
     {
       "id": "tovaglioli-carta-colorati-2-veli",
       "name": "Tovaglioli di carta colorati a 2 veli",
-      "category": "Itissue - Monouso in carta / Tovaglioli",
+      "category": ["Monouso in carta","Tovaglioli"],
       "unit": {
         "quantity": 1,
         "measure": "confezione",
@@ -845,7 +845,7 @@
       "id": "spatole-decorazione-torte-7-pezzi",
       "profiles": ["panificio"],
       "name": "Set spatole per decorazione torte",
-      "category": "Pasticceria e Gelateria / Basi e Accessori",
+      "category": ["Pasticceria e Gelateria","Basi e Accessori"],
       "unit": {
         "quantity": 7,
         "measure": "pezzi",
@@ -862,7 +862,7 @@
       "id": "porta-torte-signora-ware-28cm",
       "profiles": ["panificio"],
       "name": "Porta torte rotondo con coperchio",
-      "category": "Pasticceria e Gelateria / Porta torte",
+      "category": ["Pasticceria e Gelateria","Porta torte"],
       "unit": {
         "quantity": 1,
         "measure": "pezzo",
@@ -878,7 +878,7 @@
     {
       "id": "vaschette-gelato-eps-25-pezzi",
       "name": "Vaschette gelato da asporto in polistirolo",
-      "category": "Pasticceria e Gelateria / Vaschette EPS gelato",
+      "category": ["Pasticceria e Gelateria","Vaschette EPS gelato"],
       "unit": {
         "quantity": 25,
         "measure": "pezzi",
@@ -895,7 +895,7 @@
       "id": "vassoi-cartone-oro-pasticceria",
       "profiles": ["panificio"],
       "name": "Vassoi in cartone oro per pasticceria",
-      "category": "Pasticceria e Gelateria / Vassoi in cartone",
+      "category": ["Pasticceria e Gelateria","Vassoi in cartone"],
       "unit": {
         "quantity": 1,
         "measure": "cartone",
@@ -911,7 +911,7 @@
     {
       "id": "kit-accessori-caffe-monouso-150",
       "name": "Kit accessori monouso per pausa caffè",
-      "category": "Stoviglie monouso / Accessori monouso",
+      "category": ["Stoviglie monouso","Accessori monouso"],
       "unit": {
         "quantity": 1,
         "measure": "kit",
@@ -927,7 +927,7 @@
     {
       "id": "bicchieri-cartoncino-coperchio-200",
       "name": "Bicchieri in cartoncino con coperchio",
-      "category": "Stoviglie monouso / Bicchieri in cartoncino con coperchio",
+      "category": ["Stoviglie monouso","Bicchieri in cartoncino con coperchio"],
       "unit": {
         "quantity": 200,
         "measure": "pezzi",
@@ -943,7 +943,7 @@
     {
       "id": "bicchieri-plastica-coperchio-50",
       "name": "Bicchierini PET da asporto con coperchio",
-      "category": "Stoviglie monouso / Bicchieri in plastica con coperchio",
+      "category": ["Stoviglie monouso","Bicchieri in plastica con coperchio"],
       "unit": {
         "quantity": 50,
         "measure": "pezzi",
@@ -959,7 +959,7 @@
     {
       "id": "cannucce-bambu-1000-pezzi",
       "name": "Cannucce in bambù monouso",
-      "category": "Stoviglie monouso / Cannucce e Agitatori",
+      "category": ["Stoviglie monouso","Cannucce e Agitatori"],
       "unit": {
         "quantity": 1000,
         "measure": "pezzi",
@@ -975,7 +975,7 @@
     {
       "id": "piatti-ciotole-biodegradabili-50",
       "name": "Piatti e ciotole monouso BIOZOYG",
-      "category": "Stoviglie monouso / Piatti e Scodelle",
+      "category": ["Stoviglie monouso","Piatti e Scodelle"],
       "unit": {
         "quantity": 50,
         "measure": "pezzi",
@@ -991,7 +991,7 @@
     {
       "id": "kit-posate-bambu-50",
       "name": "Set posate monouso in bambù con tovagliolo",
-      "category": "Stoviglie monouso / Posate e Kit posate",
+      "category": ["Stoviglie monouso","Posate e Kit posate"],
       "unit": {
         "quantity": 50,
         "measure": "set",
@@ -1007,7 +1007,7 @@
     {
       "id": "buste-portaposate-tnt-100",
       "name": "Buste portaposate in TNT con tovagliolo",
-      "category": "Tovaglie e Tovaglioli / Porta posate",
+      "category": ["Tovaglie e Tovaglioli","Porta posate"],
       "unit": {
         "quantity": 100,
         "measure": "pezzi",
@@ -1023,7 +1023,7 @@
     {
       "id": "tovaglia-tnt-rotolo-12x20m",
       "name": "Rotolo tovaglia monouso in TNT Gef Aura",
-      "category": "Tovaglie e Tovaglioli / Tovaglia TNT",
+      "category": ["Tovaglie e Tovaglioli","Tovaglia TNT"],
       "unit": {
         "quantity": 1,
         "measure": "rotolo",
@@ -1039,7 +1039,7 @@
     {
       "id": "tovagliette-carta-ristorante-500",
       "name": "Tovagliette in carta per ristorante",
-      "category": "Tovaglie e Tovaglioli / Tovaglietta",
+      "category": ["Tovaglie e Tovaglioli","Tovaglietta"],
       "unit": {
         "quantity": 500,
         "measure": "fogli",
@@ -1055,7 +1055,7 @@
     {
       "id": "tovaglioli-colorati-2-veli-38cm",
       "name": "Tovaglioli colorati in carta a 2 veli",
-      "category": "Tovaglie e Tovaglioli / Tovaglioli colorati",
+      "category": ["Tovaglie e Tovaglioli","Tovaglioli colorati"],
       "unit": {
         "quantity": 1,
         "measure": "confezione",
@@ -1071,7 +1071,7 @@
     {
       "id": "insetticida-copyr-kenyasafe-extra",
       "name": "Insetticida Copyr KenyaSafe Extra",
-      "category": "Insetticida",
+      "category": ["Insetticida"],
       "unit": {
         "quantity": 2,
         "measure": "bombolette",

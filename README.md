@@ -27,8 +27,8 @@ Il CMS usa il backend GitHub di Decap Turbo, distribuito al momento come release
 
 ## Dati e contatti
 
-- `data/products.json`: prodotti, categoria, confezione, prezzo, foto principale, foto aggiuntive, caratteristiche e disponibilità. La pagina prodotto mostra la galleria e le caratteristiche inserite qui o nel CMS. Prezzi e stock iniziali sono dimostrativi: sostituiscili con quelli effettivi prima della pubblicazione.
-- `data/site.json`: nome, zona, recapiti, indirizzo e dati dell'impresa. Verifica che i contatti e le informazioni legali siano aggiornati e pertinenti all'attività.
+- `data/products.json`: prodotti, profili attività (ID configurati in `site.profiles`), categoria come array di percorso dal livello principale alla sottocategoria (per esempio `["Monouso in carta", "Rotoloni"]`), confezione, prezzo, foto principale, foto aggiuntive, caratteristiche e disponibilità. Il percorso deve esistere nell'albero `categories` di `data/site.json`; il CMS carica profili e categorie da lì. Prezzi e stock iniziali sono dimostrativi: sostituiscili con quelli effettivi prima della pubblicazione.
+- `data/site.json`: nome, zona, recapiti, indirizzo e dati dell'impresa. `profiles` contiene ID e nomi visualizzati delle attività. `prices_include_vat` specifica se i prezzi sono lordi; ogni nodo di `categories` contiene `name`, `vat_rate` ed eventuali `children`. Verifica le aliquote con la documentazione fiscale prima di compilarle. Se i prezzi sono IVA esclusa, configura l'aliquota sul nodo corrispondente al percorso di ogni prodotto.
 - Il catalogo iniziale usa immagini dimostrative da Unsplash. Caricando le foto definitive da Decap, i file vengono salvati in `uploads/` nel repository.
 
 I tempi di consegna sono indicativi: Montoro circa 2 ore, comuni vicini in giornata e, per la Zona 03, spedizione standard con tempi variabili. Le tariffe vengono calcolate in base alla zona; i dettagli dell'ordine vengono confermati dall'attività dopo la richiesta.

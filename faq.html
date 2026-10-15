@@ -35,7 +35,7 @@
               { "@type": "Question", "name": "Come invio un ordine?", "acceptedAnswer": { "@type": "Answer", "text": "Scegli i prodotti dal catalogo, aggiungili al carrello e invia la richiesta con i dati per la consegna. Riceverai un riepilogo via email; Cartaway verifica disponibilità, costo e tempi prima di confermare." } },
               { "@type": "Question", "name": "Posso pagare online?", "acceptedAnswer": { "@type": "Answer", "text": "No. Il sito non raccoglie pagamenti: modalità di pagamento, totale e consegna si concordano con Cartaway dopo la richiesta." } },
               { "@type": "Question", "name": "Prezzi e disponibilità sono definitivi?", "acceptedAnswer": { "@type": "Answer", "text": "No. Prezzi e disponibilità mostrati nel catalogo sono indicativi e vengono verificati prima della conferma dell'ordine." } },
-              { "@type": "Question", "name": "L'ordine ricorrente si rinnova automaticamente?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ogni invio è una richiesta, non un rinnovo automatico. Frequenza e consegna si concordano con Cartaway; le frequenze indicate sono ogni 30 o 60 giorni." } },
+              { "@type": "Question", "name": "L'ordine ricorrente si rinnova automaticamente?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ogni invio è una richiesta, non un rinnovo automatico. Le frequenze e la consegna si concordano con Cartaway." } },
               { "@type": "Question", "name": "Come funziona il Buono Tech?", "acceptedAnswer": { "@type": "Answer", "text": "Il primo ordine del mese può generare un buono pari al 25% della spesa per un ordine singolo o al 50% per un ordine ricorrente, fino a 25 euro. È soggetto a verifica e alle condizioni pubblicate da Cartaway." } }
             ]
           },
@@ -51,9 +51,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="shop.css?v=67" />
+    <link rel="stylesheet" href="shop.css?v=68" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-    <script src="shop.js?v=70" defer></script>
+    <script src="shop.js?v=76" defer></script>
   </head>
   <body data-page="cart">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -125,7 +125,7 @@
           </details>
           <details>
             <summary>L'ordine ricorrente si rinnova automaticamente?</summary>
-            <p>No. Ogni invio è una richiesta, non un rinnovo automatico. Puoi chiedere una consegna ogni 30 o 60 giorni; frequenza, sconto e disponibilità si concordano con Cartaway.</p>
+            <p>No. Ogni invio è una richiesta, non un rinnovo automatico. Puoi chiedere una consegna con queste cadenze: <span id="recurring-frequency-faq">consulta le opzioni disponibili nel modulo</span>; frequenza, sconto e disponibilità si concordano con Cartaway.</p>
           </details>
           <details id="buono-tech-faq">
             <summary>Come funziona il Buono Tech?</summary>
@@ -154,6 +154,13 @@
           <p>Consegna locale a Montoro e nei comuni vicini.</p>
         </div>
       </div>
+      <nav class="site-footer__documents" aria-label="Documenti legali">
+        <a href="condizioni-vendita.html">Condizioni di vendita</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="cookie.html">Cookie</a>
+        <a href="resi.html">Resi</a>
+        <a href="recesso.html">Recesso</a>
+      </nav>
       <div class="site-footer__bottom">
         <span>© <span id="current-year"></span> Cartaway</span>
         <span>Ordini e pagamenti confermati direttamente con l'attività.</span>
@@ -176,14 +183,14 @@
           <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
         </div>
         <div data-quick-message-dialog="recurring" hidden>
-          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture con una richiesta ogni <span data-recurring-frequency-days>30 o 60 giorni</span>: ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
+          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture scegliendo una cadenza adatta. Ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
           <div class="promo-dialog__example">
             <span data-quick-message-copy="recurring.discount_label">Sconto sugli ordini ricorrenti</span>
             <strong data-quick-message-copy="recurring.discount_value"><span data-recurring-discount-percent>5%</span> in meno</strong>
             <span data-quick-message-copy="recurring.price_lock_label">Prezzi bloccati</span>
             <strong data-quick-message-copy="recurring.price_lock_value"><span data-recurring-price-lock>12 mesi</span></strong>
             <span data-quick-message-copy="recurring.frequency_label">Frequenze disponibili</span>
-            <strong data-quick-message-copy="recurring.frequency_value">Ogni <span data-recurring-frequency-days>30 o 60 giorni</span></strong>
+            <strong data-quick-message-copy="recurring.frequency_value">Frequenze disponibili: consulta le opzioni del modulo.</strong>
             <span data-quick-message-copy="recurring.tech_voucher_label">Buono Tech sul primo ordine del mese</span>
             <strong data-quick-message-copy="recurring.tech_voucher_value"><span data-tech-voucher-recurring-percent>50%</span> fino a <span data-tech-voucher-maximum>25 €</span></strong>
           </div>
