@@ -1,9 +1,9 @@
 {
   "brand": "Cartaway",
   "city": "Montoro (AV)",
-  "phone": "+39 347 7095289",
+  "phone": "+39 00000",
   "tagline": "La carta che ti serve, consegnata vicino a te.",
-  "whatsapp": "+39 347 7095289",
+  "whatsapp": "+39 00000",
   "address": "Via Roma, 1, Torchiati di Montoro (AV)",
   "legal": {
     "holder": "MARIO ROSSI",
@@ -196,7 +196,7 @@
     "tech_voucher_validity_days": 90,
     "fixed_delivery_day": true
   },
-  "email": "nicolagal33@gmail.com",
+  "email": "example@gmail.com",
   "emailjs": {
     "public_key": "khfx-WKeKM91KZmnj",
     "service_id": "service_retgqpj",

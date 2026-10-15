@@ -36,7 +36,7 @@
               { "@type": "Question", "name": "Posso pagare online?", "acceptedAnswer": { "@type": "Answer", "text": "No. Il sito non raccoglie pagamenti: modalità di pagamento, totale e consegna si concordano con Cartaway dopo la richiesta." } },
               { "@type": "Question", "name": "Prezzi e disponibilità sono definitivi?", "acceptedAnswer": { "@type": "Answer", "text": "No. Prezzi e disponibilità mostrati nel catalogo sono indicativi e vengono verificati prima della conferma dell'ordine." } },
               { "@type": "Question", "name": "L'ordine ricorrente si rinnova automaticamente?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ogni invio è una richiesta, non un rinnovo automatico. Le frequenze e la consegna si concordano con Cartaway." } },
-              { "@type": "Question", "name": "Come funziona il Buono Tech?", "acceptedAnswer": { "@type": "Answer", "text": "Il primo ordine del mese può generare un buono pari al 25% della spesa per un ordine singolo o al 50% per un ordine ricorrente, fino a 25 euro. È soggetto a verifica e alle condizioni pubblicate da Cartaway." } }
+              { "@type": "Question", "name": "Come funziona il Buono Tech?", "acceptedAnswer": { "@type": "Answer", "text": "Percentuali, importi e validità del Buono Tech vengono caricati dalle impostazioni del sito." } }
             ]
           },
           {
@@ -51,15 +51,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="shop.css?v=70" />
+    <link rel="stylesheet" href="shop.css?v=71" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-      <script src="shop.js?v=81" defer></script>
+      <script src="shop.js?v=89" defer></script>
   </head>
   <body data-page="cart">
     <a class="skip-link" href="#main">Salta al contenuto</a>
     <div class="notice-bar">
       <div class="notice-bar__inner">
-        <span><span class="notice-bar__dot" aria-hidden="true"></span> Consegne locali a Montoro e dintorni</span>
+        <span><span class="notice-bar__dot" aria-hidden="true"></span> <span data-site-area>Consegne locali nelle zone configurate</span></span>
         <button class="notice-bar__promo" id="promo-open-top" data-quick-message-button type="button" aria-haspopup="dialog" aria-controls="promo-dialog"><span data-quick-message-slide="tech" data-quick-message-copy="tech.banner_message"></span><span data-quick-message-slide="recurring" hidden><span data-quick-message-copy="recurring.banner_message"></span></span></button>
         <button class="notice-bar__delivery" id="delivery-open" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog"><img class="notice-bar__delivery-icon" src="assets/location-icon.svg" alt="" aria-hidden="true" />Zone e tempi <span aria-hidden="true">↗</span></button>
       </div>
@@ -68,7 +68,7 @@
       <div class="site-header__inner">
         <a class="brand" href="/#main" aria-label="Cartaway, torna all'inizio">
           <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
-          <span class="brand__wordmark"><span class="brand__name">Cartaway</span><span class="brand__descriptor">CARTA PER LA CASA, IL LAVORO E L'UFFICIO</span></span>
+          <span class="brand__wordmark"><span class="brand__name" data-brand>Cartaway</span><span class="brand__descriptor" data-site-tagline>CARTA PER LA CASA, IL LAVORO E L'UFFICIO</span></span>
         </a>
         <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Apri il menu" aria-controls="primary-navigation" aria-expanded="false"><span></span><span></span></button>
         <nav class="primary-nav" id="primary-navigation" aria-label="Navigazione principale">
@@ -101,15 +101,15 @@
         <div class="faq-list faq-page__list">
           <details>
             <summary>Quanto costa la consegna?</summary>
-            <p>A Montoro la consegna è gratuita e senza minimo d'ordine. A Solofra, Forino e Contrada costa €5 sotto €30 ed è gratuita da €30. A Fisciano, Bracigliano e Mercato San Severino costa €5. Copertura e condizioni si confermano con Cartaway.</p>
+            <p id="faq-delivery-cost-answer">Costi e copertura dipendono dalla zona e vanno confermati con Cartaway.</p>
           </details>
           <details>
             <summary>Esiste un minimo d'ordine?</summary>
-            <p>A Montoro non c'è un importo minimo. A Solofra, Forino e Contrada la consegna è gratuita da €30; sotto tale importo costa €5. Negli altri comuni si applicano costo e condizioni della relativa zona.</p>
+            <p id="faq-delivery-minimum-answer">Il minimo d'ordine e le soglie per la consegna gratuita dipendono dalla zona.</p>
           </details>
           <details>
             <summary>Quanto tempo richiede la consegna?</summary>
-            <p>A Montoro la stima è di circa 2 ore; nei comuni vicini è prevista in giornata. Per i comuni più lontani è prevista una spedizione standard con tempi variabili. Sono stime: confermiamo disponibilità e orario prima di procedere.</p>
+            <p id="faq-delivery-time-answer">Tempi e disponibilità sono indicativi e si confermano prima di procedere.</p>
           </details>
           <details>
             <summary>Come invio una richiesta d'ordine?</summary>
@@ -129,7 +129,7 @@
           </details>
           <details id="buono-tech-faq">
             <summary>Come funziona il Buono Tech?</summary>
-            <p>Il primo ordine del mese può generare un buono pari al 25% della spesa per un ordine singolo o al 50% per un ordine ricorrente, fino a €25. L'attivazione è soggetta a verifica e alle condizioni complete indicate al momento dell'ordine.</p>
+            <p id="faq-tech-voucher-answer">Percentuali, importi, requisiti e validità dipendono dalle impostazioni correnti del Buono Tech.</p>
           </details>
         </div>
         <div class="editorial-page__actions">
@@ -143,15 +143,15 @@
         <div class="site-footer__brand">
           <a class="brand brand--footer" href="/#main" aria-label="Cartaway, torna all'inizio">
             <img class="brand__mark" src="assets/cartaway-cart.svg" alt="" aria-hidden="true" />
-            <span class="brand__wordmark"><span class="brand__name">Cartaway</span><span class="brand__descriptor">CARTA PER LA CASA, IL LAVORO E L'UFFICIO</span></span>
+            <span class="brand__wordmark"><span class="brand__name" data-brand>Cartaway</span><span class="brand__descriptor" data-site-tagline>CARTA PER LA CASA, IL LAVORO E L'UFFICIO</span></span>
           </a>
-          <p>Carta per casa, ufficio e attività. Consegna locale a Montoro e dintorni.</p>
+          <p id="footer-business-copy" hidden></p>
         </div>
         <div class="site-footer__contact-block">
           <h2>Informazioni</h2>
           <a href="primi-passi.html">Come ordinare <span aria-hidden="true">↗</span></a>
           <a href="/">Vai al catalogo <span aria-hidden="true">↗</span></a>
-          <p>Consegna locale a Montoro e nei comuni vicini.</p>
+          <p id="footer-delivery-note" hidden></p>
         </div>
       </div>
       <nav class="site-footer__documents" aria-label="Documenti legali">
@@ -173,26 +173,26 @@
         <p class="eyebrow eyebrow--dark"><span class="eyebrow__rule" aria-hidden="true"></span> <span id="promo-dialog-eyebrow" data-quick-message-copy="tech.eyebrow">PROMO PER ORDINI B2B</span></p>
         <h2 id="promo-dialog-title" data-quick-message-copy="tech.title">Il Buono Tech del mese</h2>
         <div data-quick-message-dialog="tech">
-          <p class="promo-dialog__description" id="promo-dialog-description" data-quick-message-copy="tech.description">Dal primo ordine del mese con almeno 25 € di spesa: <span data-tech-voucher-standard-percent>25%</span> singolo o <span data-tech-voucher-recurring-percent>50%</span> ricorrente, fino a <span data-tech-voucher-maximum>25 €</span>. Idoneità verificata dall'attività.</p>
+          <p class="promo-dialog__description" id="promo-dialog-description" data-quick-message-copy="tech.description">I dettagli del Buono Tech vengono caricati dalle impostazioni del sito.</p>
           <div class="promo-dialog__example" data-tech-voucher-example>
             <span data-quick-message-copy="tech.standard_example_label">Per ottenere il buono massimo con ordine non ricorrente</span>
-            <strong data-quick-message-copy="tech.standard_example_result"><span data-tech-voucher-standard-example-order>100 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+            <strong data-quick-message-copy="tech.standard_example_result">Esempio di ordine singolo in caricamento.</strong>
             <span data-quick-message-copy="tech.recurring_example_label">Per ottenere il buono massimo con ordine ricorrente</span>
-            <strong data-quick-message-copy="tech.recurring_example_result"><span data-tech-voucher-recurring-example-order>52,63 €</span> di spesa → <span data-tech-voucher-maximum>25 €</span> di buono</strong>
+            <strong data-quick-message-copy="tech.recurring_example_result">Esempio di ordine ricorrente in caricamento.</strong>
           </div>
-          <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Un solo buono per cliente al mese. Valido <span data-tech-voucher-validity>60 giorni</span> dalla consegna; con un ordine ricorrente la validità si estende a <span data-tech-voucher-recurring-validity>90 giorni</span>. È valido per un solo intervento, non è convertibile in denaro né cumulabile con altri buoni. È spendibile su <a href="https://colosso.cloud" target="_blank" rel="noopener noreferrer">colosso.cloud</a>.</p>
+          <p class="promo-dialog__terms" id="promo-dialog-terms" data-quick-message-copy="tech.terms">Condizioni e validità del buono vengono caricate dalle impostazioni del sito.</p>
         </div>
         <div data-quick-message-dialog="recurring" hidden>
-          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">Organizza le forniture scegliendo una cadenza adatta. Ottieni <span data-recurring-discount-percent>5%</span> di sconto e prezzi bloccati per <span data-recurring-price-lock>12 mesi</span>.</p>
+          <p class="promo-dialog__description" id="recurring-order-description" data-quick-message-copy="recurring.description">I dettagli dell'ordine ricorrente vengono caricati dalle impostazioni del sito.</p>
           <div class="promo-dialog__example">
             <span data-quick-message-copy="recurring.discount_label">Sconto sugli ordini ricorrenti</span>
-            <strong data-quick-message-copy="recurring.discount_value"><span data-recurring-discount-percent>5%</span> in meno</strong>
+            <strong data-quick-message-copy="recurring.discount_value">Sconto in caricamento.</strong>
             <span data-quick-message-copy="recurring.price_lock_label">Prezzi bloccati</span>
-            <strong data-quick-message-copy="recurring.price_lock_value"><span data-recurring-price-lock>12 mesi</span></strong>
+            <strong data-quick-message-copy="recurring.price_lock_value">Durata in caricamento.</strong>
             <span data-quick-message-copy="recurring.frequency_label">Frequenze disponibili</span>
             <strong data-quick-message-copy="recurring.frequency_value">Frequenze disponibili: consulta le opzioni del modulo.</strong>
             <span data-quick-message-copy="recurring.tech_voucher_label">Buono Tech sul primo ordine del mese</span>
-            <strong data-quick-message-copy="recurring.tech_voucher_value"><span data-tech-voucher-recurring-percent>50%</span> fino a <span data-tech-voucher-maximum>25 €</span></strong>
+            <strong data-quick-message-copy="recurring.tech_voucher_value">Buono Tech in caricamento.</strong>
           </div>
           <p class="promo-dialog__terms" id="recurring-order-terms" data-quick-message-copy="recurring.terms">Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni.</p>
         </div>
@@ -261,26 +261,20 @@
           <p class="cart-total-row"><span id="cart-total-label">Totale prodotti</span><strong id="cart-estimated-total">€0,00</strong></p>
           <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
             <p><span id="cart-cashback-label">Buono Tech stimato</span>: <strong id="cart-cashback-amount">€0,00</strong></p>
-            <small id="cart-cashback-note">Da 25 € di spesa; importo e idoneità vengono verificati dall'attività.</small>
+            <small id="cart-cashback-note">Importo e idoneità del buono vengono verificati dall'attività.</small>
             <button class="text-button cart-cashback__more" id="cart-cashback-more" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">Come funziona</button>
           </div>
         </div>
         <form class="checkout-form" id="checkout-form">
           <h3>Contatti e consegna</h3>
-          <label class="form-field"><span>Email <span class="form-field__optional">facoltativa</span></span><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" /></label>
-          <label class="form-field"><span>Telefono per ricontatto</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="30" /></label>
+          <p class="checkout-contact-note" id="checkout-contact-requirement">Inserisci almeno un recapito: email o telefono.</p>
+          <label class="form-field"><span>Email <span class="form-field__optional">facoltativa</span></span><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" aria-describedby="checkout-contact-requirement" /></label>
+          <label class="form-field"><span>Telefono per ricontatto <span class="form-field__optional">facoltativo</span></span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" aria-describedby="checkout-contact-requirement" /></label>
           <div class="form-row">
             <label class="form-field">
               <span>Comune</span>
               <select id="delivery-town" name="city" required>
                 <option value="">Seleziona il comune</option>
-                <option value="Montoro">Montoro</option>
-                <option value="Solofra">Solofra</option>
-                <option value="Forino">Forino</option>
-                <option value="Contrada">Contrada</option>
-                <option value="Fisciano">Fisciano</option>
-                <option value="Bracigliano">Bracigliano</option>
-                <option value="Mercato San Severino">Mercato San Severino</option>
                 <option value="altro">Altro comune</option>
               </select>
             </label>
@@ -301,14 +295,14 @@
           <label class="recurring-order">
             <span class="recurring-order__copy">
               <span class="recurring-order__title">Ordine ricorrente</span>
-              <span class="recurring-order__hint" id="recurring-hint">Sconto 5% · prezzo bloccato per 12 mesi</span>
+              <span class="recurring-order__hint" id="recurring-hint">Condizioni dell'ordine ricorrente in caricamento.</span>
             </span>
             <input class="recurring-order__switch" name="recurring-order" type="checkbox" value="yes" role="switch" />
           </label>
           <div class="recurring-order__options" id="recurring-options" hidden>
             <label class="form-field"><span>Frequenza di consegna</span><select id="recurring-frequency" name="recurring-frequency"></select></label>
             <label class="form-field" id="recurring-day-field" hidden><span id="recurring-day-label">Giorno del mese</span><select id="recurring-day" name="recurring-day"></select></label>
-            <p class="recurring-order__note"><span id="recurring-price-lock-note">Prezzi bloccati per 12 mesi.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
+            <p class="recurring-order__note"><span id="recurring-price-lock-note">Durata dei prezzi bloccati in caricamento.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
           </div>
           <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
           <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>

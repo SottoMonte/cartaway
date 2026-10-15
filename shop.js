@@ -34,6 +34,7 @@ const state = {
   selectedDeliveryZoneId: null,
 };
 let preferredTimeToAutoFilled = false;
+let refreshHeroCarousel = () => {};
 
 const elements = {
   cartClear: document.querySelector("#cart-clear"),
@@ -67,6 +68,8 @@ const elements = {
   categorySelect: document.querySelector("#product-category"),
   checkoutFeedback: document.querySelector("#checkout-feedback"),
   checkoutForm: document.querySelector("#checkout-form"),
+  checkoutEmail: document.querySelector('#checkout-form [name="email"]'),
+  checkoutPhone: document.querySelector('#checkout-form [name="phone"]'),
   checkoutMobileDock: document.querySelector("#checkout-mobile-dock"),
   checkoutConfirmation: document.querySelector("#checkout-confirmation"),
   checkoutConfirmationOrder: document.querySelector("#checkout-confirmation-order"),
@@ -103,6 +106,7 @@ const elements = {
   deliveryDisclaimer: document.querySelector("#delivery-disclaimer"),
   emptyState: document.querySelector("#empty-state"),
   footerBusinessCopy: document.querySelector("#footer-business-copy"),
+  footerDeliveryNote: document.querySelector("#footer-delivery-note"),
   hero: document.querySelector("#inizio"),
   heroAction: document.querySelector("#hero-action"),
   heroActionLabel: document.querySelector("#hero-action-label"),
@@ -160,6 +164,7 @@ const elements = {
   productDialogUnitPriceWrap: document.querySelector("#product-dialog-unit-price-wrap"),
   productDetail: document.querySelector("#product-detail"),
   productNotFound: document.querySelector("#product-not-found"),
+  productDeliveryCopy: document.querySelector("#product-delivery-copy"),
   detailAdd: document.querySelector("#detail-add"),
   detailCategory: document.querySelector("#detail-category"),
   detailDescription: document.querySelector("#detail-description"),
@@ -191,6 +196,10 @@ const elements = {
   zone1DeliveryFaq: document.querySelector("#zone-01-delivery-faq"),
   zone2DeliveryFaq: document.querySelector("#zone-02-delivery-faq"),
   zone3DeliveryFaq: document.querySelector("#zone-03-delivery-faq"),
+  faqDeliveryCost: document.querySelector("#faq-delivery-cost-answer"),
+  faqDeliveryMinimum: document.querySelector("#faq-delivery-minimum-answer"),
+  faqDeliveryTime: document.querySelector("#faq-delivery-time-answer"),
+  faqTechVoucher: document.querySelector("#faq-tech-voucher-answer"),
 };
 
 let leafletPromise = null;
@@ -258,6 +267,13 @@ function formatPercentage(value) {
 function getRecurringDiscountPercent() {
   const value = Number(state.site.recurring_order?.discount_percent);
   return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+}
+
+function recurringPriceLockText() {
+  const months = Number(state.site.recurring_order?.price_lock_months);
+  return Number.isInteger(months) && months > 0
+    ? `${months} ${months === 1 ? "mese" : "mesi"}`
+    : "da definire";
 }
 
 function priceInCents(value) {
@@ -373,16 +389,15 @@ function techVoucherPercent(recurring = false) {
     ? state.site.recurring_order?.tech_voucher_percent
     : state.site.tech_voucher?.percent;
   const value = Number(configuredPercent);
-  const fallbackPercent = recurring ? 50 : 25;
-  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : fallbackPercent;
+  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
 }
 
 function techVoucherMaximumCents() {
-  return optionalPriceInCents(state.site.tech_voucher?.maximum_amount) ?? 2500;
+  return optionalPriceInCents(state.site.tech_voucher?.maximum_amount) ?? 0;
 }
 
 function techVoucherMinimumCents() {
-  return optionalPriceInCents(state.site.tech_voucher?.minimum_order_amount) ?? 2500;
+  return optionalPriceInCents(state.site.tech_voucher?.minimum_order_amount) ?? 0;
 }
 
 function techVoucherExampleOrderCents(recurring = false) {
@@ -407,12 +422,12 @@ function techVoucherValidityDays(recurring = false) {
     ? state.site.recurring_order?.tech_voucher_validity_days
     : state.site.tech_voucher?.validity_days;
   const days = Number(configuredDays);
-  return Number.isInteger(days) && days > 0 ? days : recurring ? 90 : 60;
+  return Number.isInteger(days) && days > 0 ? days : null;
 }
 
 function techVoucherValidityText(recurring = false) {
   const days = techVoucherValidityDays(recurring);
-  return `${days} ${days === 1 ? "giorno" : "giorni"}`;
+  return days === null ? "da definire" : `${days} ${days === 1 ? "giorno" : "giorni"}`;
 }
 
 function techVoucherAmountCents(subtotalCents, recurring = false) {
@@ -447,13 +462,15 @@ function configureTechVoucher() {
   document.querySelectorAll("[data-tech-voucher-recurring-validity]").forEach((element) => {
     element.textContent = techVoucherValidityText(true);
   });
+  if (elements.faqTechVoucher) {
+    elements.faqTechVoucher.textContent = `Il primo ordine del mese può generare un buono pari al ${formatPercentage(techVoucherPercent(false))}% della spesa per un ordine singolo o al ${formatPercentage(techVoucherPercent(true))}% per un ordine ricorrente, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Spesa minima: ${formatPrice(techVoucherMinimumCents() / 100)}. Validità: ${techVoucherValidityText(false)}; con un ordine ricorrente, ${techVoucherValidityText(true)}. L'attivazione è soggetta a verifica e alle condizioni complete indicate al momento dell'ordine.`;
+  }
 }
 
 function configureRecurringOrder() {
   const config = state.site.recurring_order || {};
   const discount = getRecurringDiscountPercent();
-  const configuredMonths = Number(config.price_lock_months);
-  const priceLockMonths = Number.isInteger(configuredMonths) && configuredMonths > 0 ? configuredMonths : 12;
+  const priceLock = recurringPriceLockText();
   const frequencies = recurringFrequencyDays();
   const previousFrequency = elements.recurringFrequency.value;
   const options = frequencies.map((days) => {
@@ -467,20 +484,20 @@ function configureRecurringOrder() {
   if (frequencies.includes(Number(previousFrequency))) {
     elements.recurringFrequency.value = previousFrequency;
   }
-  elements.recurringHint.textContent = `${formatPercentage(discount)}% di sconto · prezzo bloccato per ${priceLockMonths} mesi`;
-  elements.recurringPriceLockNote.textContent = `Prezzi bloccati per ${priceLockMonths} mesi.`;
+  elements.recurringHint.textContent = `${formatPercentage(discount)}% di sconto · prezzo bloccato per ${priceLock}`;
+  elements.recurringPriceLockNote.textContent = `Prezzi bloccati per ${priceLock}.`;
   configureRecurringDayOptions();
   elements.recurringDayField.hidden = config.fixed_delivery_day === false || !elements.recurringOrder.checked;
 
   if (elements.recurringDiscountFaq) elements.recurringDiscountFaq.textContent = `${formatPercentage(discount)}%`;
-  if (elements.recurringPriceLockFaq) elements.recurringPriceLockFaq.textContent = `${priceLockMonths} mesi`;
+  if (elements.recurringPriceLockFaq) elements.recurringPriceLockFaq.textContent = priceLock;
   const frequencyText = formatRecurringFrequencyList(frequencies);
   if (elements.recurringFrequencyFaq) elements.recurringFrequencyFaq.textContent = frequencyText;
   document.querySelectorAll("[data-recurring-discount-percent]").forEach((element) => {
     element.textContent = `${formatPercentage(discount)}%`;
   });
   document.querySelectorAll("[data-recurring-price-lock]").forEach((element) => {
-    element.textContent = `${priceLockMonths} mesi`;
+    element.textContent = priceLock;
   });
   document.querySelectorAll("[data-recurring-frequency-days]").forEach((element) => {
     element.textContent = frequencyText;
@@ -503,11 +520,9 @@ function quickMessageTemplateValues(message) {
     };
   }
 
-  const configuredMonths = Number(state.site.recurring_order?.price_lock_months);
-  const priceLockMonths = Number.isInteger(configuredMonths) && configuredMonths > 0 ? configuredMonths : 12;
   return {
     discount_percent: `${formatPercentage(getRecurringDiscountPercent())}%`,
-    price_lock_months: `${priceLockMonths} mesi`,
+    price_lock_months: recurringPriceLockText(),
     frequency_days: formatRecurringFrequencyList(),
     tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
     recurring_validity_days: techVoucherValidityText(true),
@@ -711,6 +726,14 @@ function updateInvoiceControls() {
   elements.invoiceFields.hidden = !requested;
   [elements.invoiceBusinessName, elements.invoiceVatNumber, elements.invoiceRecipient]
     .forEach((field) => { field.required = requested; });
+}
+
+function updateCheckoutContactRequirement() {
+  const hasEmail = Boolean(elements.checkoutEmail.value.trim());
+  const hasPhone = Boolean(elements.checkoutPhone.value.trim());
+  const message = hasEmail || hasPhone ? "" : "Inserisci almeno un recapito: email o telefono.";
+  elements.checkoutEmail.setCustomValidity(message);
+  elements.checkoutPhone.setCustomValidity(message);
 }
 
 function productImages(product) {
@@ -1152,7 +1175,9 @@ function renderProductDetail() {
   const metaDescription = [
     `${productNameForMetadata}.`,
     productDescription,
-    "Consegna a Montoro e nei comuni vicini.",
+    state.site.city
+      ? `Consegna a ${String(state.site.city).trim()} e nei comuni vicini.`
+      : "Consegna nelle zone configurate.",
   ].join(" ");
   updateSeoMetadata({
     title: `${productNameForMetadata} | ${brand}`,
@@ -1759,6 +1784,40 @@ function updateSeoStructuredData(data) {
   script.textContent = JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+function updateFaqStructuredData() {
+  const script = document.head.querySelector("#seo-structured-data");
+  if (!script) return;
+
+  try {
+    const data = JSON.parse(script.textContent);
+    const faqPage = data["@type"] === "FAQPage"
+      ? data
+      : Array.isArray(data["@graph"])
+        ? data["@graph"].find((entry) => entry?.["@type"] === "FAQPage")
+        : null;
+    if (!Array.isArray(faqPage?.mainEntity)) return;
+
+    const answers = [
+      elements.faqDeliveryCost?.textContent,
+      elements.faqDeliveryMinimum?.textContent,
+      elements.faqDeliveryTime?.textContent,
+      null,
+      null,
+      null,
+      null,
+      elements.faqTechVoucher?.textContent,
+    ];
+    answers.forEach((answer, index) => {
+      if (answer && faqPage.mainEntity[index]?.acceptedAnswer) {
+        faqPage.mainEntity[index].acceptedAnswer.text = answer;
+      }
+    });
+    updateSeoStructuredData(data);
+  } catch {
+    return;
+  }
+}
+
 function catalogStructuredData(title, description, url) {
   const products = state.products.filter((product) => product.available !== false);
   return {
@@ -1790,6 +1849,8 @@ function catalogStructuredData(title, description, url) {
 
 function renderSiteDetails() {
   const brand = String(state.site.brand || "Cartaway").trim();
+  const city = String(state.site.city || "").trim();
+  const tagline = String(state.site.tagline || "").trim();
   const categories = Array.isArray(state.site.categories) ? state.site.categories : [];
   const allVatRatesConfigured = categories.length > 0
     && state.products.length > 0
@@ -1805,24 +1866,68 @@ function renderSiteDetails() {
   document.querySelectorAll("[data-brand]").forEach((element) => {
     element.textContent = brand;
   });
+  document.querySelectorAll("[data-site-area]").forEach((element) => {
+    element.textContent = city
+      ? `Consegne locali a ${city} e dintorni`
+      : "Consegne locali nelle zone configurate";
+  });
+  if (tagline) {
+    document.querySelectorAll("[data-site-tagline]").forEach((element) => {
+      element.textContent = tagline;
+    });
+  }
+  if (elements.productDeliveryCopy) {
+    elements.productDeliveryCopy.textContent = city
+      ? `Consegna a ${city} e dintorni`
+      : "Consegna nelle zone configurate";
+  }
+  const businessLines = [state.site.services, state.site.service_note]
+    .map((line) => String(line || "").trim())
+    .filter(Boolean);
+  if (elements.footerBusinessCopy) {
+    elements.footerBusinessCopy.textContent = businessLines.join(". ");
+    elements.footerBusinessCopy.hidden = businessLines.length === 0;
+  }
+  const footerDeliveryNote = String(state.site.delivery_note || "").trim();
+  if (elements.footerDeliveryNote) {
+    elements.footerDeliveryNote.textContent = footerDeliveryNote;
+    elements.footerDeliveryNote.hidden = !footerDeliveryNote;
+  }
+  refreshHeroCarousel();
   if (state.page === "cart") {
+    const isFaqPage = window.location.pathname.endsWith("/faq.html");
+    const isAboutPage = window.location.pathname.endsWith("/chi-siamo.html");
+    if (isFaqPage || isAboutPage) {
+      const cityDescription = city ? `${city} e nei comuni vicini` : "le zone di consegna configurate";
+      const title = isFaqPage
+        ? `Domande frequenti su ordini e consegne | ${brand}`
+        : `Chi siamo | ${brand}, forniture a ${city || "consegna locale"}`;
+      const description = isFaqPage
+        ? `Risposte su ordini, consegna a ${cityDescription}, disponibilità e acquisti ricorrenti da ${brand}.`
+        : `Scopri ${brand}: prodotti di carta e forniture per casa, ufficio e attività, con consegna locale a ${cityDescription}.`;
+      const url = new URL(window.location.pathname, canonicalSiteOrigin).href;
+      updateSeoMetadata({ title, description, url, siteName: brand, pageType: "website" });
+    }
     if (elements.currentYear) elements.currentYear.textContent = String(new Date().getFullYear());
     renderDeliveryInfo();
+    updateFaqStructuredData();
     return;
   }
   if (state.page !== "product") {
     const isCatalog = state.page === "catalog";
     const isHelp = state.page === "help";
+    const cityTitle = city ? `a ${city}` : "nelle zone configurate";
+    const cityDescription = city ? `${city} e nei comuni vicini` : "le zone configurate";
     const title = isCatalog
-      ? `Catalogo carta per la casa, il lavoro e l'ufficio a Montoro | ${brand}`
+      ? `Catalogo carta per la casa, il lavoro e l'ufficio ${cityTitle} | ${brand}`
       : isHelp
-        ? `Come ordinare da ${brand} | Consegna a Montoro`
-        : `${brand} | Carta per la casa, la cucina, il lavoro e l'ufficio a Montoro`;
+        ? `Come ordinare da ${brand} | Consegna ${cityTitle}`
+        : `${brand} | Carta per la casa, la cucina, il lavoro e l'ufficio ${cityTitle}`;
     const description = isCatalog
-      ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per la casa, il lavoro e l'ufficio, con consegna a Montoro e nei comuni vicini.`
+      ? `Sfoglia il catalogo ${brand}: carta igienica, rotoli cucina, carta A4 e prodotti di carta per la casa, il lavoro e l'ufficio, con consegna a ${cityDescription}.`
       : isHelp
-        ? `Guida per ordinare da ${brand}: come inviare una richiesta, costi e zone di consegna a Montoro e nei comuni vicini.`
-        : `Carta igienica, rotoli cucina e carta A4 per la casa, il lavoro e l'ufficio. ${brand} consegna a Montoro e nei comuni vicini, con tempi da concordare.`;
+        ? `Guida per ordinare da ${brand}: come inviare una richiesta, costi e zone di consegna a ${cityDescription}.`
+        : `Carta igienica, rotoli cucina e carta A4 per la casa, il lavoro e l'ufficio. ${brand} consegna a ${cityDescription}, con tempi da concordare.`;
     const url = seoCanonicalUrl();
     updateSeoMetadata({ title, description, url, siteName: brand, pageType: "website" });
     updateSeoStructuredData(isCatalog
@@ -1879,39 +1984,53 @@ function renderSiteDetails() {
   }
 
   const email = String(state.site.email || "").trim();
-  if (email) {
-    elements.contactEmail.href = `mailto:${email}`;
-    elements.contactEmail.textContent = email;
-  } else {
-    elements.contactEmail.hidden = true;
+  if (elements.contactEmail) {
+    if (email) {
+      elements.contactEmail.href = `mailto:${email}`;
+      elements.contactEmail.textContent = email;
+      elements.contactEmail.hidden = false;
+    } else {
+      elements.contactEmail.removeAttribute("href");
+      elements.contactEmail.textContent = "";
+      elements.contactEmail.hidden = true;
+    }
   }
 
   const phone = String(state.site.phone || "").trim();
-  if (phone) {
-    elements.contactPhone.href = `tel:${phone.replace(/[^\d+]/g, "")}`;
-    elements.contactPhone.textContent = phone;
-  } else {
-    elements.contactPhone.hidden = true;
+  if (elements.contactPhone) {
+    if (phone) {
+      elements.contactPhone.href = `tel:${phone.replace(/[^\d+]/g, "")}`;
+      elements.contactPhone.textContent = phone;
+      elements.contactPhone.hidden = false;
+    } else {
+      elements.contactPhone.removeAttribute("href");
+      elements.contactPhone.textContent = "";
+      elements.contactPhone.hidden = true;
+    }
   }
 
   const whatsapp = buildWhatsappUrl(`Buongiorno ${brand}, vorrei informazioni su un ordine.`);
-  if (whatsapp) {
-    elements.contactWhatsapp.href = whatsapp;
-  } else {
-    elements.contactWhatsapp.hidden = true;
+  if (elements.contactWhatsapp) {
+    if (whatsapp) {
+      elements.contactWhatsapp.href = whatsapp;
+      elements.contactWhatsapp.hidden = false;
+    } else {
+      elements.contactWhatsapp.removeAttribute("href");
+      elements.contactWhatsapp.hidden = true;
+    }
   }
 
   const address = String(state.site.address || "").trim();
-  if (address) {
-    elements.contactAddress.textContent = address;
-  } else {
-    elements.contactAddress.hidden = true;
+  if (elements.contactAddress) {
+    if (address) {
+      elements.contactAddress.textContent = address;
+      elements.contactAddress.hidden = false;
+    } else {
+      elements.contactAddress.textContent = "";
+      elements.contactAddress.hidden = true;
+    }
   }
 
-  const businessLines = [state.site.services, state.site.service_note]
-    .map((line) => String(line || "").trim())
-    .filter(Boolean);
-  elements.footerBusinessCopy.textContent = businessLines.join(". ");
   elements.currentYear.textContent = String(new Date().getFullYear());
   renderDeliveryInfo();
 
@@ -2060,6 +2179,29 @@ function getDeliveryZones() {
   );
 }
 
+function renderDeliveryTownOptions() {
+  const select = elements.deliveryTown;
+  if (!select) return;
+
+  const selectedTown = select.value;
+  const towns = new Map();
+  for (const zone of getDeliveryZones()) {
+    for (const location of zone.locations) {
+      const name = String(location.name || "").trim();
+      const key = normalizeText(name);
+      if (name && key && !towns.has(key)) towns.set(key, name);
+    }
+  }
+
+  const options = [new Option("Seleziona il comune", "")];
+  for (const town of towns.values()) options.push(new Option(town, town));
+  options.push(new Option("Altro comune", "altro"));
+  select.replaceChildren(...options);
+  if (selectedTown === "altro" || [...towns.values()].includes(selectedTown)) {
+    select.value = selectedTown;
+  }
+}
+
 function deliveryZoneLabel(zone) {
   const match = String(zone.id || "").match(/^zona-(\d+)$/i);
   return match ? `Zona ${match[1]}` : String(zone.name || "Zona di consegna");
@@ -2067,8 +2209,34 @@ function deliveryZoneLabel(zone) {
 
 function renderDeliveryInfo() {
   const zones = getDeliveryZones();
+  renderDeliveryTownOptions();
   const colors = ["#c95e47", "#5e874b", "#4f7892"];
   state.selectedDeliveryZoneId = zones[0]?.id || null;
+  const zonePolicies = zones.map((zone) => {
+    const locations = zone.locations.map((location) => String(location.name || "").trim()).filter(Boolean);
+    const label = locations.join(", ") || String(zone.name || deliveryZoneLabel(zone));
+    return `${label}: ${deliveryPolicyDescription(zone)}`;
+  });
+  const zoneTimings = zones.map((zone) => {
+    const locations = zone.locations.map((location) => String(location.name || "").trim()).filter(Boolean);
+    const label = locations.join(", ") || String(zone.name || deliveryZoneLabel(zone));
+    return `${label}: ${String(zone.delivery_time || "Tempi da confermare").trim()}`;
+  });
+  if (elements.faqDeliveryCost) {
+    elements.faqDeliveryCost.textContent = zonePolicies.length
+      ? `${zonePolicies.join(" ")} Costi e copertura vanno confermati con Cartaway.`
+      : "Costi e copertura dipendono dalla zona e vanno confermati con Cartaway.";
+  }
+  if (elements.faqDeliveryMinimum) {
+    elements.faqDeliveryMinimum.textContent = zonePolicies.length
+      ? `Il minimo d'ordine e le soglie per la consegna gratuita dipendono dalla zona. ${zonePolicies.join(" ")}`
+      : "Il minimo d'ordine e le soglie per la consegna gratuita dipendono dalla zona.";
+  }
+  if (elements.faqDeliveryTime) {
+    elements.faqDeliveryTime.textContent = zoneTimings.length
+      ? `${zoneTimings.join(" ")} Sono stime: disponibilità e orario si confermano prima di procedere.`
+      : "Tempi e disponibilità sono indicativi e si confermano prima di procedere.";
+  }
   const zone1 = zones.find((zone) => zone.id === "zona-01");
   const zone2 = zones.find((zone) => zone.id === "zona-02");
   const zone3 = zones.find((zone) => zone.id === "zona-03");
@@ -2275,8 +2443,7 @@ function setupHeroCarousel() {
       action: "Scegli i prodotti",
       actionHref: "/",
       openPromo: false,
-      deliveryHighlight: "Montoro: circa 2 ore",
-      deliverySecondary: "Comuni vicini: in giornata",
+      deliveryMode: "timings",
       caption: "UNA SCORTA IN MENO A CUI PENSARE",
     },
     {
@@ -2288,8 +2455,6 @@ function setupHeroCarousel() {
       actionHref: "#promo-dialog",
       openPromo: true,
       voucher: true,
-      deliveryHighlight: "Un buono per cliente al mese",
-      deliverySecondary: "60 giorni · 90 con ordine ricorrente · massimo 25 €",
       caption: "BUONO TECH · ORDINI SINGOLI E RICORRENTI",
     },
     {
@@ -2297,26 +2462,23 @@ function setupHeroCarousel() {
       imageAlt: "Scatole in magazzino, pronte per la consegna",
       eyebrow: "CONSEGNA LOCALE · ORDINI RICORRENTI",
       title: "La tua scorta, al ritmo giusto.",
-      intro: "Scegli una consegna {frequency_days}: hai il 5% di sconto, prezzi bloccati per 12 mesi e puoi indicare un giorno fisso.",
       recurringVoucher: true,
       action: "Scopri le zone",
       actionHref: "#consegna",
       openPromo: false,
-      deliveryHighlight: "Zona 01: gratuita, senza minimo",
-      deliverySecondary: "Zona 02: 5 € sotto 30 €, gratuita da 30 € · Zona 03: spedizione a pagamento, 5 €",
+      deliveryMode: "summary",
       caption: "CONSEGNE PER ZONA · ORDINI RICORRENTI",
     },
     {
       image: "https://images.unsplash.com/photo-1608494133726-bb93324274c8?auto=format&fit=crop&w=2000&q=88",
       imageAlt: "Prodotti in carta per la casa",
-      eyebrow: "SPEDIZIONI LOCALI · TRE ZONE",
+      eyebrow: "SPEDIZIONI LOCALI · CONSEGNE DI ZONA",
       title: "La consegna giusta, nella tua zona.",
-      intro: "Montoro: gratuita senza minimo, entro circa 2 ore. Nei comuni vicini è gratuita da 30 €; le località più lontane rientrano nella Zona 03, con spedizione a pagamento.",
+      intro: "Costi, copertura e tempi dipendono dalla zona e si confermano prima dell'ordine.",
       action: "Scopri le zone",
       actionHref: "#consegna",
       openPromo: false,
-      deliveryHighlight: "Zona 01 · gratuita, senza minimo",
-      deliverySecondary: "Zona 02 · 5 € sotto 30 €, gratuita da 30 € · Zona 03 · spedizione a pagamento: 5 €",
+      deliveryMode: "summary",
       caption: "TEMPI E COSTI CHIARI PER OGNI ZONA",
     },
   ];
@@ -2330,6 +2492,18 @@ function setupHeroCarousel() {
   const renderSlide = (index) => {
     currentSlide = (index + slides.length) % slides.length;
     const slide = slides[currentSlide];
+    const deliveryZones = getDeliveryZones();
+    const zoneNames = deliveryZones
+      .map((zone) => String(zone.name || deliveryZoneLabel(zone)).trim())
+      .filter(Boolean);
+    const zoneTimings = deliveryZones.map((zone) =>
+      `${String(zone.name || deliveryZoneLabel(zone)).trim()}: ${String(zone.delivery_time || "Tempi da confermare").trim()}`,
+    );
+    const deliveryNote = String(state.site.delivery_note || "").trim();
+    const deliveryFallback = "Consulta zone e tempi per la tua consegna.";
+    const recurringConfig = state.site.recurring_order || {};
+    const recurringFrequency = formatRecurringFrequencyList() || "da concordare";
+    const recurringIntro = `Scegli una consegna ${recurringFrequency}: hai il ${formatPercentage(getRecurringDiscountPercent())}% di sconto e prezzi bloccati per ${recurringPriceLockText()}${recurringConfig.fixed_delivery_day === false ? "." : " e puoi indicare un giorno fisso."}`;
     const standardVoucherPercent = formatPercentage(techVoucherPercent(false));
     const recurringVoucherPercent = formatPercentage(techVoucherPercent(true));
     elements.heroImage.src = slide.image;
@@ -2339,22 +2513,29 @@ function setupHeroCarousel() {
     elements.heroIntro.textContent = slide.voucher
       ? `Buono Tech dal primo ordine del mese da ${formatPrice(techVoucherMinimumCents() / 100)}: fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Idoneità verificata dall'attività.`
       : slide.recurringVoucher
-      ? `${slide.intro.replace("{frequency_days}", formatRecurringFrequencyList())} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
+      ? `${recurringIntro} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
+      : slide.deliveryMode === "summary"
+        ? deliveryNote || slide.intro
         : slide.intro;
     elements.heroActionLabel.textContent = slide.action;
     elements.heroAction.href = slide.actionHref;
     elements.heroAction.dataset.openPromo = String(slide.openPromo);
     elements.heroDeliveryHighlight.textContent = slide.voucher
       ? `${standardVoucherPercent}% singolo · ${recurringVoucherPercent}% ricorrente · massimo ${formatPrice(techVoucherMaximumCents() / 100)}`
-      : slide.deliveryHighlight;
+      : slide.deliveryMode === "summary"
+        ? zoneNames.join(" · ") || "Zone di consegna da configurare"
+        : zoneTimings[0] || "Tempi di consegna da confermare";
     elements.heroDeliverySecondary.textContent = slide.voucher
       ? `${techVoucherValidityText()} dalla consegna · ${techVoucherValidityText(true)} con ordine ricorrente`
-      : slide.deliverySecondary;
+      : slide.deliveryMode === "summary"
+        ? deliveryNote || deliveryFallback
+        : zoneTimings.slice(1).join(" · ") || deliveryNote || deliveryFallback;
     elements.heroCaption.textContent = slide.voucher
       ? `BUONO TECH · ${standardVoucherPercent}% SINGOLO · ${recurringVoucherPercent}% RICORRENTE`
       : slide.caption;
     elements.heroSlideCount.textContent = `${String(currentSlide + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
   };
+  refreshHeroCarousel = () => renderSlide(currentSlide);
 
   const updateRotation = () => {
     window.clearInterval(rotationTimer);
@@ -2725,6 +2906,8 @@ function setupEvents() {
   elements.deliveryPreference.addEventListener("change", updateDeliveryPreferenceControls);
   elements.preferredTimeFrom.addEventListener("input", updatePreferredTimeFrom);
   elements.preferredTimeTo.addEventListener("input", updatePreferredTimeTo);
+  elements.checkoutEmail.addEventListener("input", updateCheckoutContactRequirement);
+  elements.checkoutPhone.addEventListener("input", updateCheckoutContactRequirement);
   elements.invoiceRequest.addEventListener("change", updateInvoiceControls);
 
   if (elements.preferredDate) {
@@ -2737,6 +2920,7 @@ function setupEvents() {
   }
 
   updateDeliveryPreferenceControls();
+  updateCheckoutContactRequirement();
   updateInvoiceControls();
 
   elements.menuToggle.addEventListener("click", () => {
@@ -2815,11 +2999,12 @@ function setupEvents() {
     const invoiceVatNumber = invoiceRequested ? String(formData.get("billing-vat-number") || "").trim() : "";
     const invoiceRecipient = invoiceRequested ? String(formData.get("billing-recipient") || "").trim() : "";
     const emailRecipient = customerEmail || String(state.site.email || "").trim();
+    if (!emailRecipient) {
+      showCheckoutFeedback("Email dell'attività non configurata in site.json.", "error");
+      return;
+    }
     const notes = String(formData.get("notes") || "").trim();
     const discountPercent = getRecurringDiscountPercent();
-    const recurringConfig = state.site.recurring_order || {};
-    const configuredMonths = Number(recurringConfig.price_lock_months);
-    const priceLockMonths = Number.isInteger(configuredMonths) && configuredMonths > 0 ? configuredMonths : 12;
     const fullSubtotalCents = items.reduce(
       (total, item) => total + productPriceInCents(item.product) * item.quantity,
       0,
@@ -2920,7 +3105,7 @@ function setupEvents() {
       recurring_frequency: recurringOrder ? formatRecurringFrequency(Number(recurringFrequency)) : "Non applicabile",
       recurring_day: recurringOrder && recurringDay ? recurringDayLabel : "Non indicato",
       recurring_discount: recurringOrder ? `${formatPercentage(discountPercent)}%` : "Nessuno",
-      price_lock_months: recurringOrder ? `${priceLockMonths} mesi` : "Non applicabile",
+      price_lock_months: recurringOrder ? recurringPriceLockText() : "Non applicabile",
       delivery_notes: notes || "Nessuna",
     };
 
@@ -2970,6 +3155,7 @@ function setupEvents() {
       state.cart = {};
       saveCart();
       elements.checkoutForm.reset();
+      updateCheckoutContactRequirement();
       elements.otherTownField.hidden = true;
       elements.otherTown.required = false;
       elements.checkoutConfirmation.hidden = false;
