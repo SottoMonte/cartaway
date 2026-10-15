@@ -1487,7 +1487,6 @@ function renderCart() {
   const entries = cartEntries();
   const quantity = entries.reduce((total, entry) => total + entry.quantity, 0);
   const recurring = elements.recurringOrder.checked;
-  const discountPercent = getRecurringDiscountPercent();
   const priceConfigurationMissing = entries.some(({ product }) => productPriceInCents(product) === null);
   const fullSubtotalCents = entries.reduce(
     (total, entry) => total + (productPriceInCents(entry.product) ?? 0) * entry.quantity,
@@ -1516,12 +1515,10 @@ function renderCart() {
     const id = escapeHtml(product.id);
     const name = String(product.name || "Prodotto");
     const fullUnitPriceCents = productPriceInCents(product);
-    const unitPriceCents = recurring ? productRecurringPriceInCents(product) : fullUnitPriceCents;
+    const unitPriceCents = fullUnitPriceCents;
     const unitPrice = unitPriceCents === null
       ? "Aliquota IVA da configurare"
-      : recurring && discountPercent > 0
-        ? `<del>${escapeHtml(formatPrice(fullUnitPriceCents / 100))}</del> <strong>${escapeHtml(formatPrice(unitPriceCents / 100))}</strong>`
-        : escapeHtml(formatPrice(unitPriceCents / 100));
+      : escapeHtml(formatPrice(unitPriceCents / 100));
     const pricePerUnit = productPricePerUnit(product);
     const comparableUnitPrice = pricePerUnit === null || unitPriceCents === null
       ? ""
@@ -1560,8 +1557,9 @@ function renderCart() {
   elements.cartDeliveryNote.textContent = cartDeliveryStatusNote(selectedTown, deliveryZone, deliveryQuote, fullSubtotalCents);
   if (elements.cartDeliveryRules) elements.cartDeliveryRules.textContent = deliveryRulesSummary(fullSubtotalCents);
   const deliveryIsKnown = deliveryQuote.costCents !== null;
-  if (elements.cartTotalLabel) elements.cartTotalLabel.textContent = deliveryIsKnown ? "Totale" : "Totale prodotti";
-  if (elements.cartMobileTotalLabel) elements.cartMobileTotalLabel.textContent = deliveryIsKnown ? "Totale" : "Totale prodotti";
+  const totalLabel = `${deliveryIsKnown ? "Totale" : "Totale prodotti"} (${pricesIncludeVat() ? "IVA inclusa" : "IVA esclusa"})`;
+  if (elements.cartTotalLabel) elements.cartTotalLabel.textContent = totalLabel;
+  if (elements.cartMobileTotalLabel) elements.cartMobileTotalLabel.textContent = totalLabel;
   if (elements.cartMobileTotal) elements.cartMobileTotal.textContent = priceConfigurationMissing
     ? "Configura le aliquote IVA"
     : formatPrice((subtotalCents + (deliveryQuote.costCents ?? 0)) / 100);
