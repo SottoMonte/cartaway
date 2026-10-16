@@ -22,7 +22,7 @@
   "categories": [
     {
       "name": "Avvolgenti Alimentari",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Carta e Veline alimentari", "vat_rate": null },
         { "name": "Carta sovrainvolto", "vat_rate": null },
@@ -37,7 +37,7 @@
     },
     {
       "name": "Cancelleria e Ufficio",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Accessori", "vat_rate": null },
         { "name": "Blocchi e fogli A4", "vat_rate": null },
@@ -47,7 +47,7 @@
     },
     {
       "name": "Contenitori cibo asporto",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Box fritti e panino", "vat_rate": null },
         { "name": "Box pizza e Teglie in cartone", "vat_rate": null },
@@ -59,10 +59,10 @@
         { "name": "Contenitori laccati con coperchio", "vat_rate": null }
       ]
     },
-    { "name": "Dispenser", "vat_rate": null },
+    { "name": "Dispenser", "vat_rate": 22 },
     {
       "name": "Dispositivi di sicurezza",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Guanti", "vat_rate": null },
         { "name": "Scarpe da lavoro", "vat_rate": null }
@@ -70,7 +70,7 @@
     },
     {
       "name": "Igiene e Pulizia",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Detergenti stoviglie", "vat_rate": null },
         { "name": "Detergenti superfici", "vat_rate": null },
@@ -81,17 +81,17 @@
     },
     {
       "name": "Imballaggi",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Carta gommata", "vat_rate": null },
         { "name": "Estensibile", "vat_rate": null },
         { "name": "Nastri adesivi", "vat_rate": null }
       ]
     },
-    { "name": "Insetticida", "vat_rate": null },
+    { "name": "Insetticida", "vat_rate": 22 },
     {
       "name": "Monouso in carta",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Asciugamani piegati", "vat_rate": null },
         { "name": "Carta igienica", "vat_rate": null },
@@ -104,7 +104,7 @@
     },
     {
       "name": "Pasticceria e Gelateria",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Basi e Accessori", "vat_rate": null },
         { "name": "Porta torte", "vat_rate": null },
@@ -114,7 +114,7 @@
     },
     {
       "name": "Stoviglie monouso",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Accessori monouso", "vat_rate": null },
         { "name": "Bicchieri in cartoncino con coperchio", "vat_rate": null },
@@ -126,7 +126,7 @@
     },
     {
       "name": "Tovaglie e Tovaglioli",
-      "vat_rate": null,
+      "vat_rate": 22,
       "children": [
         { "name": "Porta posate", "vat_rate": null },
         { "name": "Tovaglia TNT", "vat_rate": null },

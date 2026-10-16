@@ -155,7 +155,7 @@ collections:
                 label_singular: sottocategoria
                 fields:
                   - { label: Nome sottocategoria, name: name, widget: string }
-                  - { label: Aliquota IVA (%), name: vat_rate, widget: number, value_type: float, min: 0, max: 100, step: 0.1, required: false, hint: "Lascia vuoto finché l'aliquota non è stata verificata." }
+                  - { label: Aliquota IVA (%), name: vat_rate, widget: number, value_type: float, min: 0, max: 100, step: 0.1, required: false, hint: "Lascia vuoto per ereditare l'aliquota principale; inserisci un valore solo se verificato." }
 
   - name: catalogo
     label: Catalogo prodotti

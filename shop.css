@@ -1233,7 +1233,21 @@ summary:focus-visible {
   white-space: nowrap;
 }
 
-.product-sheet__quantity-cell {
+.product-sheet__price-net {
+  display: block;
+  margin-top: 3px;
+  color: var(--forest-deep);
+.product-sheet__price-main {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
   width: 142px;
 }
 
@@ -1446,15 +1460,6 @@ summary:focus-visible {
   font-weight: 700;
   line-height: 1.2;
   text-transform: uppercase;
-}
-
-.product-price-set__value {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--display);
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.15;
 }
 
 .product-price-set__item--unit {
@@ -3033,18 +3038,6 @@ html.cart-is-open {
   color: var(--coral);
 }
 
-.cart-summary .cart-total-row {
-  padding-top: 10px;
-  margin-top: 8px;
-  border-top: 1px solid var(--line);
-}
-
-.cart-summary .cart-total-row span {
-  font-weight: 700;
-}
-
-.cart-summary .cart-total-row strong {
-  font-size: 20px;
 }
 
 .cart-summary .cart-discount-row {

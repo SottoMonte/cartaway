@@ -321,6 +321,14 @@ function productPriceInCents(product) {
   return rate === null ? null : price + Math.round(price * rate / 100);
 }
 
+function productNetPriceInCents(product, recurring = false) {
+  const rate = productVatRate(product);
+  if (rate === null) return null;
+
+  const grossPrice = recurring ? productRecurringPriceInCents(product) : productPriceInCents(product);
+  return grossPrice === null ? null : Math.round(grossPrice * 100 / (100 + rate));
+}
+
 function recurringPriceInCents(price) {
   return Math.round(priceInCents(price) * (100 - getRecurringDiscountPercent()) / 100);
 }
@@ -884,6 +892,17 @@ function productPricePerUnit(product) {
   return { amount: Math.round(price / quantity) / 100, label };
 }
 
+function productNetPricePerUnit(product) {
+  const unit = product.unit;
+  const price = productNetPriceInCents(product);
+  if (!unit || typeof unit !== "object" || Array.isArray(unit)) return null;
+
+  const quantity = Number(unit.quantity);
+  const label = String(unit.pricePer || "").trim();
+  if (!label || !Number.isFinite(quantity) || quantity <= 0 || price === null) return null;
+  return { amount: Math.round(price / quantity) / 100, label };
+}
+
 function productCard(product) {
   const id = escapeHtml(product.id);
   const name = String(product.name || "Prodotto");
@@ -891,7 +910,7 @@ function productCard(product) {
   const images = productImages(product);
   const imageCount = images.length;
   const unitLabel = productUnitLabel(product.unit);
-  const pricePerUnit = productPricePerUnit(product);
+  const pricePerUnit = Number(product.unit?.quantity) > 1 ? productPricePerUnit(product) : null;
   const priceAvailable = productPriceInCents(product) !== null;
   return `
     <article class="product-card">
@@ -917,7 +936,7 @@ function productCard(product) {
             </div>
             ${pricePerUnit === null ? "" : `
               <div class="product-price-set__item product-price-set__item--unit">
-                <span class="product-price-set__label">Prezzo unitario</span>
+                <span class="product-price-set__label">Unitario IVA incl.</span>
                 <strong class="product-price-set__value product-price-set__unit-value">${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}</strong>
               </div>
             `}
@@ -936,7 +955,9 @@ function productSheetRow(product) {
   const name = String(product.name || "Prodotto");
   const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
   const image = productImages(product)[0] || fallbackImage;
-  const pricePerUnit = productPricePerUnit(product);
+  const pricePerUnit = Number(product.unit?.quantity) > 1 ? productPricePerUnit(product) : null;
+  const netPricePerUnit = Number(product.unit?.quantity) > 1 ? productNetPricePerUnit(product) : null;
+  const netPrice = productNetPriceInCents(product);
   const price = formatProductPrice(product);
   const quantity = normalizeSheetQuantity(state.sheetQuantities[product.id] || 0);
   return `
@@ -944,8 +965,14 @@ function productSheetRow(product) {
       <td class="product-sheet__product" data-label="Articolo"><a href="${escapeHtml(productUrl)}" data-open-product="${id}"><img class="product-sheet__thumbnail" src="${escapeHtml(safeImageUrl(image))}" alt="" loading="lazy" decoding="async" /><span>${escapeHtml(name)}</span></a></td>
       <td class="product-sheet__format" data-label="Formato"><strong>${escapeHtml(productUnitLabel(product.unit) || "—")}</strong></td>
       <td class="product-sheet__category" data-label="Categoria" title="${escapeHtml(productCategories(product.category).join(", ") || "Carta")}">${escapeHtml(productCategoryLabel(product.category))}</td>
-      <td class="product-sheet__price" data-label="Prezzo confezione">${escapeHtml(price)}</td>
-      <td class="product-sheet__price" data-label="Prezzo unitario">${pricePerUnit === null ? "—" : `${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}`}</td>
+      <td class="product-sheet__price" data-label="Prezzo confezione">
+        <strong class="product-sheet__price-main">${escapeHtml(price)}</strong>
+        ${netPrice === null ? "" : `<span class="product-sheet__price-net">IVA escl. ${escapeHtml(formatPrice(netPrice / 100))}</span>`}
+      </td>
+      <td class="product-sheet__price" data-label="Prezzo unitario">
+        ${pricePerUnit === null ? "—" : `<strong class="product-sheet__price-main">${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}</strong>`}
+        ${netPricePerUnit === null ? "" : `<span class="product-sheet__price-net">IVA escl. ${escapeHtml(formatPrice(netPricePerUnit.amount))} / ${escapeHtml(netPricePerUnit.label)}</span>`}
+      </td>
       <td class="product-sheet__quantity-cell" data-label="Quantità">
         <div class="product-sheet__stepper">
           <button class="product-sheet__step" type="button" data-sheet-step="-1" aria-label="Riduci quantità di ${escapeHtml(name)}"${quantity === 0 ? " disabled" : ""}>−</button>
@@ -1051,7 +1078,7 @@ function openProductDialog(productId) {
   elements.productDialogCategory.textContent = productCategoryLabel(product.category);
   elements.productDialogUnit.textContent = productUnitLabel(product.unit);
   elements.productDialogPrice.textContent = formatProductPrice(product);
-  const pricePerUnit = productPricePerUnit(product);
+  const pricePerUnit = Number(product.unit?.quantity) > 1 ? productPricePerUnit(product) : null;
   if (elements.productDialogUnitPriceWrap && elements.productDialogUnitPrice) {
     elements.productDialogUnitPriceWrap.hidden = pricePerUnit === null;
     elements.productDialogUnitPrice.textContent = pricePerUnit === null
@@ -1127,7 +1154,7 @@ function renderProductDetail() {
   elements.detailCategory.textContent = productCategoryLabel(product.category);
   elements.detailUnit.textContent = productUnit;
   elements.detailPrice.textContent = formatProductPrice(product);
-  const pricePerUnit = productPricePerUnit(product);
+  const pricePerUnit = Number(product.unit?.quantity) > 1 ? productPricePerUnit(product) : null;
   if (elements.detailUnitPriceWrap && elements.detailUnitPrice) {
     elements.detailUnitPriceWrap.hidden = pricePerUnit === null;
     elements.detailUnitPrice.textContent = pricePerUnit === null
@@ -1517,10 +1544,10 @@ function renderCart() {
     const unitPrice = unitPriceCents === null
       ? "Aliquota IVA da configurare"
       : escapeHtml(formatPrice(unitPriceCents / 100));
-    const pricePerUnit = productPricePerUnit(product);
+    const pricePerUnit = Number(product.unit?.quantity) > 1 ? productPricePerUnit(product) : null;
     const comparableUnitPrice = pricePerUnit === null || unitPriceCents === null
       ? ""
-      : `<p class="cart-item__unit-price">Prezzo unitario: ${escapeHtml(formatPrice(unitPriceCents / 100 / Number(product.unit.quantity)))} / ${escapeHtml(pricePerUnit.label)}</p>`;
+      : `<p class="cart-item__unit-price">Unitario IVA incl. ${escapeHtml(formatPrice(pricePerUnit.amount))} / ${escapeHtml(pricePerUnit.label)}</p>`;
     return `
       <article class="cart-item">
         <img class="cart-item__image" src="${escapeHtml(safeImageUrl(product.image))}" alt="" loading="lazy" />
@@ -1546,7 +1573,7 @@ function renderCart() {
   if (elements.checkoutMobileDock) elements.checkoutMobileDock.hidden = entries.length === 0 || showingConfirmation;
   elements.orderSubmit.disabled = state.orderSubmitting || entries.length === 0 || !minimumReached || priceConfigurationMissing;
   elements.orderSubmit.setAttribute("aria-busy", String(state.orderSubmitting));
-  elements.cartSubtotalLabel.textContent = "Prodotti";
+  elements.cartSubtotalLabel.textContent = "Prodotti (IVA incl.)";
   elements.cartSubtotal.textContent = priceConfigurationMissing ? "Aliquote IVA da configurare" : formatPrice(fullSubtotalCents / 100);
   if (selectedTown) {
     elements.cartDeliveryCost.textContent = deliveryZone ? deliveryQuote.label : "Da verificare";
@@ -1575,7 +1602,7 @@ function renderCart() {
     elements.cartDeliveryContext.hidden = !deliveryContext;
   }
   const deliveryIsKnown = deliveryQuote.costCents !== null;
-  const totalLabel = `${deliveryIsKnown ? "Totale" : "Totale prodotti"} (${pricesIncludeVat() ? "IVA inclusa" : "IVA esclusa"})`;
+  const totalLabel = `${deliveryIsKnown ? "Totale" : "Totale prodotti"} (IVA inclusa)`;
   if (elements.cartTotalLabel) elements.cartTotalLabel.textContent = totalLabel;
   if (elements.cartMobileTotalLabel) elements.cartMobileTotalLabel.textContent = totalLabel;
   if (elements.cartMobileTotal) elements.cartMobileTotal.textContent = priceConfigurationMissing
