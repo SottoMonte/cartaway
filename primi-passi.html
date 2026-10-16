@@ -30,9 +30,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="shop.css?v=71" />
+    <link rel="stylesheet" href="shop.css?v=77" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-      <script src="shop.js?v=89" defer></script>
+      <script src="shop.js?v=99" defer></script>
   </head>
   <body data-page="help">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -335,11 +335,13 @@
           <p><span id="cart-subtotal-label">Prodotti</span><strong id="cart-subtotal">€0,00</strong></p>
           <p class="cart-discount-row" id="cart-discount-row" hidden><span>Sconto ricorrente</span><strong id="cart-discount-amount">−€0,00</strong></p>
           <p class="cart-shipping-row"><span>Consegna</span><strong id="cart-delivery-cost" data-delivery-state="unknown">Scegli il comune</strong></p>
-          <small class="cart-delivery-rules" id="cart-delivery-rules"></small>
-          <small class="cart-delivery-note" id="cart-delivery-note" role="status" aria-live="polite">Scegli il comune per calcolare la consegna. Il totale definitivo sarà confermato prima dell'ordine.</small>
+          <div class="cart-delivery__details">
+            <small class="cart-delivery-context" id="cart-delivery-context" role="status" aria-live="polite" hidden></small>
+            <button class="text-button cart-delivery__more" id="cart-delivery-more" type="button" aria-haspopup="dialog" aria-controls="delivery-dialog" aria-label="Come funziona la consegna">Come funziona</button>
+          </div>
           <p class="cart-total-row"><span id="cart-total-label">Totale prodotti</span><strong id="cart-estimated-total">€0,00</strong></p>
           <div class="cart-cashback" id="cart-cashback" aria-live="polite" hidden>
-            <p><span id="cart-cashback-label">Buono Tech stimato</span>: <strong id="cart-cashback-amount">€0,00</strong></p>
+            <p><span id="cart-cashback-label">Buono Tech</span>: <strong id="cart-cashback-amount">€0,00</strong></p>
             <small id="cart-cashback-note">Importo e idoneità del buono vengono verificati dall'attività.</small>
             <button class="text-button cart-cashback__more" id="cart-cashback-more" type="button" aria-haspopup="dialog" aria-controls="promo-dialog">Come funziona</button>
           </div>
@@ -418,9 +420,9 @@
           </fieldset>
           <section class="checkout-payment" aria-labelledby="checkout-payment-title">
             <h4 id="checkout-payment-title">Pagamento</h4>
-            <p>Non paghi nulla ora. Dopo la verifica riceverai il totale definitivo e le modalità disponibili prima di confermare l'acquisto.</p>
+            <p>Il pagamento è previsto alla consegna della merce.</p>
           </section>
-          <p class="checkout-privacy">I dati saranno usati per gestire la richiesta. Consulta l'<a href="privacy.html" target="_blank" rel="noopener noreferrer">informativa privacy</a>.</p>
+          <p class="checkout-privacy">I dati saranno usati per gestire la richiesta. Consulta l'<a href="privacy.html" target="_blank" rel="noopener noreferrer">informativa privacy</a>, le <a href="condizioni-vendita.html" target="_blank" rel="noopener noreferrer">condizioni di vendita</a> e le informazioni sul <a href="recesso.html" target="_blank" rel="noopener noreferrer">recesso</a>.</p>
           <div class="checkout-mobile-dock" id="checkout-mobile-dock">
             <p class="checkout-mobile-dock__total"><span id="cart-mobile-total-label">Totale prodotti</span><strong id="cart-mobile-total">€0,00</strong></p>
             <button class="button button--dark checkout-submit" id="order-submit" type="submit" disabled><span id="order-submit-label">Invia richiesta d'ordine</span></button>

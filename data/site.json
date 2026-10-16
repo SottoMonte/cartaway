@@ -180,7 +180,6 @@
   "tech_voucher": {
     "percent": 25,
     "maximum_amount": 25,
-    "minimum_order_amount": 25,
     "validity_days": 60
   },
   "recurring_order": {
@@ -205,10 +204,10 @@
   "services": "Carta per casa, cucina e ufficio",
   "quick_messages": {
     "tech": {
-      "banner_message": "🎁 Buono Tech dal primo ordine del mese, da {minimum_amount} e fino a {maximum_amount}.",
+      "banner_message": "🎁 Buono Tech sul primo ordine del mese, senza soglia minima e fino a {maximum_amount}.",
       "eyebrow": "PROMO PER ORDINI B2B",
       "title": "Il Buono Tech del mese",
-      "description": "Dal primo ordine del mese con spesa di almeno {minimum_amount}: {standard_percent} della spesa (ordine singolo) o {recurring_percent} (ricorrente), fino a {maximum_amount}. Idoneità da verificare con l'attività.",
+      "description": "Sul primo ordine del mese, senza soglia minima, il Buono Tech è calcolato sul totale prodotti dopo lo sconto: {standard_percent} per un ordine singolo o {recurring_percent} per un ordine ricorrente, fino a {maximum_amount}.",
       "standard_example_label": "Per ottenere il buono massimo con ordine non ricorrente",
       "standard_example_result": "{standard_example_amount} di spesa → {maximum_amount} di buono",
       "recurring_example_label": "Per ottenere il buono massimo con ordine ricorrente",
@@ -230,7 +229,7 @@
       "frequency_value": "Frequenze disponibili: {frequency_days}",
       "tech_voucher_label": "Buono Tech sul primo ordine del mese",
       "tech_voucher_value": "{tech_voucher_recurring_percent} fino a {maximum_amount} · valido {recurring_validity_days} dalla consegna",
-      "terms": "Con l'ordine ricorrente il Buono Tech è valido {recurring_validity_days} dalla consegna. Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni."
+      "terms": "Con l'ordine ricorrente il Buono Tech spetta sul primo ordine del mese, senza soglia minima, ed è calcolato sul totale prodotti dopo lo sconto fino a {maximum_amount}. È valido {recurring_validity_days} dalla consegna. Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività."
     }
   }
 }

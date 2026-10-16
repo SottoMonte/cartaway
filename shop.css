@@ -3012,6 +3012,18 @@ html.cart-is-open {
   font-size: 19px;
 }
 
+.cart-delivery-cost-link {
+  color: inherit;
+  text-decoration-color: var(--forest);
+  text-underline-offset: 3px;
+}
+
+.cart-delivery-cost-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
+
 .cart-summary .cart-shipping-row strong[data-delivery-state="free"] {
   color: var(--forest);
 }
@@ -3089,9 +3101,40 @@ html.cart-is-open {
   line-height: 1.5;
 }
 
-.cart-delivery-rules {
-  display: block;
+.cart-delivery-context[hidden] {
+  display: none;
+}
+
+.cart-delivery__details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
   margin-top: 5px;
+}
+
+.cart-delivery__details .cart-delivery-context {
+  grid-column: 1;
+  min-width: 0;
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--lime);
+  color: var(--forest);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.cart-delivery-context__amount {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--lime);
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .checkout-form {
@@ -3280,6 +3323,22 @@ html.cart-is-open {
   margin-top: 3px;
   font-size: 11px;
   text-align: left;
+}
+
+.cart-delivery__more {
+  grid-column: 2;
+  padding: 2px 0;
+  margin: 0;
+  font-size: 11px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cart-cashback__more,
+.cart-delivery__more {
+  text-decoration: underline;
+  text-decoration-color: var(--forest);
+  text-underline-offset: 3px;
 }
 
 .cart-item__details p del {

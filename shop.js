@@ -47,8 +47,8 @@ const elements = {
   cartSubtotal: document.querySelector("#cart-subtotal"),
   cartSubtotalLabel: document.querySelector("#cart-subtotal-label"),
   cartDeliveryCost: document.querySelector("#cart-delivery-cost"),
-  cartDeliveryNote: document.querySelector("#cart-delivery-note"),
-  cartDeliveryRules: document.querySelector("#cart-delivery-rules"),
+  cartDeliveryContext: document.querySelector("#cart-delivery-context"),
+  cartDeliveryMore: document.querySelector("#cart-delivery-more"),
   cartEstimatedTotal: document.querySelector("#cart-estimated-total"),
   cartTotalLabel: document.querySelector("#cart-total-label"),
   cartDiscountRow: document.querySelector("#cart-discount-row"),
@@ -396,25 +396,12 @@ function techVoucherMaximumCents() {
   return optionalPriceInCents(state.site.tech_voucher?.maximum_amount) ?? 0;
 }
 
-function techVoucherMinimumCents() {
-  return optionalPriceInCents(state.site.tech_voucher?.minimum_order_amount) ?? 0;
-}
-
 function techVoucherExampleOrderCents(recurring = false) {
   const percent = techVoucherPercent(recurring);
   const maximumCents = techVoucherMaximumCents();
   if (percent <= 0 || maximumCents <= 0) return null;
 
-  const spendAfterDiscountCents = Math.max(
-    techVoucherMinimumCents(),
-    Math.ceil(maximumCents * 100 / percent),
-  );
-  if (!recurring) return spendAfterDiscountCents;
-
-  const remainingPercent = 100 - getRecurringDiscountPercent();
-  return remainingPercent > 0
-    ? Math.ceil((spendAfterDiscountCents - 0.5) * 100 / remainingPercent)
-    : null;
+  return Math.ceil(maximumCents * 100 / percent);
 }
 
 function techVoucherValidityDays(recurring = false) {
@@ -431,7 +418,6 @@ function techVoucherValidityText(recurring = false) {
 }
 
 function techVoucherAmountCents(subtotalCents, recurring = false) {
-  if (subtotalCents < techVoucherMinimumCents()) return 0;
   return Math.min(Math.round(subtotalCents * techVoucherPercent(recurring) / 100), techVoucherMaximumCents());
 }
 
@@ -463,7 +449,7 @@ function configureTechVoucher() {
     element.textContent = techVoucherValidityText(true);
   });
   if (elements.faqTechVoucher) {
-    elements.faqTechVoucher.textContent = `Il primo ordine del mese può generare un buono pari al ${formatPercentage(techVoucherPercent(false))}% della spesa per un ordine singolo o al ${formatPercentage(techVoucherPercent(true))}% per un ordine ricorrente, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Spesa minima: ${formatPrice(techVoucherMinimumCents() / 100)}. Validità: ${techVoucherValidityText(false)}; con un ordine ricorrente, ${techVoucherValidityText(true)}. L'attivazione è soggetta a verifica e alle condizioni complete indicate al momento dell'ordine.`;
+    elements.faqTechVoucher.textContent = `Il primo ordine del mese può generare un Buono Tech senza soglia minima, calcolato sul totale prodotti dopo lo sconto: ${formatPercentage(techVoucherPercent(false))}% per un ordine singolo o ${formatPercentage(techVoucherPercent(true))}% per un ordine ricorrente, fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Validità: ${techVoucherValidityText(false)}; con un ordine ricorrente, ${techVoucherValidityText(true)}.`;
   }
 }
 
@@ -512,7 +498,6 @@ function quickMessageTemplateValues(message) {
       standard_percent: `${formatPercentage(techVoucherPercent(false))}%`,
       recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
       maximum_amount: maximumAmount,
-      minimum_amount: formatPrice(techVoucherMinimumCents() / 100),
       validity_days: techVoucherValidityText(false),
       recurring_validity_days: techVoucherValidityText(true),
       standard_example_amount: formatPrice((techVoucherExampleOrderCents(false) ?? 0) / 100),
@@ -1467,45 +1452,33 @@ function cartEntries() {
     .filter(({ product }) => product && product.available !== false);
 }
 
-function deliveryRulesSummary(subtotalCents) {
-  return getDeliveryZones().map((zone) => {
-    const name = String(zone.name || deliveryZoneLabel(zone)).trim();
-    const feeCents = optionalPriceInCents(zone.delivery_fee);
-    if (zone.delivery_policy === "free") {
-      const minimumCents = optionalPriceInCents(zone.minimum_order_amount);
-      return `${name}: gratuita${minimumCents !== null && minimumCents > 0 ? ` da ${formatPrice(minimumCents / 100)}` : ""}`;
-    }
-    if (zone.delivery_policy === "threshold") {
-      const thresholdCents = optionalPriceInCents(zone.free_delivery_minimum)
-        ?? optionalPriceInCents(zone.minimum_order_amount);
-      if (thresholdCents === null) return `${name}: soglia gratuita da definire`;
-      const fee = feeCents === null ? "costo da concordare" : `${formatPrice(feeCents / 100)} sotto ${formatPrice(thresholdCents / 100)}`;
-      const remainingCents = Math.max(0, thresholdCents - subtotalCents);
-      const remaining = remainingCents > 0 ? ` (mancano ${formatPrice(remainingCents / 100)})` : "";
-      return `${name}: ${fee}; gratis da ${formatPrice(thresholdCents / 100)}${remaining}`;
-    }
-    return `${name}: ${feeCents === null ? "costo da concordare" : formatPrice(feeCents / 100)}`;
-  }).join(" · ");
-}
+function cartDeliveryContextMessage(zone, subtotalCents) {
+  if (!zone) return null;
 
-function cartDeliveryStatusNote(town, zone, quote, subtotalCents) {
-  if (!town) return "Scegli il comune per calcolare la consegna. Il totale definitivo sarà confermato prima dell'ordine.";
-  if (!zone) return `Verifichiamo la consegna per ${town}. Il totale definitivo sarà confermato prima dell'ordine.`;
-
-  const delivery = quote.costCents === null
-    ? quote.label.toLowerCase()
-    : quote.costCents === 0
-      ? "gratuita"
-      : formatPrice(quote.costCents / 100);
-  const timing = String(zone.delivery_time || "").trim();
-  const details = [`Consegna ${delivery}`, timing].filter(Boolean);
+  const zoneName = deliveryZoneLabel(zone);
+  const plainMessage = (text) => ({ text });
+  if (zone.delivery_policy === "free") return plainMessage(`${zoneName}: consegna gratuita.`);
   if (zone.delivery_policy === "threshold") {
-    const thresholdCents = optionalPriceInCents(zone.free_delivery_minimum);
-    if (thresholdCents !== null && subtotalCents < thresholdCents) {
-      details.push(`gratis da ${formatPrice(thresholdCents / 100)}: mancano ${formatPrice((thresholdCents - subtotalCents) / 100)}`);
-    }
+    const freeMinimumCents = optionalPriceInCents(zone.free_delivery_minimum)
+      ?? optionalPriceInCents(zone.minimum_order_amount);
+    if (freeMinimumCents === null) return plainMessage(`${zoneName}: soglia di gratuità da definire.`);
+
+    const remainingCents = Math.max(0, freeMinimumCents - subtotalCents);
+    return remainingCents > 0
+      ? {
+        prefix: `${zoneName}: mancano `,
+        amount: formatPrice(remainingCents / 100),
+        suffix: " alla consegna gratuita.",
+      }
+      : plainMessage(`${zoneName}: consegna gratuita raggiunta.`);
   }
-  return `${details.join(" · ")}.`;
+  if (zone.delivery_policy === "paid") {
+    const feeCents = optionalPriceInCents(zone.delivery_fee);
+    return feeCents === null
+      ? plainMessage(`${zoneName}: tariffa da concordare.`)
+      : plainMessage(`${zoneName}: tariffa fissa ${formatPrice(feeCents / 100)}.`);
+  }
+  return null;
 }
 
 function renderCart() {
@@ -1575,12 +1548,32 @@ function renderCart() {
   elements.orderSubmit.setAttribute("aria-busy", String(state.orderSubmitting));
   elements.cartSubtotalLabel.textContent = "Prodotti";
   elements.cartSubtotal.textContent = priceConfigurationMissing ? "Aliquote IVA da configurare" : formatPrice(fullSubtotalCents / 100);
-  elements.cartDeliveryCost.textContent = selectedTown
-    ? deliveryZone ? deliveryQuote.label : "Da verificare"
-    : "Scegli il comune";
+  if (selectedTown) {
+    elements.cartDeliveryCost.textContent = deliveryZone ? deliveryQuote.label : "Da verificare";
+  } else {
+    const townLink = document.createElement("a");
+    townLink.className = "cart-delivery-cost-link";
+    townLink.href = "#delivery-town";
+    townLink.textContent = "Scegli il comune";
+    elements.cartDeliveryCost.replaceChildren(townLink);
+  }
   elements.cartDeliveryCost.dataset.deliveryState = deliveryQuote.state;
-  elements.cartDeliveryNote.textContent = cartDeliveryStatusNote(selectedTown, deliveryZone, deliveryQuote, fullSubtotalCents);
-  if (elements.cartDeliveryRules) elements.cartDeliveryRules.textContent = deliveryRulesSummary(fullSubtotalCents);
+  if (elements.cartDeliveryContext) {
+    const deliveryContext = cartDeliveryContextMessage(deliveryZone, fullSubtotalCents);
+    if (deliveryContext?.amount) {
+      const amount = document.createElement("strong");
+      amount.className = "cart-delivery-context__amount";
+      amount.textContent = deliveryContext.amount;
+      elements.cartDeliveryContext.replaceChildren(
+        document.createTextNode(deliveryContext.prefix),
+        amount,
+        document.createTextNode(deliveryContext.suffix),
+      );
+    } else {
+      elements.cartDeliveryContext.textContent = deliveryContext?.text ?? "";
+    }
+    elements.cartDeliveryContext.hidden = !deliveryContext;
+  }
   const deliveryIsKnown = deliveryQuote.costCents !== null;
   const totalLabel = `${deliveryIsKnown ? "Totale" : "Totale prodotti"} (${pricesIncludeVat() ? "IVA inclusa" : "IVA esclusa"})`;
   if (elements.cartTotalLabel) elements.cartTotalLabel.textContent = totalLabel;
@@ -1593,20 +1586,14 @@ function renderCart() {
     : formatPrice((subtotalCents + (deliveryQuote.costCents ?? 0)) / 100);
   elements.cartDiscountRow.hidden = !recurring || savingsCents <= 0;
   elements.cartDiscountAmount.textContent = `−${formatPrice(savingsCents / 100)}`;
-  const voucherMinimumCents = techVoucherMinimumCents();
-  const voucherEligibleByAmount = subtotalCents >= voucherMinimumCents;
   elements.cartCashbackAmount.textContent = priceConfigurationMissing
     ? "Da configurare"
-    : voucherEligibleByAmount
-      ? formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100)
-      : `Da ${formatPrice(voucherMinimumCents / 100)}`;
+    : formatPrice(techVoucherAmountCents(subtotalCents, recurring) / 100);
   if (elements.cartCashbackLabel) {
-    elements.cartCashbackLabel.textContent = "Buono Tech stimato";
+    elements.cartCashbackLabel.textContent = "Buono Tech";
   }
   if (elements.cartCashbackNote) {
-    elements.cartCashbackNote.textContent = voucherEligibleByAmount
-      ? "Valore calcolato sui prodotti; idoneità per il primo ordine del mese da verificare."
-      : `Da ${formatPrice(voucherMinimumCents / 100)} di prodotti dopo lo sconto; idoneità da verificare con l'attività.`;
+    elements.cartCashbackNote.textContent = `Stima sul totale prodotti dopo lo sconto. Nessuna soglia minima: il buono spetta sul primo ordine del mese, fino a ${formatPrice(techVoucherMaximumCents() / 100)}.`;
   }
   elements.cartCashback.hidden = entries.length === 0;
 }
@@ -2204,7 +2191,7 @@ function renderDeliveryTownOptions() {
 
 function deliveryZoneLabel(zone) {
   const match = String(zone.id || "").match(/^zona-(\d+)$/i);
-  return match ? `Zona ${match[1]}` : String(zone.name || "Zona di consegna");
+  return match ? `Zona ${Number(match[1])}` : String(zone.name || "Zona di consegna");
 }
 
 function renderDeliveryInfo() {
@@ -2511,7 +2498,7 @@ function setupHeroCarousel() {
     elements.heroEyebrow.textContent = slide.eyebrow;
     elements.heroTitle.textContent = slide.title;
     elements.heroIntro.textContent = slide.voucher
-      ? `Buono Tech dal primo ordine del mese da ${formatPrice(techVoucherMinimumCents() / 100)}: fino a ${formatPrice(techVoucherMaximumCents() / 100)}. Idoneità verificata dall'attività.`
+      ? `Buono Tech sul primo ordine del mese, senza soglia minima e fino a ${formatPrice(techVoucherMaximumCents() / 100)}.`
       : slide.recurringVoucher
       ? `${recurringIntro} Con l'ordine ricorrente, la validità del Buono Tech si estende a ${techVoucherValidityText(true)} dalla consegna.`
       : slide.deliveryMode === "summary"
@@ -2706,10 +2693,13 @@ function setupEvents() {
     });
   }
 
-  if (elements.deliveryOpen && elements.deliveryDialog) {
-    elements.deliveryOpen.addEventListener("click", () => {
+  if (elements.deliveryDialog) {
+    const openDeliveryDialog = () => {
       elements.deliveryDialog.showModal();
       void initializeDeliveryMap();
+    };
+    [elements.deliveryOpen, elements.cartDeliveryMore].forEach((button) => {
+      button?.addEventListener("click", openDeliveryDialog);
     });
     elements.deliveryDialog.addEventListener("click", (event) => {
       if (event.target === elements.deliveryDialog) elements.deliveryDialog.close();
@@ -3024,7 +3014,7 @@ function setupEvents() {
       ? window.crypto?.randomUUID
         ? `BT-${window.crypto.randomUUID().toUpperCase()}`
         : `BT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
-      : "Non maturato";
+      : "Non disponibile";
     const orderId = window.crypto?.randomUUID
       ? window.crypto.randomUUID().slice(0, 8).toUpperCase()
       : `CW-${Date.now()}`;
@@ -3074,14 +3064,13 @@ function setupEvents() {
       tech_voucher_id: voucherId,
       tech_voucher_value: voucherValueCents > 0
         ? formatPrice(voucherValueCents / 100)
-        : "Non maturato",
-      tech_voucher_minimum: formatPrice(techVoucherMinimumCents() / 100),
+        : "Non disponibile",
       tech_voucher_note: voucherValueCents > 0
         ? "Il codice non è attivo. L'attività verifica che questo sia il primo ordine del mese e invierà una seconda email se il buono viene riconosciuto."
-        : `Spesa minima non raggiunta (${formatPrice(techVoucherMinimumCents() / 100)}); nessun codice è stato generato.`,
+        : "Nessun valore stimabile: controlla che percentuale e massimale del Buono Tech siano configurati.",
       tech_voucher_status: voucherValueCents > 0
         ? "Il buono non è ancora attivo: attendi la conferma dell'attività."
-        : `Il buono non è maturato; la spesa minima è ${formatPrice(techVoucherMinimumCents() / 100)}.`,
+        : "Il Buono Tech non è disponibile per questo ordine.",
       tech_voucher_percent: `${formatPercentage(techVoucherPercent(recurringOrder))}%`,
       tech_voucher_standard_percent: `${formatPercentage(techVoucherPercent(false))}%`,
       tech_voucher_recurring_percent: `${formatPercentage(techVoucherPercent(true))}%`,
