@@ -43,6 +43,8 @@ Il template riceve `brand`, `website_url`, `cart_url`, `order_id`, `email`, `rep
 
 Il campo `email` è il destinatario cliente; `reply_to` usa l'email di contatto dell'attività configurata in `data/site.json`. Sostituisci il valore dimostrativo prima del rilascio, limita in EmailJS i domini autorizzati al dominio del negozio e verifica l'invio reale. Questi identificativi sono pubblici nel browser: non inserire chiavi private o credenziali del provider email. L'email è solo un riepilogo al cliente; per trasmettere l'ordine all'attività serve un canale separato.
 
+La tabella costi del template email riceve `cost.products` (subtotale a prezzo pieno) e `cost.discount` (sconto già sottratto dal totale). Gli articoli in `orders` mostrano i prezzi unitari a prezzo pieno e includono `product_url` per aprire la scheda prodotto.
+
 ## Costi e limiti
 
 Netlify Free costa attualmente €0 e include un limite di 300 crediti al mese. Le pubblicazioni di produzione e il traffico consumano crediti: oltre la quota il servizio può fermarsi fino al rinnovo o richiedere un piano superiore. Controlla i consumi e non attivare ricariche automatiche se l'obiettivo è non superare il budget. Il costo del dominio resta separato. Le quote e i piani dei servizi possono cambiare.

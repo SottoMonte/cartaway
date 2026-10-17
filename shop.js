@@ -3030,6 +3030,7 @@ function setupEvents() {
       (total, item) => total + (recurringOrder ? productRecurringPriceInCents(item.product) : productPriceInCents(item.product)) * item.quantity,
       0,
     );
+    const savingsCents = fullSubtotalCents - subtotalCents;
     const deliveryZone = findDeliveryZoneForTown(town);
     const deliveryQuote = getDeliveryQuote(deliveryZone, subtotalCents, fullSubtotalCents);
     if (deliveryQuote.minimumReached === false) {
@@ -3046,7 +3047,7 @@ function setupEvents() {
       ? window.crypto.randomUUID().slice(0, 8).toUpperCase()
       : `CW-${Date.now()}`;
     const emailOrders = items.map(({ product, quantity }) => {
-      const unitPriceCents = recurringOrder ? productRecurringPriceInCents(product) : productPriceInCents(product);
+      const unitPriceCents = productPriceInCents(product);
       const productUrl = new URL("/prodotto.html", canonicalSiteOrigin);
       productUrl.searchParams.set("id", String(product.id || ""));
       return {
@@ -3090,7 +3091,13 @@ function setupEvents() {
       cart_url: buildCartShareUrl(items).href,
       order_id: orderId,
       orders: emailOrders,
-      cost: { shipping: shippingCost, tax: vatSummary, total: totalCost },
+      cost: {
+        products: formatPrice(fullSubtotalCents / 100),
+        discount: savingsCents > 0 ? `−${formatPrice(savingsCents / 100)}` : "Nessuno",
+        shipping: shippingCost,
+        tax: vatSummary,
+        total: totalCost,
+      },
       tech_voucher_id: voucherId,
       tech_voucher_value: voucherValueCents > 0
         ? formatPrice(voucherValueCents / 100)
@@ -3146,7 +3153,6 @@ function setupEvents() {
         return row;
       });
       elements.checkoutConfirmationItems.replaceChildren(...confirmationRows);
-      const savingsCents = fullSubtotalCents - subtotalCents;
       const confirmationCosts = [
         `Prodotti ${formatPrice(fullSubtotalCents / 100)}`,
         ...(savingsCents > 0 ? [`Sconto ricorrente −${formatPrice(savingsCents / 100)}`] : []),
