@@ -29,7 +29,7 @@
 
     <div style="padding: 0 16px 20px">
       <p style="margin-top: 0">
-        Questo riepilogo viene inviato a te e all'attività. La richiesta non conferma ancora l'ordine: verificheremo disponibilità, consegna e pagamento. Se un prodotto non è disponibile, ti contatteremo noi; non devi fare nulla.
+        Questo riepilogo viene inviato all'indirizzo email del cliente, se indicato; in sua assenza, all'email dell'attività. Non è una conferma d'ordine: Cartaway verificherà disponibilità, consegna e pagamento prima di confermare.
       </p>
 
       <div style="text-align: left; padding: 8px 0; border-bottom: 2px solid #183d32">
@@ -41,16 +41,20 @@
         {{#orders}}
         <tr style="vertical-align: top">
           <td style="width: 72px; padding: 12px 8px 12px 0">
-            <img
-              src="{{image_url}}"
-              alt="{{name}}"
-              width="64"
-              height="64"
-              style="display: block; width: 64px; height: 64px; object-fit: contain; border: 0"
-            />
+            <a href="{{product_url}}" target="_blank" rel="noopener noreferrer" style="text-decoration: none">
+              <img
+                src="{{image_url}}"
+                alt="{{name}}"
+                width="64"
+                height="64"
+                style="display: block; width: 64px; height: 64px; object-fit: contain; border: 0"
+              />
+            </a>
           </td>
           <td style="padding: 12px 8px; width: 100%">
-            <strong>{{name}}</strong>
+            <a href="{{product_url}}" target="_blank" rel="noopener noreferrer" style="color: #183d32; text-decoration: none">
+              <strong>{{name}}</strong>
+            </a>
             <div style="color: #62736b; padding-top: 4px">Quantità: {{units}}</div>
           </td>
           <td style="padding: 12px 0; text-align: right; white-space: nowrap">

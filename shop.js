@@ -1343,7 +1343,7 @@ function parseSharedOrder(serializedOrder) {
 }
 
 function buildCartShareUrl(items) {
-  const shareUrl = new URL("/", window.location.href);
+  const shareUrl = new URL("/", canonicalSiteOrigin);
   shareUrl.search = "";
   shareUrl.hash = "";
   shareUrl.searchParams.set(
@@ -3047,12 +3047,15 @@ function setupEvents() {
       : `CW-${Date.now()}`;
     const emailOrders = items.map(({ product, quantity }) => {
       const unitPriceCents = recurringOrder ? productRecurringPriceInCents(product) : productPriceInCents(product);
+      const productUrl = new URL("/prodotto.html", canonicalSiteOrigin);
+      productUrl.searchParams.set("id", String(product.id || ""));
       return {
         name: productNameWithFormat(product),
         units: quantity,
         price: formatPrice(unitPriceCents / 100),
         line_total: formatPrice((unitPriceCents * quantity) / 100),
         image_url: safeImageUrl(product.image || fallbackImage),
+        product_url: productUrl.href,
       };
     });
     const vatAmountCents = orderVatAmountCents(items, recurringOrder);
@@ -3083,7 +3086,7 @@ function setupEvents() {
     const estimatedDeliveryTime = String(deliveryZone?.delivery_time || "").trim() || "Da confermare";
     const templateParams = {
       brand: String(state.site.brand || "Cartaway"),
-      website_url: window.location.origin,
+      website_url: canonicalSiteOrigin,
       cart_url: buildCartShareUrl(items).href,
       order_id: orderId,
       orders: emailOrders,
