@@ -730,6 +730,41 @@ class GestionaleWebTests(unittest.TestCase):
         grouped = _group_route_orders_by_city(timed_orders, origin)
         self.assertEqual([order["order_id"] for order in grouped], ["SOL-1", "MON-1"])
 
+    def test_route_optimizes_city_detours_around_fixed_time_constraints(self):
+        site = {
+            "delivery_zones": [
+                {
+                    "locations": [
+                        {"name": "Montoro", "lat": 40.0, "lon": 14.0},
+                        {"name": "Forino", "lat": 40.0, "lon": 14.1},
+                        {"name": "Solofra", "lat": 40.0, "lon": 14.2},
+                        {"name": "Fisciano", "lat": 40.0, "lon": 14.3},
+                    ]
+                }
+            ]
+        }
+        origin = "Via Roma, 1, Torchiati di Montoro (AV)"
+        orders = [
+            {"order_id": "FISCIANO", "delivery_city": "Fisciano", "preferred_delivery_time": "", "delivery_notes": "Dopo le 12:00"},
+            {"order_id": "SOLOFRA", "delivery_city": "Solofra", "preferred_delivery_time": "", "delivery_notes": ""},
+            {"order_id": "MONTORO", "delivery_city": "Montoro", "preferred_delivery_time": "", "delivery_notes": ""},
+            {"order_id": "FORINO", "delivery_city": "Forino", "preferred_delivery_time": "10:00–11:00", "delivery_notes": ""},
+        ]
+
+        grouped = _group_route_orders_by_city(orders, origin, site)
+
+        self.assertEqual(
+            [order["delivery_city"] for order in grouped],
+            ["Montoro", "Forino", "Solofra", "Fisciano"],
+        )
+
+        earlier_appointment_orders = [
+            {"order_id": "MONTORO", "delivery_city": "Montoro", "preferred_delivery_time": "15:00–16:00"},
+            {"order_id": "FORINO", "delivery_city": "Forino", "preferred_delivery_time": "10:00–11:00"},
+        ]
+        grouped = _group_route_orders_by_city(earlier_appointment_orders, origin, site)
+        self.assertEqual([order["delivery_city"] for order in grouped], ["Forino", "Montoro"])
+
     def test_orders_api_separates_completed_orders_into_history(self):
         today = datetime.now(ROME).date()
         order_specs = [
@@ -1115,6 +1150,14 @@ class GestionaleWebTests(unittest.TestCase):
     def test_route_respects_delivery_date_and_time_preferences_and_shows_recurrence(self):
         today = datetime.now(ROME).date()
         delivery_date = today + timedelta(days=1)
+        self.site["delivery_zones"] = [
+            {
+                "locations": [
+                    {"name": "Montoro", "lat": 40.8328763, "lon": 14.7917765},
+                    {"name": "Solofra", "lat": 40.8291308, "lon": 14.8456516},
+                ]
+            }
+        ]
         self.site["recurring_order"] = {
             "frequency_days": [
                 {"days": 7, "label": "Ogni settimana"},
@@ -1229,18 +1272,18 @@ class GestionaleWebTests(unittest.TestCase):
 
         self.assertEqual(
             [order["order_id"] for order in result["orders"]],
-            ["ORD-ROUTE-MORNING", "ORD-ROUTE-LATE", "ORD-ROUTE-EARLY", "ORD-ROUTE-AFTERNOON"],
+            ["ORD-ROUTE-EARLY", "ORD-ROUTE-AFTERNOON", "ORD-ROUTE-MORNING", "ORD-ROUTE-LATE"],
         )
         self.assertEqual(
             [order["delivery_city"] for order in result["orders"]],
-            ["Montoro", "Montoro", "Solofra", "Solofra"],
+            ["Solofra", "Solofra", "Montoro", "Montoro"],
         )
         maps_query = parse_qs(urlsplit(result["maps_urls"][0]).query)
         self.assertEqual(
             maps_query["waypoints"],
-            ["Via Mattina 3, Montoro|Via Tardi 1, Montoro|Via Presto 2, Solofra"],
+            ["Via Presto 2, Solofra|Via Pomeriggio 4, Solofra|Via Mattina 3, Montoro"],
         )
-        self.assertEqual(maps_query["destination"], ["Via Pomeriggio 4, Solofra"])
+        self.assertEqual(maps_query["destination"], ["Via Tardi 1, Montoro"])
         calendar = parse_qs(urlsplit(result["calendar_url"]).query)
         self.assertIn("Ogni 2 settimane", calendar["details"][0])
         self.assertIn("giorno Lunedì", calendar["details"][0])

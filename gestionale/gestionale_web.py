@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import imaplib
+import math
 import re
 import sqlite3
 import unicodedata
@@ -30,7 +31,7 @@ def _requested_delivery_times(value: str) -> List[time]:
 
 def _delivery_time_sort_key(order: Dict[str, Any]) -> Tuple[int, int]:
     preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
-    requested_times = _requested_delivery_times(preference)
+    requested_times = _requested_order_times(order)
     if requested_times:
         requested_start = requested_times[0]
         minutes = requested_start.hour * 60 + requested_start.minute
@@ -67,34 +68,298 @@ def _origin_city_key(origin: str, orders: List[Dict[str, Any]]) -> Optional[Tupl
     return max(matching_cities, key=lambda city: len(city[1]), default=None)
 
 
-def _group_route_orders_by_city(
+def _requested_order_times(order: Dict[str, Any]) -> List[time]:
+    for value in (order.get("preferred_delivery_time"), order.get("delivery_notes")):
+        requested_times = _requested_delivery_times(str(value or ""))
+        if requested_times:
+            return requested_times
+    return []
+
+
+def _route_time_constraint(order: Dict[str, Any]) -> Optional[Tuple[int, int]]:
+    requested_times = _requested_order_times(order)
+    if requested_times:
+        requested_start = requested_times[0]
+        return (0, requested_start.hour * 60 + requested_start.minute)
+    preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
+    if "mattina" in preference:
+        return (1, 0)
+    if "pomeriggio" in preference:
+        return (2, 0)
+    return None
+
+
+def _delivery_location_coordinates(site: Dict[str, Any]) -> Dict[str, Tuple[float, float]]:
+    coordinates: Dict[str, Tuple[float, float]] = {}
+    zones = site.get("delivery_zones")
+    if not isinstance(zones, list):
+        return coordinates
+    for zone in zones:
+        if not isinstance(zone, dict) or not isinstance(zone.get("locations"), list):
+            continue
+        for location in zone["locations"]:
+            if not isinstance(location, dict):
+                continue
+            city = _normalized_place(location.get("name"))
+            try:
+                latitude = float(location["lat"])
+                longitude = float(location["lon"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if city and -90 <= latitude <= 90 and -180 <= longitude <= 180:
+                coordinates[city] = (latitude, longitude)
+    return coordinates
+
+
+def _matching_location_coordinate(
+    value: str,
+    coordinates: Dict[str, Tuple[float, float]],
+) -> Optional[Tuple[float, float]]:
+    normalized_value = f" {_normalized_place(value)} "
+    matches = [
+        (city, point)
+        for city, point in coordinates.items()
+        if f" {city} " in normalized_value
+    ]
+    return max(matches, key=lambda match: len(match[0]))[1] if matches else None
+
+
+def _city_coordinate(
+    city_key: Tuple[str, str],
+    coordinates: Dict[str, Tuple[float, float]],
+) -> Optional[Tuple[float, float]]:
+    city_name = city_key[1]
+    if city_name in coordinates:
+        return coordinates[city_name]
+    matches = [
+        (name, point)
+        for name, point in coordinates.items()
+        if city_name.startswith(f"{name} ") or name.startswith(f"{city_name} ")
+    ]
+    return max(matches, key=lambda match: len(match[0]))[1] if matches else None
+
+
+def _distance_km(
+    first_point: Tuple[float, float],
+    second_point: Tuple[float, float],
+) -> float:
+    first_latitude, first_longitude = map(math.radians, first_point)
+    second_latitude, second_longitude = map(math.radians, second_point)
+    latitude_delta = second_latitude - first_latitude
+    longitude_delta = second_longitude - first_longitude
+    haversine = (
+        math.sin(latitude_delta / 2) ** 2
+        + math.cos(first_latitude) * math.cos(second_latitude) * math.sin(longitude_delta / 2) ** 2
+    )
+    return 6371 * 2 * math.asin(math.sqrt(min(1.0, haversine)))
+
+
+def _minimum_distance_city_order(
+    city_keys: List[Tuple[str, str]],
+    coordinates: Dict[Tuple[str, str], Tuple[float, float]],
+    origin_coordinate: Tuple[float, float],
+    required_order: List[Tuple[str, str]],
+    return_to_origin: bool,
+) -> List[Tuple[str, str]]:
+    city_count = len(city_keys)
+    city_indexes = {city_key: index for index, city_key in enumerate(city_keys)}
+    required_indexes = [city_indexes[city_key] for city_key in required_order]
+    required_ranks = {city_index: rank for rank, city_index in enumerate(required_indexes)}
+    distance_matrix = [
+        [
+            _distance_km(coordinates[first_city], coordinates[second_city])
+            for second_city in city_keys
+        ]
+        for first_city in city_keys
+    ]
+    origin_distances = [_distance_km(origin_coordinate, coordinates[city_key]) for city_key in city_keys]
+
+    if city_count > 12:
+        route_indexes = list(required_indexes)
+        unplaced_indexes = [index for index in range(city_count) if index not in required_ranks]
+        if not route_indexes and unplaced_indexes:
+            first_index = min(unplaced_indexes, key=lambda index: (origin_distances[index], index))
+            route_indexes.append(first_index)
+            unplaced_indexes.remove(first_index)
+        while unplaced_indexes:
+            best_addition = math.inf
+            best_city_index = unplaced_indexes[0]
+            best_position = len(route_indexes)
+            minimum_position = 1 if required_order else 1
+            for city_index in unplaced_indexes:
+                for position in range(minimum_position, len(route_indexes) + 1):
+                    previous_distance = (
+                        origin_distances[city_index]
+                        if position == 0
+                        else distance_matrix[route_indexes[position - 1]][city_index]
+                    )
+                    addition = previous_distance
+                    if position < len(route_indexes):
+                        addition += distance_matrix[city_index][route_indexes[position]]
+                        addition -= (
+                            origin_distances[route_indexes[position]]
+                            if position == 0
+                            else distance_matrix[route_indexes[position - 1]][route_indexes[position]]
+                        )
+                    elif return_to_origin:
+                        addition += origin_distances[city_index]
+                    if (addition, city_index, position) < (best_addition, best_city_index, best_position):
+                        best_addition = addition
+                        best_city_index = city_index
+                        best_position = position
+            route_indexes.insert(best_position, best_city_index)
+            unplaced_indexes.remove(best_city_index)
+        return [city_keys[index] for index in route_indexes]
+
+    full_mask = (1 << city_count) - 1
+    costs: Dict[Tuple[int, int], float] = {}
+    parents: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {}
+    start_indexes = [required_indexes[0]] if required_indexes else list(range(city_count))
+    for city_index in start_indexes:
+        state = (1 << city_index, city_index)
+        costs[state] = origin_distances[city_index]
+        parents[state] = None
+
+    for visited_mask in range(1, full_mask + 1):
+        for last_index in range(city_count):
+            state = (visited_mask, last_index)
+            if state not in costs or visited_mask == full_mask:
+                continue
+            visited_required_count = sum(
+                bool(visited_mask & (1 << required_index))
+                for required_index in required_indexes
+            )
+            for next_index in range(city_count):
+                next_bit = 1 << next_index
+                if visited_mask & next_bit:
+                    continue
+                if next_index in required_ranks:
+                    if required_ranks[next_index] != visited_required_count:
+                        continue
+                elif required_indexes and visited_required_count == 0:
+                    continue
+                next_state = (visited_mask | next_bit, next_index)
+                next_cost = costs[state] + distance_matrix[last_index][next_index]
+                if next_cost < costs.get(next_state, math.inf) - 1e-9:
+                    costs[next_state] = next_cost
+                    parents[next_state] = state
+
+    best_state: Optional[Tuple[int, int]] = None
+    best_cost = math.inf
+    for last_index in range(city_count):
+        state = (full_mask, last_index)
+        if state not in costs:
+            continue
+        total_cost = costs[state] + (origin_distances[last_index] if return_to_origin else 0)
+        if total_cost < best_cost - 1e-9:
+            best_state = state
+            best_cost = total_cost
+    if best_state is None:
+        return city_keys
+
+    route_indexes = []
+    state = best_state
+    while state is not None:
+        route_indexes.append(state[1])
+        state = parents[state]
+    route_indexes.reverse()
+    return [city_keys[index] for index in route_indexes]
+
+
+def _fallback_city_order(
     orders: List[Dict[str, Any]],
-    origin: str = "",
+    origin: str,
 ) -> List[Dict[str, Any]]:
     time_ordered = sorted(orders, key=_delivery_time_sort_key)
     city_rank: Dict[Tuple[str, str], int] = {}
     city_time_priority: Dict[Tuple[str, str], Tuple[int, int]] = {}
     for order in time_ordered:
-        key = _delivery_city_key(order)
-        city_rank.setdefault(key, len(city_rank))
+        city_key = _delivery_city_key(order)
+        city_rank.setdefault(city_key, len(city_rank))
         order_priority = _delivery_time_sort_key(order)
-        if key not in city_time_priority or order_priority < city_time_priority[key]:
-            city_time_priority[key] = order_priority
+        if city_key not in city_time_priority or order_priority < city_time_priority[city_key]:
+            city_time_priority[city_key] = order_priority
     origin_city = _origin_city_key(origin, time_ordered)
     if origin_city in city_rank:
         earlier_cities = [
-            city
-            for city in city_rank
-            if city != origin_city and city_time_priority[city] < city_time_priority[origin_city]
+            city_key
+            for city_key in city_rank
+            if city_key != origin_city and city_time_priority[city_key] < city_time_priority[origin_city]
         ]
         city_order = earlier_cities + [origin_city] + [
-            city for city in city_rank if city != origin_city and city not in earlier_cities
+            city_key for city_key in city_rank if city_key != origin_city and city_key not in earlier_cities
         ]
-        city_rank = {city: rank for rank, city in enumerate(city_order)}
+        city_rank = {city_key: rank for rank, city_key in enumerate(city_order)}
     return sorted(
         time_ordered,
         key=lambda order: (city_rank[_delivery_city_key(order)], _delivery_time_sort_key(order)),
     )
+
+
+def _group_route_orders_by_city(
+    orders: List[Dict[str, Any]],
+    origin: str = "",
+    site: Optional[Dict[str, Any]] = None,
+    return_to_origin: bool = False,
+) -> List[Dict[str, Any]]:
+    if not orders:
+        return []
+    if site is None:
+        return _fallback_city_order(orders, origin)
+
+    grouped_orders: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+    for order in orders:
+        grouped_orders.setdefault(_delivery_city_key(order), []).append(order)
+    location_coordinates = _delivery_location_coordinates(site)
+    city_coordinates = {
+        city_key: _city_coordinate(city_key, location_coordinates)
+        for city_key in grouped_orders
+    }
+    if not location_coordinates or any(point is None for point in city_coordinates.values()):
+        return _fallback_city_order(orders, origin)
+    origin_coordinate = _matching_location_coordinate(origin, location_coordinates)
+    origin_city = _origin_city_key(origin, orders)
+    if origin_coordinate is None and origin_city is not None:
+        origin_coordinate = city_coordinates.get(origin_city)
+    if origin_coordinate is None:
+        return _fallback_city_order(orders, origin)
+
+    city_rank = {city_key: rank for rank, city_key in enumerate(grouped_orders)}
+    city_constraints: Dict[Tuple[str, str], Tuple[int, int]] = {}
+    for city_key, city_orders in grouped_orders.items():
+        constraints = [
+            priority
+            for order in city_orders
+            if (priority := _route_time_constraint(order)) is not None
+        ]
+        if constraints:
+            city_constraints[city_key] = min(constraints)
+    constrained_cities = sorted(
+        city_constraints,
+        key=lambda city_key: (city_constraints[city_key], city_rank[city_key]),
+    )
+    if origin_city in grouped_orders:
+        if origin_city in city_constraints:
+            required_order = constrained_cities
+        else:
+            required_order = [origin_city] + [
+                city_key for city_key in constrained_cities if city_key != origin_city
+            ]
+    else:
+        required_order = constrained_cities
+
+    route_city_order = _minimum_distance_city_order(
+        list(grouped_orders),
+        {city_key: point for city_key, point in city_coordinates.items() if point is not None},
+        origin_coordinate,
+        required_order,
+        return_to_origin,
+    )
+    return [
+        order
+        for city_key in route_city_order
+        for order in sorted(grouped_orders[city_key], key=_delivery_time_sort_key)
+    ]
 
 
 def _route_schedule_warning(
@@ -104,7 +369,7 @@ def _route_schedule_warning(
 ) -> str:
     preference = str(order.get("preferred_delivery_time") or "").strip()
     normalized_preference = preference.casefold()
-    requested_times = _requested_delivery_times(preference)
+    requested_times = _requested_order_times(order)
     if not requested_times:
         if "mattina" in normalized_preference:
             conflict = route_start >= time(12, 0)
@@ -650,7 +915,13 @@ def create_server(
                     f"Nessun ordine confermato con indirizzo per il {event_date.strftime('%d/%m/%Y')}.",
                     409,
                 )
-            route_orders = _group_route_orders_by_city(route_orders, origin)
+            return_to_origin = payload.get("return_to_origin") is True
+            route_orders = _group_route_orders_by_city(
+                route_orders,
+                origin,
+                site,
+                return_to_origin,
+            )
             destinations = [order["destination"] for order in route_orders]
             start_time = gestionale._parse_time(str(payload.get("start", "")), "Ora inizio")
             end_time = gestionale._parse_time(str(payload.get("end", "")), "Ora fine")
@@ -662,7 +933,7 @@ def create_server(
             maps_urls = gestionale.build_maps_urls(
                 origin,
                 destinations,
-                return_to_origin=payload.get("return_to_origin") is True,
+                return_to_origin=return_to_origin,
             )
             order_details = []
             for order in route_orders:
@@ -687,8 +958,9 @@ def create_server(
                     detail += f" - Richiesta ricorrente: {recurrence} (nessun rinnovo automatico)"
                 order_details.append(detail)
             details = (
-                "Ordini confermati; tappe raggruppate per città dando precedenza alla partenza, "
-                "salvo orari più urgenti.\n\n"
+                "Ordini confermati; precedenza alla partenza quando gli orari lo consentono. "
+                "Percorso stimato sui centri comunali, con appuntamenti in ordine temporale e "
+                "deviazioni delle altre tappe ridotte.\n\n"
                 + "\n".join(order_details)
             )
             if schedule_warnings:
