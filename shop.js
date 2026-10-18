@@ -1200,10 +1200,11 @@ function renderProductDetail() {
     imageUrl: productImageUrls[0] || "",
     imageAlt: productNameForMetadata,
   });
+  const productPriceCents = productPriceInCents(product);
   updateSeoStructuredData({
     "@context": "https://schema.org",
     "@graph": [
-      {
+      ...(productPriceCents === null ? [] : [{
         "@type": "Product",
         "@id": `${canonicalUrl}#product`,
         name: productNameForMetadata,
@@ -1220,7 +1221,14 @@ function renderProductDetail() {
               })),
             }
           : {}),
-      },
+        offers: {
+          "@type": "Offer",
+          url: canonicalUrl,
+          priceCurrency: "EUR",
+          price: productPriceCents / 100,
+          availability: "https://schema.org/InStock",
+        },
+      }]),
       {
         "@type": "BreadcrumbList",
         itemListElement: [
@@ -1846,16 +1854,15 @@ function catalogStructuredData(title, description, url) {
       itemListOrder: "https://schema.org/ItemListUnordered",
       numberOfItems: products.length,
       itemListElement: products.map((product, index) => {
-        const item = {
-          "@type": "Product",
-          name: String(product.name || "Prodotto"),
-          url: seoCanonicalUrl("product", product.id),
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          item: {
+            "@type": "WebPage",
+            name: String(product.name || "Prodotto"),
+            url: seoCanonicalUrl("product", product.id),
+          },
         };
-        const images = productImages(product).map(safeImageUrl);
-        if (images.length) item.image = images;
-        if (product.description) item.description = String(product.description);
-        if (product.category) item.category = productCategories(product.category).join(" / ");
-        return { "@type": "ListItem", position: index + 1, item };
       }),
     },
   };
