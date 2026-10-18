@@ -35,7 +35,9 @@ I tempi di consegna sono indicativi: Montoro circa 2 ore, comuni vicini in giorn
 
 ## Email ordini
 
-Il checkout invia un riepilogo al cliente; configura una copia all'attività come CC/BCC nel template EmailJS. Il parametro `reply_to` è solo l'indirizzo a cui il cliente può rispondere, non invia una copia. Il riepilogo non conferma un ordine: l'attività verifica disponibilità, consegna e pagamento e contatta il cliente in caso di indisponibilità. Il riepilogo mostra un codice Buono Tech candidato; l'attività verifica manualmente l'idoneità e, solo se valido, invia al cliente una seconda email di conferma dell'attivazione. Questa seconda email non è generata automaticamente dal checkout. Raccoglie l'indirizzo email nel checkout. Crea un servizio e un template, poi configura nel CMS Public Key, Service ID e Template ID.
+Il checkout invia al cliente un riepilogo, non una conferma d'ordine, e non trasmette la richiesta all'attività. Per la gestione locale di ordini, giacenze e consegne, consulta la [guida del gestionale](gestionale/README.md).
+
+Configura una copia all'attività come CC/BCC nel template EmailJS. Il parametro `reply_to` è solo l'indirizzo a cui il cliente può rispondere, non invia una copia. Crea un servizio e un template, poi configura nel CMS Public Key, Service ID e Template ID.
 
 Il codice HTML pronto da incollare nel template EmailJS è in `email/order-summary.html`. Imposta `To Email` su `{{email}}`, `Reply To` su `{{reply_to}}` e oggetto su `Riepilogo richiesta #{{order_id}} - {{brand}}`. Allega il logo come immagine inline con Content ID esatto `logo.png` perché il template lo richiama con `cid:logo.png`. Le immagini prodotto usano URL pubblici assoluti.
 
@@ -44,6 +46,10 @@ Il template riceve `brand`, `website_url`, `cart_url`, `order_id`, `email`, `rep
 Il campo `email` è il destinatario cliente; `reply_to` usa l'email di contatto dell'attività configurata in `data/site.json`. Sostituisci il valore dimostrativo prima del rilascio, limita in EmailJS i domini autorizzati al dominio del negozio e verifica l'invio reale. Questi identificativi sono pubblici nel browser: non inserire chiavi private o credenziali del provider email. L'email è solo un riepilogo al cliente; per trasmettere l'ordine all'attività serve un canale separato.
 
 La tabella costi del template email riceve `cost.products` (subtotale a prezzo pieno) e `cost.discount` (sconto già sottratto dal totale). Gli articoli in `orders` mostrano i prezzi unitari a prezzo pieno e includono `product_url` per aprire la scheda prodotto.
+
+## Gestionale locale
+
+Il codice, l'interfaccia e i test del gestionale sono raccolti nella cartella `gestionale/`. Le istruzioni per configurazione, avvio e uso sono nella [guida dedicata](gestionale/README.md).
 
 ## Costi e limiti
 

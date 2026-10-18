@@ -1,2 +1,8 @@
 /email/*
   X-Robots-Tag: noindex, nofollow
+
+/gestionale
+  X-Robots-Tag: noindex, nofollow
+
+/gestionale/*
+  X-Robots-Tag: noindex, nofollow

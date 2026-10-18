@@ -113,7 +113,7 @@
         <tr><td style="padding: 4px 8px 4px 0; color: #62736b">Prezzo bloccato</td><td style="padding: 4px 0">{{price_lock_months}}</td></tr>
       </table>
       <p style="color: #62736b; font-size: 12px; margin: 8px 0 0">
-        Frequenza e giorno sono indicazioni da concordare con l'attività; il sito non attiva rinnovi automatici.
+        Questa è una richiesta: la programmazione delle consegne successive si attiva solo dopo conferma manuale dell'attività. Non sono previsti pagamenti automatici; la ricorrenza può essere disattivata, lasciando valida una consegna già in programma.
       </p>
 
       <h2 style="font-size: 16px; margin: 22px 0 8px">Riepilogo costi</h2>
@@ -128,7 +128,7 @@
           <td style="padding: 12px 0; border-top: 2px solid #183d32"><strong>{{cost.total}}</strong></td>
         </tr>
       </table>
-      <p style="color: #62736b; font-size: 12px; margin: 8px 0 0">{{payment_information}}</p>
+      <p data-order-field="payment_information" style="color: #62736b; font-size: 12px; margin: 8px 0 0">{{payment_information}}</p>
 
       <div style="margin-top: 22px; padding: 16px; border: 1px solid #b7d6a6; background-color: #edf6e8">
         <h2 style="font-size: 16px; margin: 0 0 10px">Buono Tech</h2>

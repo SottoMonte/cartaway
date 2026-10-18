@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f5f1" />
+    <title>Gestionale Cartaway</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --canvas: #f2f5f1;
+        --paper: #ffffff;
+        --ink: #1a2a23;
+        --muted: #65766e;
+        --line: #d9e2dc;
+        --green: #165b45;
+        --green-soft: #e6f1eb;
+        --blue: #315f6a;
+        --blue-soft: #e8f0f2;
+        --gold: #b47a18;
+        --gold-soft: #fff4d9;
+        --red: #a84337;
+        --red-soft: #f9e9e6;
+        --shadow: 0 12px 32px rgb(24 50 39 / 8%);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          linear-gradient(110deg, rgb(226 237 230 / 60%), transparent 34rem),
+          var(--canvas);
+        color: var(--ink);
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      button, input, select, textarea { font: inherit; }
+      button { cursor: pointer; }
+
+      .shell { width: min(1440px, 100% - 48px); margin: 0 auto; }
+
+      .topbar {
+        min-height: 74px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 9px;
+        background: var(--green);
+        color: white;
+        font-family: Georgia, serif;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .brand-name { font-family: Georgia, "Times New Roman", serif; font-size: 19px; line-height: 1.1; }
+      .brand-caption { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 700; }
+      .topbar-meta { display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: 12px; }
+      .local-badge { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-weight: 700; }
+      .local-badge::before { width: 7px; height: 7px; border-radius: 50%; background: #54a77b; content: ""; }
+
+      main { padding: 36px 0 56px; }
+      .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+      .eyebrow { color: var(--green); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { margin-bottom: 5px; font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 500; line-height: 1.15; }
+      .page-heading p { margin-bottom: 0; color: var(--muted); }
+
+      .button {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 15px;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        background: var(--green);
+        color: white;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color .16s ease, transform .16s ease;
+      }
+      .button:hover { background: #104b38; }
+      .button:active { transform: translateY(1px); }
+      .button:disabled { cursor: wait; opacity: .55; }
+      .button.secondary { border-color: var(--line); background: var(--paper); color: var(--ink); }
+      .button.secondary:hover { border-color: #9eafa5; background: #f9fbf9; }
+      .button.small { min-height: 34px; padding: 0 11px; font-size: 12px; }
+
+      .summary-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin: 0 0 26px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+      .summary-item { min-height: 86px; display: flex; align-items: center; gap: 14px; padding: 15px 20px; }
+      .summary-item + .summary-item { border-left: 1px solid var(--line); }
+      .summary-value { color: var(--green); font-family: Georgia, "Times New Roman", serif; font-size: 25px; line-height: 1; }
+      .summary-label { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+      .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+      .tab {
+        position: relative;
+        flex: 0 0 auto;
+        min-height: 47px;
+        padding: 0 17px;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .tab[aria-selected="true"] { color: var(--green); }
+      .tab[aria-selected="true"]::after { position: absolute; right: 12px; bottom: -1px; left: 12px; height: 3px; border-radius: 3px 3px 0 0; background: var(--green); content: ""; }
+      .panel { padding-top: 25px; animation: panel-in .22s ease both; }
+      .panel[hidden] { display: none; }
+      @keyframes panel-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+      .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 17px; }
+      .section-head h2 { margin-bottom: 3px; font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; }
+      .section-head p { margin-bottom: 0; color: var(--muted); font-size: 12px; }
+      .toolbar { display: flex; align-items: flex-end; gap: 12px; }
+      .field { display: grid; gap: 5px; }
+      .field label { color: var(--muted); font-size: 11px; font-weight: 700; }
+      .field input, .field select, .field textarea, .search-input {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid #cbd7cf;
+        border-radius: 4px;
+        background: white;
+        color: var(--ink);
+      }
+      .field input:focus, .field select:focus, .field textarea:focus, .search-input:focus { outline: 2px solid #87b9a0; outline-offset: 1px; }
+      .field textarea { min-height: 176px; resize: vertical; }
+      .field input[type="number"] { width: 120px; }
+      .search-input { width: min(320px, 48vw); }
+      .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+      table { width: 100%; border-collapse: collapse; text-align: left; }
+      th { padding: 11px 14px; background: #f7f9f7; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+      td { padding: 12px 14px; border-top: 1px solid #e8ede9; vertical-align: middle; }
+      tbody tr:hover { background: #fbfcfb; }
+      .product-name { min-width: 230px; font-weight: 700; }
+      .product-id { display: block; margin-top: 3px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
+      .pill { display: inline-flex; align-items: center; min-height: 23px; padding: 2px 8px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .pill.warning { background: var(--gold-soft); color: #875a0c; }
+      .pill.danger { background: var(--red-soft); color: var(--red); }
+      .pill.neutral { background: var(--blue-soft); color: var(--blue); }
+      .stock-edit { display: flex; align-items: center; gap: 8px; }
+      .stock-edit input { width: 90px; min-height: 34px; padding: 5px 8px; border: 1px solid #cbd7cf; border-radius: 4px; }
+      .empty-state { padding: 34px 20px; color: var(--muted); text-align: center; }
+      .order-ref { min-width: 220px; font-weight: 800; }
+      .order-ref > span { display: block; }
+      .order-contact { min-width: 200px; }
+      .order-contact small { display: block; margin-top: 3px; color: var(--muted); }
+      .order-details { max-width: 440px; margin-top: 8px; }
+      .order-details summary { color: var(--green); cursor: pointer; font-size: 12px; font-weight: 700; }
+      .order-detail-list { margin: 9px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+      .order-detail-list li + li { margin-top: 4px; }
+      .order-detail-group { margin-top: 10px; }
+      .order-detail-heading { display: block; margin-bottom: 4px; color: var(--ink); font-size: 11px; }
+      .order-metadata { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 12px; margin: 0; }
+      .order-metadata > div { min-width: 0; }
+      .order-metadata dt { color: var(--muted); font-size: 10px; }
+      .order-metadata dd { margin: 1px 0 0; overflow-wrap: anywhere; font-size: 11px; font-weight: 500; }
+      .order-hint { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+      .mail-sync-status { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; text-align: right; }
+      .subtle { color: var(--muted); font-size: 12px; }
+
+      .delivery-preview { margin-bottom: 18px; }
+      .delivery-preview > p { margin-bottom: 8px; }
+      .delivery-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+      .delivery-list li { display: grid; gap: 3px; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+      .delivery-list strong { font-size: 12px; }
+      .delivery-list span, .delivery-list small { color: var(--muted); font-size: 12px; }
+      .delivery-list .delivery-stock-status { color: var(--green); font-weight: 700; }
+      .delivery-list .delivery-stock-issue { color: var(--red); }
+
+      .route-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, .75fr); gap: 26px; align-items: start; }
+      .route-form { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+      .route-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+      .route-row.schedule { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .check-field { display: flex; align-items: center; gap: 9px; min-height: 40px; color: var(--ink); }
+      .check-field input { width: 17px; height: 17px; accent-color: var(--green); }
+      .route-results { padding: 20px; border-left: 3px solid var(--blue); background: var(--blue-soft); }
+      .route-results h3 { margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 500; }
+      .route-results ol { margin: 12px 0 16px; padding-left: 22px; }
+      .route-results li + li { margin-top: 7px; }
+      .route-results a { color: #224c56; font-weight: 700; overflow-wrap: anywhere; }
+      .route-results[hidden] { display: none; }
+      .route-schedule-warnings { margin: 12px 0; padding: 10px 12px; border-left: 3px solid var(--red); background: var(--red-soft); color: var(--red); font-size: 12px; }
+      .route-schedule-warnings ul { margin: 6px 0 0; padding-left: 18px; }
+
+      .notice { position: fixed; right: 22px; bottom: 20px; z-index: 5; max-width: min(480px, calc(100vw - 32px)); display: flex; align-items: flex-start; gap: 14px; padding: 12px 14px 12px 16px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); box-shadow: var(--shadow); color: var(--ink); }
+      .notice[data-kind="error"] { border-color: #e2b4ae; background: var(--red-soft); color: #7e2f27; }
+      .notice[data-kind="success"] { border-color: #b8d4c3; background: var(--green-soft); color: var(--green); }
+      .notice[hidden] { display: none; }
+      .notice-dismiss { flex: 0 0 auto; padding: 0 2px; border: 0; background: transparent; color: inherit; font-size: 18px; line-height: 1; }
+      .notice-dismiss:hover { opacity: .7; }
+      .notice-dismiss:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+      footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+
+      @media (max-width: 900px) {
+        .summary-item { padding: 14px; }
+        .route-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 640px) {
+        .shell { width: min(100% - 28px, 1440px); }
+        .topbar { min-height: 64px; }
+        .topbar-meta { gap: 8px; }
+        .topbar-meta span:last-child { display: none; }
+        main { padding-top: 25px; }
+        .page-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+        h1 { font-size: 27px; }
+        .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .summary-item { min-height: 72px; padding: 12px; }
+        .summary-item:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+        .summary-item:nth-child(4) { border-top: 1px solid var(--line); }
+        .summary-value { font-size: 22px; }
+        .tabs { margin-right: -14px; }
+        .tab { padding-inline: 13px; }
+        .section-head { align-items: flex-start; flex-direction: column; }
+        .toolbar { width: 100%; flex-wrap: wrap; align-items: flex-end; }
+        .search-input { width: 100%; }
+        .field.search-field { flex: 1 1 100%; }
+        .route-form { padding: 15px; }
+        .route-row, .route-row.schedule { grid-template-columns: 1fr 1fr; }
+        .route-row .field:first-child { grid-column: 1 / -1; }
+        .route-row.schedule .field:first-child { grid-column: auto; }
+        .route-row.schedule .check-field { grid-column: 1 / -1; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Gestionale Cartaway">
+          <span class="brand-mark" aria-hidden="true">C</span>
+          <span><span class="brand-name" id="brand-name">Cartaway</span><span class="brand-caption">GESTIONALE LOCALE</span></span>
+        </a>
+        <div class="topbar-meta"><span class="local-badge">Solo su questo computer</span><span>Europe/Rome</span></div>
+      </header>
+
+      <main>
+        <div class="page-heading">
+          <div><span class="eyebrow">Operatività</span><h1>Ordini e consegne</h1></div>
+          <button class="button secondary" id="refresh-button" type="button">Aggiorna dati</button>
+        </div>
+
+        <section class="summary-strip" aria-label="Riepilogo gestionale">
+          <div class="summary-item"><div><span class="summary-value" id="summary-products">—</span><span class="summary-label">Prodotti</span></div></div>
+          <div class="summary-item"><div><span class="summary-value" id="summary-unset">—</span><span class="summary-label">Giacenze da impostare</span></div></div>
+          <div class="summary-item"><div><span class="summary-value" id="summary-recurring">—</span><span class="summary-label">Ordini ricorrenti attivi</span></div></div>
+          <div class="summary-item"><div><span class="summary-value" id="summary-pending">—</span><span class="summary-label">Ordini da confermare</span></div></div>
+        </section>
+
+        <nav class="tabs" role="tablist" aria-label="Sezioni gestionali">
+          <button class="tab" id="tab-stock" type="button" role="tab" aria-selected="true" aria-controls="panel-stock" data-panel="panel-stock">Inventario</button>
+          <button class="tab" id="tab-orders" type="button" role="tab" aria-selected="false" aria-controls="panel-orders" data-panel="panel-orders">Ordini</button>
+          <button class="tab" id="tab-route" type="button" role="tab" aria-selected="false" aria-controls="panel-route" data-panel="panel-route">Consegne</button>
+        </nav>
+
+        <section class="panel" id="panel-stock" role="tabpanel" aria-labelledby="tab-stock">
+          <div class="section-head">
+            <div><h2>Inventario</h2><p>Lo stock si scala solo quando segni come consegnato un ordine confermato.</p></div>
+            <div class="toolbar">
+              <label class="field" for="stock-action"><span>Operazione</span><select id="stock-action"><option value="set">Imposta giacenza</option><option value="add">Aggiungi pezzi</option></select></label>
+              <label class="field search-field" for="stock-search"><span>Cerca prodotto</span><input class="search-input" id="stock-search" type="search" placeholder="Nome o ID prodotto" autocomplete="off" /></label>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th scope="col">Prodotto</th><th scope="col">Catalogo</th><th scope="col">Giacenza registrata</th><th scope="col">Aggiorna</th></tr></thead><tbody id="stock-body"><tr><td class="empty-state" colspan="4">Caricamento catalogo…</td></tr></tbody></table></div>
+        </section>
+
+        <section class="panel" id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" hidden>
+          <div class="section-head">
+            <div><h2>Ordini</h2></div>
+            <div>
+              <button class="button secondary" id="mail-button" type="button">Sincronizza ora</button>
+              <span class="mail-sync-status" id="mail-sync-status" role="status" aria-live="polite">Controllo automatico ogni minuto.</span>
+            </div>
+          </div>
+          <p class="subtle">Legge solo i messaggi non letti di INBOX. L'importazione non invia email: verifica e conferma ogni ordine singolarmente.</p>
+          <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Consegna richiesta</th><th scope="col">Disponibilità</th><th scope="col">Buono Tech</th><th scope="col">Stato</th><th scope="col">Azione</th></tr></thead><tbody id="orders-body"><tr><td class="empty-state" colspan="8">Nessun ordine registrato.</td></tr></tbody></table></div>
+          <div class="section-head voucher-list-heading">
+            <div><h2>Buoni Tech validi</h2><p>Codici verificati e registrati dal gestionale.</p></div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th scope="col">Codice</th><th scope="col">Ordine</th><th scope="col">Cliente</th><th scope="col">Valore</th><th scope="col">Validità</th><th scope="col">Convalidato il</th></tr></thead><tbody id="valid-vouchers-body"><tr><td class="empty-state" colspan="6">Nessun Buono Tech convalidato.</td></tr></tbody></table></div>
+        </section>
+
+        <section class="panel" id="panel-route" role="tabpanel" aria-labelledby="tab-route" hidden>
+          <div class="section-head"><div><h2>Consegne</h2><p id="delivery-summary">Ordini confermati per la data selezionata.</p></div></div>
+          <div class="delivery-preview">
+            <ul class="delivery-list" id="delivery-orders-list" aria-live="polite"><li class="subtle">Caricamento ordini…</li></ul>
+          </div>
+          <div class="route-layout">
+            <form class="route-form" id="route-form">
+              <div class="route-row">
+                <label class="field" for="route-origin"><span>Punto di partenza</span><input id="route-origin" name="origin" type="text" required /></label>
+                <label class="field" for="route-date"><span>Data consegna</span><input id="route-date" name="date" type="date" required /></label>
+                <div class="field"><span>Rientro</span><label class="check-field"><input id="route-return" type="checkbox" /> Torna al punto di partenza</label></div>
+              </div>
+              <div class="route-row schedule">
+                <label class="field" for="route-start"><span>Ora inizio</span><input id="route-start" name="start" type="time" value="09:00" required /></label>
+                <label class="field" for="route-end"><span>Ora fine</span><input id="route-end" name="end" type="time" value="13:00" required /></label>
+              </div>
+              <div><button class="button" id="route-button" type="submit">Crea link per gli ordini</button></div>
+            </form>
+            <div class="route-results" id="route-results" hidden>
+              <h3>Itinerario pronto</h3>
+              <p class="subtle">Il giro dà precedenza alla città di partenza, salvo orari richiesti più urgenti; all'interno di ogni città, le tappe seguono le preferenze orarie. Maps mantiene l'ordine indicato ma non ottimizza le distanze né garantisce l'orario di arrivo. Le consegne ricorrenti compaiono dopo la conferma manuale del primo ordine.</p>
+              <div class="route-schedule-warnings" id="route-schedule-warnings" hidden><strong>Orari da verificare</strong><ul id="route-schedule-warning-list"></ul></div>
+              <ol id="route-orders"></ol>
+              <div id="route-exclusions" hidden><h3>Ordini non inclusi</h3><ul id="route-excluded"></ul></div>
+              <ol id="maps-links"></ol>
+              <a class="button small" id="calendar-link" href="#" target="_blank" rel="noopener noreferrer">Aggiungi a Google Calendar</a>
+            </div>
+          </div>
+        </section>
+
+        <div class="notice" id="notice" role="status" aria-live="polite" hidden>
+          <span id="notice-message"></span>
+          <button class="notice-dismiss" id="notice-dismiss" type="button" aria-label="Chiudi notifica" title="Chiudi notifica">×</button>
+        </div>
+      </main>
+
+      <footer>Gestionale locale Cartaway · La posta si sincronizza ogni minuto; l'email parte solo dopo la conferma manuale di un ordine.</footer>
+    </div>
+
+    <script>
+      const state = { stock: [], orders: [], validVouchers: [], deliveryOrders: [], noticeTimer: null, mailSyncing: false, autoSyncTimer: null };
+      const notice = document.querySelector("#notice");
+      const noticeMessage = document.querySelector("#notice-message");
+
+      function showNotice(message, kind = "success") {
+        window.clearTimeout(state.noticeTimer);
+        noticeMessage.textContent = message;
+        notice.dataset.kind = kind;
+        notice.hidden = false;
+        state.noticeTimer = kind === "error"
+          ? null
+          : window.setTimeout(() => { notice.hidden = true; }, 5500);
+      }
+
+      document.querySelector("#notice-dismiss").addEventListener("click", () => {
+        window.clearTimeout(state.noticeTimer);
+        notice.hidden = true;
+      });
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), ...options.headers },
+          cache: "no-store",
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Richiesta non completata.");
+        return payload;
+      }
+
+      function element(tag, text, className) {
+        const node = document.createElement(tag);
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        if (className) node.className = className;
+        return node;
+      }
+
+      function cell(row, text, className) {
+        const node = element("td", text, className);
+        row.append(node);
+        return node;
+      }
+
+      function badge(text, kind = "neutral") {
+        return element("span", text, `pill ${kind}`);
+      }
+
+      function setButtonBusy(button, busy, label, busyLabel = "Attendi…") {
+        button.disabled = busy;
+        if (label) button.textContent = busy ? busyLabel : label;
+      }
+
+      function renderSummary(summary) {
+        document.querySelector("#summary-products").textContent = summary.products;
+        document.querySelector("#summary-unset").textContent = summary.stock_unset;
+        document.querySelector("#summary-recurring").textContent = summary.recurring_orders;
+        document.querySelector("#summary-pending").textContent = summary.orders_pending_confirmation;
+      }
+
+      function formatDate(value) {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+        return match ? `${match[3]}/${match[2]}/${match[1]}` : value || "";
+      }
+
+      function stockStatus(product) {
+        if (!product.catalog_available) return ["Non disponibile", "danger"];
+        if (product.quantity === null) return ["Da censire", "warning"];
+        if (product.quantity === 0) return ["Esaurito", "danger"];
+        return ["Attivo", "neutral"];
+      }
+
+      function renderStock() {
+        const body = document.querySelector("#stock-body");
+        const filter = document.querySelector("#stock-search").value.trim().toLocaleLowerCase("it");
+        const products = state.stock.filter((product) => `${product.name} ${product.product_id}`.toLocaleLowerCase("it").includes(filter));
+        body.replaceChildren();
+        if (!products.length) {
+          const row = element("tr");
+          const empty = cell(row, "Nessun prodotto corrispondente.", "empty-state");
+          empty.colSpan = 4;
+          body.append(row);
+          return;
+        }
+        for (const product of products) {
+          const row = element("tr");
+          const productCell = cell(row, "", "product-name");
+          productCell.append(element("span", product.name));
+          productCell.append(element("span", product.product_id, "product-id"));
+          const [label, kind] = stockStatus(product);
+          cell(row, "").append(badge(label, kind));
+          cell(row, product.quantity === null ? "Da impostare" : product.quantity);
+          const actionCell = cell(row, "");
+          const form = element("form", undefined, "stock-edit");
+          form.dataset.productId = product.product_id;
+          const quantity = element("input");
+          quantity.type = "number";
+          quantity.min = "0";
+          quantity.step = "1";
+          quantity.required = true;
+          quantity.value = "";
+          quantity.setAttribute("aria-label", `Quantità per ${product.name}`);
+          const button = element("button", "Salva", "button small");
+          button.type = "submit";
+          form.append(quantity, button);
+          actionCell.append(form);
+          body.append(row);
+        }
+      }
+
+      function orderStatus(order) {
+        if (order.status === "disponibile") return ["Stock sufficiente", "neutral"];
+        if (order.status === "disponibilita_insufficiente") return ["Non disponibile", "danger"];
+        return ["Da verificare", "warning"];
+      }
+
+      function detailGroup(title, entries) {
+        const visibleEntries = entries.filter(([, value]) => value !== undefined && value !== null && String(value).trim());
+        if (!visibleEntries.length) return null;
+        const group = element("div", undefined, "order-detail-group");
+        group.append(element("strong", title, "order-detail-heading"));
+        const list = element("dl", undefined, "order-metadata");
+        for (const [label, value] of visibleEntries) {
+          const pair = element("div");
+          pair.append(element("dt", label), element("dd", value));
+          list.append(pair);
+        }
+        group.append(list);
+        return group;
+      }
+
+      function renderOrders() {
+        const body = document.querySelector("#orders-body");
+        body.replaceChildren();
+        if (!state.orders.length) {
+          const row = element("tr");
+          const empty = cell(row, "Nessun ordine registrato.", "empty-state");
+          empty.colSpan = 8;
+          body.append(row);
+          return;
+        }
+        for (const order of state.orders) {
+          const row = element("tr");
+          const refCell = cell(row, "", "order-ref");
+          refCell.append(element("span", `#${order.order_id}`));
+          const details = element("details", undefined, "order-details");
+          details.append(element("summary", "Dettagli richiesta"));
+          const contact = element("div", undefined, "subtle");
+          contact.append(element("div", `${order.customer_name || "Cliente"} · ${order.customer_email || "Email assente"}`));
+          if (order.customer_phone) contact.append(element("div", `Telefono: ${order.customer_phone}`));
+          contact.append(element("div", [order.delivery_address, order.delivery_city].filter(Boolean).join(", ") || "Indirizzo non indicato"));
+          const list = element("ul", undefined, "order-detail-list");
+          for (const item of order.availability || []) {
+            const available = item.available === null ? "giacenza da verificare" : `${item.available} disponibili`;
+            const lineItem = (order.request_details?.product_lines || []).find((line) => line.product_id === item.product_id);
+            const priceDetails = [
+              lineItem?.line_total ? `totale ${lineItem.line_total}` : "",
+              lineItem?.unit_price ? `${lineItem.unit_price} / unità` : "",
+            ].filter(Boolean);
+            const priceLabel = priceDetails.length ? ` · ${priceDetails.join(" · ")}` : "";
+            list.append(element("li", `${item.requested} × ${item.name} · ${available}${priceLabel}`));
+          }
+          details.append(contact, list);
+          const request = order.request_details || {};
+          const deliveryDetails = detailGroup("Consegna", [
+            ["Data richiesta", formatDate(order.preferred_delivery_date)],
+            ["Preferenza", order.preferred_delivery_time],
+            ["Zona", request.delivery_zone],
+            ["Tempo indicativo", request.estimated_delivery_time],
+            ["Note", order.delivery_notes],
+          ]);
+          const billingDetails = detailGroup("Fatturazione e pagamento", [
+            ["Richiesta fattura", request.billing_requested],
+            ["Ragione sociale", request.billing_business_name],
+            ["Partita IVA", request.billing_vat_number],
+            ["Codice SDI o PEC", request.billing_recipient],
+            ["Pagamento", request.payment_information],
+          ]);
+          const recurringDetails = detailGroup("Ordine ricorrente", [
+            ["Richiesto", order.recurring_order ? "Sì" : "No"],
+            ["Programmazione", order.recurring_enabled ? `Attiva · ${formatDate(order.delivery_date)}` : "Non attiva"],
+            ["Frequenza", request.recurring_frequency],
+            ["Giorno richiesto", request.recurring_day],
+            ["Prezzo bloccato", request.price_lock_months],
+          ]);
+          const costDetails = detailGroup("Riepilogo costi", [
+            ["Prodotti", order.products_subtotal],
+            ["Sconto ricorrente", order.recurring_discount],
+            ["Consegna", request.cost_shipping],
+            ["IVA prodotti", request.cost_tax],
+            ["Totale", request.cost_total],
+          ]);
+          const voucherDetails = detailGroup("Buono Tech", [
+            ["Esito", order.voucher_status?.label || "Non presente"],
+            ["Ordine del mese", order.voucher_candidate ? order.first_month_order ? "Primo ordine" : "Esiste già un altro ordine" : ""],
+            ["Motivo", order.voucher_status?.reason],
+            ["Codice candidato", order.voucher_candidate],
+            ["Valore stimato", order.voucher_candidate_value],
+            ["Validità", order.voucher_validity_days ? `${order.voucher_validity_days} giorni dalla consegna` : ""],
+          ]);
+          for (const group of [deliveryDetails, billingDetails, recurringDetails, costDetails, voucherDetails]) {
+            if (group) details.append(group);
+          }
+          refCell.append(details);
+          const orderedAt = new Date(order.ordered_at);
+          cell(row, Number.isNaN(orderedAt.getTime()) ? order.ordered_at : orderedAt.toLocaleString("it-IT"));
+          const customerCell = cell(row, "", "order-contact");
+          customerCell.append(element("span", order.customer_name || "Cliente"));
+          customerCell.append(element("small", order.customer_email || "Email assente"));
+          const deliveryCell = cell(row, "");
+          deliveryCell.append(element("span", formatDate(order.preferred_delivery_date) || "Prima disponibilità"));
+          if (order.preferred_delivery_time) deliveryCell.append(element("small", order.preferred_delivery_time, "order-hint"));
+          if (order.delivery_notes) deliveryCell.append(element("small", `Note: ${order.delivery_notes}`, "order-hint"));
+          const [stockLabel, stockKind] = orderStatus(order);
+          cell(row, "").append(badge(stockLabel, stockKind));
+          const voucherCell = cell(row, "");
+          const voucherLabel = order.voucher_valid
+            ? `Convalidato · ${order.voucher_value}`
+            : order.voucher_status?.label || "Non presente";
+          voucherCell.append(badge(voucherLabel, order.voucher_valid ? "neutral" : order.voucher_candidate ? "warning" : "neutral"));
+          if (order.voucher_status?.reason) voucherCell.append(element("small", order.voucher_status.reason, "order-hint"));
+          if (order.voucher_valid) voucherCell.append(element("small", order.voucher_code, "product-id"));
+          const confirmed = order.confirmation_status === "confirmed";
+          const delivered = order.delivery_status === "delivered";
+          const statusCell = cell(row, "");
+          const deliveredAt = new Date(order.delivered_at);
+          const deliveredLabel = delivered && order.delivered_at && !Number.isNaN(deliveredAt.getTime())
+            ? `Consegnato · ${deliveredAt.toLocaleString("it-IT")}`
+            : "Consegnato";
+          statusCell.append(badge(
+            delivered ? deliveredLabel : confirmed ? `Confermato · ${formatDate(order.delivery_date)}` : order.confirmation_status === "sending" ? "Email in invio" : "Da confermare",
+            confirmed ? "neutral" : "warning",
+          ));
+          const actionCell = cell(row, "");
+          if (confirmed) {
+            actionCell.append(badge("Email inviata", "neutral"));
+          } else {
+            const button = element("button", "Verifica e conferma", "button small");
+            button.type = "button";
+            button.dataset.orderId = order.order_id;
+            button.disabled = order.confirmation_status === "sending";
+            actionCell.append(button);
+          }
+          body.append(row);
+        }
+      }
+
+      function renderDeliveryOrders() {
+        const list = document.querySelector("#delivery-orders-list");
+        const summary = document.querySelector("#delivery-summary");
+        list.replaceChildren();
+        const routeable = state.deliveryOrders.filter((order) => order.deliverable && !order.address_missing && order.occurrence_ready);
+        const unavailable = state.deliveryOrders.filter((order) => !order.deliverable).length;
+        const waiting = state.deliveryOrders.filter((order) => !order.occurrence_ready).length;
+        const readyLabel = routeable.length === 1 ? "1 ordine pronto" : `${routeable.length} ordini pronti`;
+        const unavailableLabel = unavailable === 1 ? "1 ordine escluso" : `${unavailable} ordini esclusi`;
+        const waitingLabel = waiting === 1 ? "1 in attesa della consegna precedente" : `${waiting} in attesa della consegna precedente`;
+        summary.textContent = `${readyLabel} per il ${formatDate(document.querySelector("#route-date").value)} · ${unavailableLabel} per disponibilità${waiting ? ` · ${waitingLabel}` : ""}.`;
+        if (!state.deliveryOrders.length) {
+          list.append(element("li", "Nessun ordine confermato previsto per questa data.", "subtle"));
+          return;
+        }
+        for (const order of state.deliveryOrders) {
+          const item = element("li");
+          item.append(element("strong", `#${order.order_id} · ${order.customer_name || "Cliente"}`));
+          item.append(element("span", order.destination || "Indirizzo mancante"));
+          item.append(element("small", `${formatDate(order.delivery_date)} · ${order.preferred_delivery_time || "Prima disponibilità"}${order.delivery_notes ? ` · ${order.delivery_notes}` : ""}`));
+          if (order.recurring_order) {
+            const recurrence = [order.recurring_frequency, order.recurring_day ? `giorno ${order.recurring_day}` : ""]
+              .filter(Boolean)
+              .join(" · ") || "frequenza da concordare";
+            const recurrenceLabel = order.recurring_enabled ? "Ricorrenza attiva" : "Consegna ricorrente già programmata";
+            item.append(element("small", `${recurrenceLabel} · ${recurrence}`, "delivery-recurring"));
+          }
+          if (!order.occurrence_ready) {
+            item.append(element("small", `In attesa della consegna del ${formatDate(order.previous_delivery_date)}.`, "delivery-stock-issue"));
+          }
+          const availabilityLabel = order.availability_status === "disponibile"
+            ? "Disponibilità sufficiente"
+            : order.availability_status === "disponibilita_insufficiente"
+              ? "Stock insufficiente"
+              : "Giacenza da verificare";
+          item.append(element("small", availabilityLabel, "delivery-stock-status"));
+          for (const issue of order.availability_issues || []) item.append(element("small", issue, "delivery-stock-issue"));
+          const deliveryButton = element(
+            "button",
+            order.occurrence_ready ? "Segna consegnato" : "In attesa del giro precedente",
+            "button small secondary",
+          );
+          deliveryButton.type = "button";
+          deliveryButton.disabled = !order.occurrence_ready;
+          deliveryButton.dataset.deliverOrderId = order.order_id;
+          deliveryButton.dataset.deliveryDate = order.delivery_date;
+          item.append(deliveryButton);
+          if (order.recurring_enabled && !order.is_recurring_projection) {
+            const disableButton = element("button", "Disattiva ricorrenza", "button small secondary");
+            disableButton.type = "button";
+            disableButton.dataset.disableRecurringOrderId = order.order_id;
+            item.append(disableButton);
+          }
+          list.append(item);
+        }
+      }
+
+      function renderValidVouchers() {
+        const body = document.querySelector("#valid-vouchers-body");
+        body.replaceChildren();
+        if (!state.validVouchers.length) {
+          const row = element("tr");
+          const empty = cell(row, "Nessun Buono Tech convalidato.", "empty-state");
+          empty.colSpan = 6;
+          body.append(row);
+          return;
+        }
+        for (const voucher of state.validVouchers) {
+          const row = element("tr");
+          cell(row, voucher.code, "order-ref");
+          cell(row, `#${voucher.order_id}`);
+          cell(row, voucher.customer_name || "Cliente");
+          cell(row, voucher.value);
+          cell(row, `${voucher.validity_days} giorni dalla consegna`);
+          const validatedAt = new Date(voucher.validated_at);
+          cell(row, Number.isNaN(validatedAt.getTime()) ? voucher.validated_at : validatedAt.toLocaleString("it-IT"));
+          body.append(row);
+        }
+      }
+
+      async function loadDeliveryOrders() {
+        const requestedDate = document.querySelector("#route-date").value;
+        if (!requestedDate) return;
+        const data = await api(`/api/deliveries?date=${encodeURIComponent(requestedDate)}`);
+        state.deliveryOrders = data.orders;
+        renderDeliveryOrders();
+      }
+
+      async function loadDashboard() {
+        const data = await api("/api/dashboard");
+        state.stock = data.stock;
+        state.orders = data.orders;
+        state.validVouchers = data.valid_vouchers;
+        document.querySelector("#brand-name").textContent = data.brand;
+        document.querySelector("#route-origin").value ||= data.default_origin;
+        renderSummary(data.summary);
+        renderStock();
+        renderOrders();
+        renderValidVouchers();
+      }
+
+      async function syncOrders(manual = false) {
+        if (state.mailSyncing) {
+          if (manual) showNotice("Sincronizzazione già in corso.");
+          return;
+        }
+        state.mailSyncing = true;
+        const button = document.querySelector("#mail-button");
+        const status = document.querySelector("#mail-sync-status");
+        if (manual) setButtonBusy(button, true, "Sincronizza ora", "Sincronizzazione…");
+        status.textContent = "Controllo INBOX in corso…";
+        try {
+          const result = await api("/api/mail/check", { method: "POST", body: JSON.stringify({ limit: 50 }) });
+          await Promise.all([loadDashboard(), loadDeliveryOrders()]);
+          status.textContent = `Ultimo controllo: ${new Date().toLocaleTimeString("it-IT")}.`;
+          if (result.processed) {
+            showNotice(`${result.processed} nuovi ordini importati. Nessuna email inviata automaticamente.`);
+          } else if (manual) {
+            showNotice("Posta aggiornata. Nessun nuovo ordine.");
+          }
+        } catch (error) {
+          status.textContent = `Errore sincronizzazione: ${error.message}`;
+          if (manual) showNotice(error.message, "error");
+        } finally {
+          state.mailSyncing = false;
+          if (manual) setButtonBusy(button, false, "Sincronizza ora");
+        }
+      }
+
+      document.querySelectorAll("[role=tab]").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll("[role=tab]").forEach((other) => {
+            const selected = other === tab;
+            other.setAttribute("aria-selected", String(selected));
+            document.querySelector(`#${other.dataset.panel}`).hidden = !selected;
+          });
+        });
+      });
+
+      document.querySelector("#stock-search").addEventListener("input", renderStock);
+      document.querySelector("#stock-body").addEventListener("submit", async (event) => {
+        const form = event.target.closest("form[data-product-id]");
+        if (!form) return;
+        event.preventDefault();
+        const input = form.querySelector("input");
+        const button = form.querySelector("button");
+        setButtonBusy(button, true);
+        try {
+          const result = await api("/api/stock", {
+            method: "POST",
+            body: JSON.stringify({
+              product_id: form.dataset.productId,
+              action: document.querySelector("#stock-action").value,
+              quantity: Number(input.value),
+            }),
+          });
+          showNotice(`Giacenza aggiornata: ${result.quantity} pezzi.`);
+          await loadDashboard();
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(button, false, "Salva");
+        }
+      });
+
+      document.querySelector("#refresh-button").addEventListener("click", async (event) => {
+        setButtonBusy(event.currentTarget, true);
+        try {
+          await loadDashboard();
+          showNotice("Dati aggiornati.");
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(event.currentTarget, false, "Aggiorna dati");
+        }
+      });
+
+      document.querySelector("#mail-button").addEventListener("click", () => {
+        syncOrders(true);
+      });
+
+      document.querySelector("#orders-body").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-order-id]");
+        if (!button) return;
+        const orderId = button.dataset.orderId;
+        if (!window.confirm(`Verificare disponibilità e Buono Tech e confermare l'ordine #${orderId}? Se lo stock basta, verrà inviata un'email al cliente.`)) return;
+        setButtonBusy(button, true, "Verifica e conferma", "Verifica…");
+        try {
+          const result = await api("/api/orders/confirm", {
+            method: "POST",
+            body: JSON.stringify({ order_id: orderId }),
+          });
+          await Promise.all([loadDashboard(), loadDeliveryOrders()]);
+          showNotice(result.already_confirmed
+            ? `Ordine #${orderId} già confermato; nessuna email duplicata.`
+            : `Ordine #${orderId} confermato. Email inviata.`);
+        } catch (error) {
+          showNotice(error.message, "error");
+          await loadDashboard();
+        } finally {
+          setButtonBusy(button, false, "Verifica e conferma");
+        }
+      });
+
+      document.querySelector("#delivery-orders-list").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-deliver-order-id]");
+        if (!button) return;
+        const orderId = button.dataset.deliverOrderId;
+        const deliveryDate = button.dataset.deliveryDate;
+        if (!window.confirm(`Confermi che l'ordine #${orderId} è stato consegnato il ${formatDate(deliveryDate)}? Le quantità richieste saranno scalate dallo stock una sola volta.`)) return;
+        setButtonBusy(button, true, "Segna consegnato", "Registrazione…");
+        try {
+          const result = await api("/api/orders/deliver", {
+            method: "POST",
+            body: JSON.stringify({ order_id: orderId, delivery_date: deliveryDate }),
+          });
+          await Promise.all([loadDashboard(), loadDeliveryOrders()]);
+          showNotice(result.already_delivered
+            ? `Consegna dell'ordine #${orderId} già registrata; stock invariato.`
+            : `Ordine #${orderId} segnato come consegnato; giacenza aggiornata.`);
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(button, false, "Segna consegnato");
+        }
+      });
+
+      document.querySelector("#delivery-orders-list").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-disable-recurring-order-id]");
+        if (!button) return;
+        const orderId = button.dataset.disableRecurringOrderId;
+        if (!window.confirm(`Disattivare le consegne future dell'ordine #${orderId}? La consegna già in programma resta confermata.`)) return;
+        setButtonBusy(button, true, "Disattiva ricorrenza", "Disattivazione…");
+        try {
+          await api("/api/orders/recurring/disable", {
+            method: "POST",
+            body: JSON.stringify({ order_id: orderId }),
+          });
+          await Promise.all([loadDashboard(), loadDeliveryOrders()]);
+          showNotice(`Ricorrenza dell'ordine #${orderId} disattivata. La consegna già in programma resta confermata.`);
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(button, false, "Disattiva ricorrenza");
+        }
+      });
+
+      function setDateDefault() {
+        const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Europe/Rome",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).formatToParts(new Date()).map(({ type, value }) => [type, value]));
+        const localDate = `${parts.year}-${parts.month}-${parts.day}`;
+        document.querySelector("#route-date").value = localDate;
+      }
+
+      document.querySelector("#route-date").addEventListener("change", () => {
+        loadDeliveryOrders().catch((error) => showNotice(error.message, "error"));
+      });
+
+      document.querySelector("#route-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = document.querySelector("#route-button");
+        setButtonBusy(button, true);
+        try {
+          const result = await api("/api/route", {
+            method: "POST",
+            body: JSON.stringify({
+              origin: document.querySelector("#route-origin").value,
+              date: document.querySelector("#route-date").value,
+              start: document.querySelector("#route-start").value,
+              end: document.querySelector("#route-end").value,
+              return_to_origin: document.querySelector("#route-return").checked,
+            }),
+          });
+          const links = document.querySelector("#maps-links");
+          links.replaceChildren();
+          for (const [index, url] of result.maps_urls.entries()) {
+            const item = element("li");
+            const link = element("a", `Apri tratto Maps ${index + 1}`);
+            link.href = url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            item.append(link);
+            links.append(item);
+          }
+          const routeOrders = document.querySelector("#route-orders");
+          routeOrders.replaceChildren();
+          for (const order of result.orders) {
+            const recurrence = order.recurring_order
+              ? ` · Ricorrente: ${[order.recurring_frequency, order.recurring_day ? `giorno ${order.recurring_day}` : ""].filter(Boolean).join(" · ") || "da concordare"}`
+              : "";
+            routeOrders.append(element("li", `#${order.order_id} · ${order.customer_name} · ${order.destination} · ${formatDate(order.delivery_date)} · ${order.preferred_delivery_time || "Prima disponibilità"}${recurrence}`));
+          }
+          const scheduleWarnings = document.querySelector("#route-schedule-warnings");
+          const scheduleWarningList = document.querySelector("#route-schedule-warning-list");
+          scheduleWarningList.replaceChildren();
+          for (const warning of result.schedule_warnings) {
+            scheduleWarningList.append(element("li", warning));
+          }
+          scheduleWarnings.hidden = result.schedule_warnings.length === 0;
+          const exclusions = document.querySelector("#route-exclusions");
+          const excludedList = document.querySelector("#route-excluded");
+          excludedList.replaceChildren();
+          for (const order of result.excluded_orders) {
+            const reasons = [...order.availability_issues, ...(order.address_missing ? ["Indirizzo mancante"] : [])];
+            excludedList.append(element("li", `#${order.order_id}: ${reasons.join("; ")}`));
+          }
+          exclusions.hidden = result.excluded_orders.length === 0;
+          const calendar = document.querySelector("#calendar-link");
+          calendar.href = result.calendar_url;
+          document.querySelector("#route-results").hidden = false;
+          showNotice(`Link creati per ${result.orders.length} ordini${result.schedule_warnings.length ? `; ${result.schedule_warnings.length} preferenze fuori fascia` : ""}${result.excluded_unavailable ? `; ${result.excluded_unavailable} sospesi per disponibilità` : ""}${result.excluded_without_address ? `; ${result.excluded_without_address} senza indirizzo` : ""}.`);
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(button, false, "Crea link per gli ordini");
+        }
+      });
+
+      setDateDefault();
+      loadDashboard().catch((error) => showNotice(error.message, "error"));
+      loadDeliveryOrders().catch((error) => showNotice(error.message, "error"));
+      syncOrders();
+      state.autoSyncTimer = window.setInterval(() => syncOrders(), 60_000);
+    </script>
+  </body>
+</html>

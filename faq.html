@@ -44,7 +44,7 @@
               { "@type": "Question", "name": "Come invio un ordine?", "acceptedAnswer": { "@type": "Answer", "text": "Scegli i prodotti dal catalogo, aggiungili al carrello e invia la richiesta con i dati per la consegna. Riceverai un riepilogo via email; Cartaway verifica disponibilità, costo e tempi prima di confermare." } },
               { "@type": "Question", "name": "Posso pagare online?", "acceptedAnswer": { "@type": "Answer", "text": "No. Il sito non raccoglie pagamenti: modalità di pagamento, totale e consegna si concordano con Cartaway dopo la richiesta." } },
               { "@type": "Question", "name": "Prezzi e disponibilità sono definitivi?", "acceptedAnswer": { "@type": "Answer", "text": "No. Prezzi e disponibilità mostrati nel catalogo sono indicativi e vengono verificati prima della conferma dell'ordine." } },
-              { "@type": "Question", "name": "L'ordine ricorrente si rinnova automaticamente?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ogni invio è una richiesta, non un rinnovo automatico. Le frequenze e la consegna si concordano con Cartaway." } },
+              { "@type": "Question", "name": "L'ordine ricorrente si rinnova automaticamente?", "acceptedAnswer": { "@type": "Answer", "text": "Dopo la conferma manuale della richiesta, le consegne successive vengono programmate secondo la cadenza concordata. Non sono previsti pagamenti automatici. Puoi chiedere a Cartaway di disattivare la ricorrenza; una consegna già in programma resta confermata." } },
               { "@type": "Question", "name": "Come funziona il Buono Tech?", "acceptedAnswer": { "@type": "Answer", "text": "Percentuali, importi e validità del Buono Tech vengono caricati dalle impostazioni del sito." } }
             ]
           },
@@ -134,7 +134,7 @@
           </details>
           <details>
             <summary>L'ordine ricorrente si rinnova automaticamente?</summary>
-            <p>No. Ogni invio è una richiesta, non un rinnovo automatico. Puoi chiedere una consegna con queste cadenze: <span id="recurring-frequency-faq">consulta le opzioni disponibili nel modulo</span>; frequenza, sconto e disponibilità si concordano con Cartaway.</p>
+            <p>Dopo la conferma manuale della richiesta, le consegne successive vengono programmate con queste cadenze: <span id="recurring-frequency-faq">consulta le opzioni disponibili nel modulo</span>. Non sono previsti pagamenti automatici. Puoi chiedere a Cartaway di disattivare la ricorrenza; una consegna già in programma resta confermata.</p>
           </details>
           <details id="buono-tech-faq">
             <summary>Come funziona il Buono Tech?</summary>
@@ -203,7 +203,7 @@
             <span data-quick-message-copy="recurring.tech_voucher_label">Buono Tech sul primo ordine del mese</span>
             <strong data-quick-message-copy="recurring.tech_voucher_value">Buono Tech in caricamento.</strong>
           </div>
-          <p class="promo-dialog__terms" id="recurring-order-terms" data-quick-message-copy="recurring.terms">Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività. Il Buono Tech è soggetto a verifica e alle relative condizioni.</p>
+          <p class="promo-dialog__terms" id="recurring-order-terms" data-quick-message-copy="recurring.terms">Dopo la conferma manuale, le consegne successive vengono programmate secondo la cadenza concordata. Nessun pagamento automatico. La ricorrenza può essere disattivata; una consegna già in programma resta confermata. Il Buono Tech è soggetto a verifica e alle relative condizioni.</p>
         </div>
       </div>
     </dialog>
@@ -313,7 +313,7 @@
           <div class="recurring-order__options" id="recurring-options" hidden>
             <label class="form-field"><span>Frequenza di consegna</span><select id="recurring-frequency" name="recurring-frequency"></select></label>
             <label class="form-field" id="recurring-day-field" hidden><span id="recurring-day-label">Giorno del mese</span><select id="recurring-day" name="recurring-day"></select></label>
-            <p class="recurring-order__note"><span id="recurring-price-lock-note">Durata dei prezzi bloccati in caricamento.</span> Frequenza e giorno da concordare con l'attività; il sito non attiva rinnovi automatici.</p>
+            <p class="recurring-order__note"><span id="recurring-price-lock-note">Durata dei prezzi bloccati in caricamento.</span> Dopo la conferma manuale, le consegne successive vengono programmate secondo la cadenza concordata. Nessun pagamento automatico; puoi chiedere la disattivazione lasciando valida una consegna già in programma.</p>
           </div>
           <label class="form-field"><span>Note per la consegna <span class="form-field__optional">facoltative</span></span><textarea name="notes" rows="2" maxlength="350" placeholder="Citofono, piano o altre indicazioni"></textarea></label>
           <label class="form-field"><span>Nome <span class="form-field__optional">facoltativo</span></span><input name="name" type="text" autocomplete="name" maxlength="80" /></label>

@@ -229,7 +229,7 @@
       "frequency_value": "Frequenze disponibili: {frequency_days}",
       "tech_voucher_label": "Buono Tech sul primo ordine del mese",
       "tech_voucher_value": "{tech_voucher_recurring_percent} fino a {maximum_amount} · valido {recurring_validity_days} dalla consegna",
-      "terms": "Con l'ordine ricorrente il Buono Tech spetta sul primo ordine del mese, senza soglia minima, ed è calcolato sul totale prodotti dopo lo sconto fino a {maximum_amount}. È valido {recurring_validity_days} dalla consegna. Nessun rinnovo automatico: ogni invio è una richiesta. Frequenza, giorno e consegna si concordano con l'attività."
+      "terms": "Con l'ordine ricorrente il Buono Tech spetta sul primo ordine del mese, senza soglia minima, ed è calcolato sul totale prodotti dopo lo sconto fino a {maximum_amount}. È valido {recurring_validity_days} dalla consegna. Dopo la conferma manuale, le consegne successive vengono programmate nel gestionale secondo la cadenza concordata. Nessun pagamento automatico. La ricorrenza può essere disattivata; una consegna già in programma resta confermata."
     }
   }
 }
