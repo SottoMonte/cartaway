@@ -224,7 +224,13 @@ def create_server(
                         recurring_frequency_days, recurring_fixed_day, next_recurring_delivery_date,
                         last_delivered_date,
                         request_details_json, availability_json, response_required, email_status
-                    FROM orders ORDER BY ordered_at DESC LIMIT 100
+                    FROM orders
+                    WHERE NOT (
+                        confirmation_status = 'confirmed'
+                        AND delivery_status = 'delivered'
+                        AND recurring_enabled = 0
+                    )
+                    ORDER BY ordered_at DESC LIMIT 100
                     """
                 ).fetchall()
                 active_recurring_orders = connection.execute(
@@ -286,6 +292,47 @@ def create_server(
             finally:
                 connection.close()
 
+        def _order_history(self) -> Dict[str, List[Dict[str, Any]]]:
+            connection = gestionale.open_database(database)
+            try:
+                rows = connection.execute(
+                    """
+                    SELECT order_id, customer_name, customer_email, customer_phone,
+                        delivery_address, delivery_city, ordered_at, delivery_date,
+                        delivered_at, last_delivered_date, preferred_delivery_time,
+                        delivery_notes, products_subtotal, recurring_discount, recurring_order,
+                        confirmation_status, delivery_status, recurring_enabled,
+                        request_details_json, availability_json
+                    FROM orders
+                    WHERE confirmation_status = 'confirmed'
+                        AND delivery_status = 'delivered'
+                        AND recurring_enabled = 0
+                    ORDER BY COALESCE(NULLIF(last_delivered_date, ''), delivery_date) DESC,
+                        delivered_at DESC, ordered_at DESC
+                    """
+                ).fetchall()
+                orders = []
+                for row in rows:
+                    order = dict(row)
+                    try:
+                        order["request_details"] = json.loads(order.pop("request_details_json"))
+                    except (json.JSONDecodeError, TypeError):
+                        order["request_details"] = {}
+                    if not isinstance(order["request_details"], dict):
+                        order["request_details"] = {}
+                    try:
+                        order["items"] = json.loads(order.pop("availability_json"))
+                    except (json.JSONDecodeError, TypeError):
+                        order["items"] = []
+                    if not isinstance(order["items"], list):
+                        order["items"] = []
+                    order["recurring_enabled"] = bool(order["recurring_enabled"])
+                    order["recurring_order"] = bool(order["recurring_order"])
+                    orders.append(order)
+                return {"orders": orders}
+            finally:
+                connection.close()
+
         def do_GET(self) -> None:
             parsed_url = urlsplit(self.path)
             path = parsed_url.path
@@ -305,6 +352,15 @@ def create_server(
                     self._send_json(200, self._dashboard())
                 except (OSError, sqlite3.Error) as exc:
                     self._send_json(500, {"error": f"Impossibile leggere il gestionale: {exc}"})
+                return
+            if path == "/api/orders/history":
+                if not self._origin_is_local():
+                    self._send_json(403, {"error": "Origine non autorizzata."})
+                    return
+                try:
+                    self._send_json(200, self._order_history())
+                except (OSError, sqlite3.Error) as exc:
+                    self._send_json(500, {"error": f"Impossibile leggere lo storico: {exc}"})
                 return
             if path == "/api/deliveries":
                 if not self._origin_is_local():

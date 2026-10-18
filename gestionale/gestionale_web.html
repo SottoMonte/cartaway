@@ -134,6 +134,7 @@
       .section-head h2 { margin-bottom: 3px; font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; }
       .section-head p { margin-bottom: 0; color: var(--muted); font-size: 12px; }
       .toolbar { display: flex; align-items: flex-end; gap: 12px; }
+      .order-view-switch { display: flex; gap: 6px; margin-bottom: 14px; }
       .field { display: grid; gap: 5px; }
       .field label { color: var(--muted); font-size: 11px; font-weight: 700; }
       .field input, .field select, .field textarea, .search-input {
@@ -291,14 +292,24 @@
 
         <section class="panel" id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" hidden>
           <div class="section-head">
-            <div><h2>Ordini</h2></div>
+            <div><h2 id="orders-heading">Ordini attivi</h2></div>
             <div>
               <button class="button secondary" id="mail-button" type="button">Sincronizza ora</button>
               <span class="mail-sync-status" id="mail-sync-status" role="status" aria-live="polite">Controllo automatico ogni minuto.</span>
             </div>
           </div>
-          <p class="subtle">Legge solo i messaggi non letti di INBOX. L'importazione non invia email: verifica e conferma ogni ordine singolarmente.</p>
-          <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Consegna richiesta</th><th scope="col">Disponibilità</th><th scope="col">Buono Tech</th><th scope="col">Stato</th><th scope="col">Azione</th></tr></thead><tbody id="orders-body"><tr><td class="empty-state" colspan="8">Nessun ordine registrato.</td></tr></tbody></table></div>
+          <div class="order-view-switch" role="group" aria-label="Vista ordini">
+            <button class="button small" id="orders-active-button" type="button" aria-pressed="true">In corso</button>
+            <button class="button secondary small" id="orders-history-button" type="button" aria-pressed="false">Storico ordini</button>
+          </div>
+          <div id="orders-current-view">
+            <p class="subtle">Legge solo i messaggi non letti di INBOX. L'importazione non invia email: verifica e conferma ogni ordine singolarmente.</p>
+            <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Consegna richiesta</th><th scope="col">Disponibilità</th><th scope="col">Buono Tech</th><th scope="col">Stato</th><th scope="col">Azione</th></tr></thead><tbody id="orders-body"><tr><td class="empty-state" colspan="8">Nessun ordine in corso.</td></tr></tbody></table></div>
+          </div>
+          <div id="orders-history-view" hidden>
+            <p class="subtle">Ordini consegnati senza altre consegne in programma. I dettagli restano consultabili qui.</p>
+            <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Consegnato</th><th scope="col">Tipologia</th></tr></thead><tbody id="order-history-body"><tr><td class="empty-state" colspan="5">Storico non caricato.</td></tr></tbody></table></div>
+          </div>
           <div class="section-head voucher-list-heading">
             <div><h2>Buoni Tech validi</h2><p>Codici verificati e registrati dal gestionale.</p></div>
           </div>
@@ -345,7 +356,7 @@
     </div>
 
     <script>
-      const state = { stock: [], orders: [], validVouchers: [], deliveryOrders: [], noticeTimer: null, mailSyncing: false, autoSyncTimer: null };
+      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], noticeTimer: null, mailSyncing: false, autoSyncTimer: null };
       const notice = document.querySelector("#notice");
       const noticeMessage = document.querySelector("#notice-message");
 
@@ -591,6 +602,57 @@
         }
       }
 
+      function renderOrderHistory() {
+        const body = document.querySelector("#order-history-body");
+        body.replaceChildren();
+        if (!state.historyLoaded || !state.historyOrders.length) {
+          const row = element("tr");
+          const message = !state.historyLoaded
+            ? "Caricamento storico…"
+            : "Nessun ordine archiviato.";
+          const empty = cell(row, message, "empty-state");
+          empty.colSpan = 5;
+          body.append(row);
+          return;
+        }
+        for (const order of state.historyOrders) {
+          const row = element("tr");
+          const refCell = cell(row, "", "order-ref");
+          refCell.append(element("span", `#${order.order_id}`));
+          const details = element("details", undefined, "order-details");
+          details.append(element("summary", "Dettagli ordine"));
+          const contact = element("div", undefined, "subtle");
+          contact.append(element("div", `${order.customer_name || "Cliente"} · ${order.customer_email || "Email assente"}`));
+          if (order.customer_phone) contact.append(element("div", `Telefono: ${order.customer_phone}`));
+          contact.append(element("div", [order.delivery_address, order.delivery_city].filter(Boolean).join(", ") || "Indirizzo non indicato"));
+          const items = element("ul", undefined, "order-detail-list");
+          for (const item of order.items || []) {
+            items.append(element("li", `${item.requested} × ${item.name}`));
+          }
+          details.append(contact, items);
+          const request = order.request_details || {};
+          const costDetails = detailGroup("Riepilogo costi", [
+            ["Prodotti", order.products_subtotal],
+            ["Sconto ricorrente", order.recurring_discount],
+            ["Totale", request.cost_total],
+          ]);
+          if (costDetails) details.append(costDetails);
+          refCell.append(details);
+          const orderedAt = new Date(order.ordered_at);
+          cell(row, Number.isNaN(orderedAt.getTime()) ? order.ordered_at : orderedAt.toLocaleString("it-IT"));
+          const customerCell = cell(row, "", "order-contact");
+          customerCell.append(element("span", order.customer_name || "Cliente"));
+          customerCell.append(element("small", order.customer_email || "Email assente"));
+          const deliveredAt = new Date(order.delivered_at);
+          const deliveredTime = Number.isNaN(deliveredAt.getTime())
+            ? ""
+            : deliveredAt.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+          cell(row, [formatDate(order.last_delivered_date || order.delivery_date), deliveredTime].filter(Boolean).join(" · "));
+          cell(row, order.recurring_order ? "Ricorrenza disattivata" : "Ordine singolo");
+          body.append(row);
+        }
+      }
+
       function renderDeliveryOrders() {
         const list = document.querySelector("#delivery-orders-list");
         const summary = document.querySelector("#delivery-summary");
@@ -683,6 +745,8 @@
         const data = await api("/api/dashboard");
         state.stock = data.stock;
         state.orders = data.orders;
+        state.historyLoaded = false;
+        state.historyOrders = [];
         state.validVouchers = data.valid_vouchers;
         document.querySelector("#brand-name").textContent = data.brand;
         document.querySelector("#route-origin").value ||= data.default_origin;
@@ -690,6 +754,31 @@
         renderStock();
         renderOrders();
         renderValidVouchers();
+        if (state.ordersView === "history") await loadOrderHistory();
+      }
+
+      async function loadOrderHistory() {
+        state.historyLoaded = false;
+        state.historyOrders = [];
+        renderOrderHistory();
+        const data = await api("/api/orders/history");
+        state.historyOrders = data.orders;
+        state.historyLoaded = true;
+        renderOrderHistory();
+      }
+
+      function selectOrdersView(view) {
+        const showHistory = view === "history";
+        state.ordersView = showHistory ? "history" : "active";
+        document.querySelector("#orders-heading").textContent = showHistory ? "Storico ordini" : "Ordini attivi";
+        document.querySelector("#orders-current-view").hidden = showHistory;
+        document.querySelector("#orders-history-view").hidden = !showHistory;
+        const activeButton = document.querySelector("#orders-active-button");
+        const historyButton = document.querySelector("#orders-history-button");
+        activeButton.setAttribute("aria-pressed", String(!showHistory));
+        historyButton.setAttribute("aria-pressed", String(showHistory));
+        activeButton.classList.toggle("secondary", showHistory);
+        historyButton.classList.toggle("secondary", !showHistory);
       }
 
       async function syncOrders(manual = false) {
@@ -770,6 +859,19 @@
 
       document.querySelector("#mail-button").addEventListener("click", () => {
         syncOrders(true);
+      });
+
+      document.querySelector("#orders-active-button").addEventListener("click", () => {
+        selectOrdersView("active");
+      });
+
+      document.querySelector("#orders-history-button").addEventListener("click", async () => {
+        selectOrdersView("history");
+        try {
+          if (!state.historyLoaded) await loadOrderHistory();
+        } catch (error) {
+          showNotice(error.message, "error");
+        }
       });
 
       document.querySelector("#orders-body").addEventListener("click", async (event) => {

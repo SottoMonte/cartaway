@@ -730,12 +730,84 @@ class GestionaleWebTests(unittest.TestCase):
         grouped = _group_route_orders_by_city(timed_orders, origin)
         self.assertEqual([order["order_id"] for order in grouped], ["SOL-1", "MON-1"])
 
+    def test_orders_api_separates_completed_orders_into_history(self):
+        today = datetime.now(ROME).date()
+        order_specs = [
+            ("ORD-HISTORY", False),
+            ("ORD-DISABLED-PENDING", True),
+            ("ORD-DISABLED-DELIVERED", True),
+            ("ORD-RECURRING-ACTIVE", True),
+            ("ORD-UNCONFIRMED", False),
+        ]
+        connection = open_database(self.database)
+        try:
+            for order_id, recurring in order_specs:
+                order = ParsedOrder(
+                    order_id=order_id,
+                    items=[OrderItem("carta-igienica", "Carta igienica lavanda", 1)],
+                    customer_name="Mario Bianchi",
+                    customer_email="cliente@example.org",
+                    customer_phone="+39 333 1234567",
+                    delivery_address="Via Roma 1",
+                    delivery_city="Montoro",
+                    recurring=recurring,
+                    voucher_candidate="",
+                    voucher_value="",
+                    products_subtotal="€ 10,00",
+                    recurring_discount="Nessuno",
+                    order_datetime=datetime.now(ROME),
+                    message_id=f"<{order_id}@example.org>",
+                )
+                prepare_order(connection, order, self.site)
+
+            for order_id in ("ORD-HISTORY", "ORD-DISABLED-DELIVERED"):
+                connection.execute(
+                    "UPDATE orders SET confirmation_status = 'confirmed', delivery_status = 'delivered', "
+                    "delivered_at = ?, delivery_date = ?, last_delivered_date = ?, recurring_enabled = 0 "
+                    "WHERE order_id = ?",
+                    (datetime.now(ROME).isoformat(timespec="seconds"), today.isoformat(), today.isoformat(), order_id),
+                )
+            connection.execute(
+                "UPDATE orders SET confirmation_status = 'confirmed', delivery_status = 'pending', "
+                "recurring_enabled = 0, delivery_date = ? WHERE order_id = ?",
+                (today.isoformat(), "ORD-DISABLED-PENDING"),
+            )
+            connection.execute(
+                "UPDATE orders SET confirmation_status = 'confirmed', delivery_status = 'pending', "
+                "recurring_enabled = 1, recurring_frequency_days = 7, delivery_date = ?, "
+                "next_recurring_delivery_date = ? WHERE order_id = ?",
+                (
+                    (today + timedelta(days=7)).isoformat(),
+                    (today + timedelta(days=14)).isoformat(),
+                    "ORD-RECURRING-ACTIVE",
+                ),
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        with urlopen(self.base_url + "/api/dashboard", timeout=3) as response:
+            dashboard = json.load(response)
+        with urlopen(self.base_url + "/api/orders/history", timeout=3) as response:
+            history = json.load(response)
+
+        self.assertCountEqual(
+            [order["order_id"] for order in dashboard["orders"]],
+            ["ORD-DISABLED-PENDING", "ORD-RECURRING-ACTIVE", "ORD-UNCONFIRMED"],
+        )
+        self.assertCountEqual(
+            [order["order_id"] for order in history["orders"]],
+            ["ORD-HISTORY", "ORD-DISABLED-DELIVERED"],
+        )
+
     def test_dashboard_and_stock_update_are_available_from_local_web_ui(self):
         with urlopen(self.base_url + "/", timeout=3) as response:
             page = response.read().decode("utf-8")
         self.assertIn("Ordini e consegne", page)
         self.assertIn("Consegne", page)
         self.assertIn("Ordini ricorrenti attivi", page)
+        self.assertIn("Storico ordini", page)
+        self.assertIn('id="orders-history-view"', page)
         self.assertNotIn("recurring-schedules-list", page)
 
         with urlopen(self.base_url + "/api/dashboard", timeout=3) as response:
@@ -801,10 +873,14 @@ class GestionaleWebTests(unittest.TestCase):
         send_email.assert_called_once()
         with urlopen(self.base_url + "/api/dashboard", timeout=3) as response:
             dashboard = json.load(response)
-        self.assertEqual(dashboard["orders"][0]["request_details"]["delivery_zone"], "Zona 01 · Montoro")
-        self.assertEqual(dashboard["orders"][0]["request_details"]["cost_total"], "€ 23,00")
+        with urlopen(self.base_url + "/api/orders/history", timeout=3) as response:
+            history = json.load(response)
+        archived_order = history["orders"][0]
+        self.assertEqual(archived_order["request_details"]["delivery_zone"], "Zona 01 · Montoro")
+        self.assertEqual(archived_order["request_details"]["cost_total"], "€ 23,00")
         self.assertEqual(dashboard["valid_vouchers"][0]["code"], "BT-23456789-ABCD")
-        self.assertEqual(dashboard["orders"][0]["delivery_status"], "delivered")
+        self.assertEqual(archived_order["delivery_status"], "delivered")
+        self.assertFalse(dashboard["orders"])
         self.assertEqual(dashboard["stock"][0]["quantity"], 8)
 
     def test_recurring_delivery_api_advances_and_can_be_disabled(self):
@@ -904,7 +980,11 @@ class GestionaleWebTests(unittest.TestCase):
         send_email.assert_called_once()
         with urlopen(self.base_url + "/api/dashboard", timeout=3) as response:
             dashboard = json.load(response)
-        self.assertFalse(dashboard["orders"][0]["recurring_enabled"])
+        with urlopen(self.base_url + "/api/orders/history", timeout=3) as response:
+            history = json.load(response)
+        self.assertFalse(dashboard["orders"])
+        self.assertEqual(history["orders"][0]["order_id"], "ORD-WEB-RECURRING")
+        self.assertFalse(history["orders"][0]["recurring_enabled"])
         self.assertEqual(dashboard["summary"]["recurring_orders"], 0)
         self.assertEqual(dashboard["stock"][0]["quantity"], 6)
 
