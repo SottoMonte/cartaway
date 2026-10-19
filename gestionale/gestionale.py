@@ -406,6 +406,14 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             name TEXT NOT NULL,
             catalog_available INTEGER NOT NULL,
             quantity INTEGER,
+            stock_group TEXT NOT NULL DEFAULT '',
+            stock_units_per_package INTEGER NOT NULL DEFAULT 1,
+            updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS shared_stock (
+            stock_group TEXT PRIMARY KEY,
+            quantity INTEGER CHECK (quantity IS NULL OR quantity >= 0),
+            unit TEXT NOT NULL,
             updated_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS delivery_load_volumes (
@@ -485,6 +493,15 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON orders (voucher_code) WHERE voucher_code <> '';
         """
     )
+    existing_product_columns = {
+        row[1] for row in connection.execute("PRAGMA table_info(products)").fetchall()
+    }
+    if "stock_group" not in existing_product_columns:
+        connection.execute("ALTER TABLE products ADD COLUMN stock_group TEXT NOT NULL DEFAULT ''")
+    if "stock_units_per_package" not in existing_product_columns:
+        connection.execute(
+            "ALTER TABLE products ADD COLUMN stock_units_per_package INTEGER NOT NULL DEFAULT 1"
+        )
     existing_columns = {
         row[1] for row in connection.execute("PRAGMA table_info(orders)").fetchall()
     }
@@ -613,74 +630,305 @@ def open_database(path: Path) -> sqlite3.Connection:
 
 def sync_catalog(connection: sqlite3.Connection, products: Sequence[Dict[str, Any]]) -> int:
     now = datetime.now(ROME).isoformat(timespec="seconds")
+    prepared_products = []
+    shared_groups: Dict[str, str] = {}
     for product in products:
         product_id = str(product.get("id", "")).strip()
         name = str(product.get("name", "")).strip()
         if not product_id or not name:
             continue
+        stock_group = str(product.get("stock_group") or "").strip()
+        stock_units_per_package = 1
+        if stock_group:
+            unit = product.get("unit")
+            if not isinstance(unit, dict):
+                raise AppError(f"Il prodotto {product_id} deve avere l'unità di vendita per condividere lo stock.")
+            factor = unit.get("quantity")
+            measure = str(unit.get("measure") or "").strip()
+            if isinstance(factor, bool) or not isinstance(factor, int) or factor < 1 or not measure:
+                raise AppError(f"Unità di stock condiviso non valida per il prodotto {product_id}.")
+            stock_units_per_package = factor
+            previous_measure = shared_groups.get(stock_group)
+            if previous_measure and previous_measure.casefold() != measure.casefold():
+                raise AppError(f"I prodotti dello stock condiviso {stock_group} devono usare la stessa unità di misura.")
+            shared_groups[stock_group] = measure
         catalog_available = 0 if product.get("available", True) is False else 1
-        connection.execute(
-            """
-            INSERT INTO products (product_id, name, catalog_available, quantity, updated_at)
-            VALUES (?, ?, ?, NULL, ?)
-            ON CONFLICT(product_id) DO UPDATE SET
-                name = excluded.name,
-                catalog_available = excluded.catalog_available,
-                updated_at = excluded.updated_at
-            """,
-            (product_id, name, catalog_available, now),
+        prepared_products.append(
+            (product_id, name, catalog_available, stock_group, stock_units_per_package)
         )
-    connection.commit()
+
+    existing_products = {
+        row["product_id"]: row
+        for row in connection.execute(
+            "SELECT product_id, stock_group, quantity FROM products"
+        ).fetchall()
+    }
+    existing_shared_stock = {
+        row["stock_group"]: row
+        for row in connection.execute(
+            "SELECT stock_group, quantity, unit FROM shared_stock"
+        ).fetchall()
+    }
+    reset_stock_product_ids = set()
+    joining_stock_units: Dict[str, int] = {}
+    groups_to_mark_unknown = set()
+    for product_id, _, _, stock_group, stock_units_per_package in prepared_products:
+        existing_product = existing_products.get(product_id)
+        if existing_product is None or existing_product["stock_group"] == stock_group:
+            continue
+        previous_group = existing_product["stock_group"]
+        if previous_group:
+            previous_stock = existing_shared_stock.get(previous_group)
+            if previous_stock is None or previous_stock["quantity"] != 0:
+                raise AppError(
+                    f"Impossibile rimuovere o cambiare il gruppo {previous_group}: "
+                    "imposta prima la giacenza condivisa a 0."
+                )
+            reset_stock_product_ids.add(product_id)
+        elif stock_group and stock_group in existing_shared_stock:
+            shared_quantity = existing_shared_stock[stock_group]["quantity"]
+            individual_quantity = existing_product["quantity"]
+            if individual_quantity is None:
+                if shared_quantity is not None:
+                    groups_to_mark_unknown.add(stock_group)
+            elif shared_quantity is not None:
+                joining_stock_units[stock_group] = (
+                    joining_stock_units.get(stock_group, 0)
+                    + int(individual_quantity) * stock_units_per_package
+                )
+
+    for stock_group, unit in shared_groups.items():
+        existing_stock = existing_shared_stock.get(stock_group)
+        if (
+            existing_stock is not None
+            and existing_stock["unit"].casefold() != unit.casefold()
+            and existing_stock["quantity"] != 0
+        ):
+            raise AppError(
+                f"Impossibile cambiare l'unità dello stock condiviso {stock_group}: "
+                "imposta prima la giacenza a 0."
+            )
+
+    with connection:
+        for product_id in reset_stock_product_ids:
+            connection.execute(
+                "UPDATE products SET quantity = 0 WHERE product_id = ?", (product_id,)
+            )
+        for product_id, name, catalog_available, stock_group, stock_units_per_package in prepared_products:
+            connection.execute(
+                """
+                INSERT INTO products (
+                    product_id, name, catalog_available, quantity, stock_group,
+                    stock_units_per_package, updated_at
+                )
+                VALUES (?, ?, ?, NULL, ?, ?, ?)
+                ON CONFLICT(product_id) DO UPDATE SET
+                    name = excluded.name,
+                    catalog_available = excluded.catalog_available,
+                    stock_group = excluded.stock_group,
+                    stock_units_per_package = excluded.stock_units_per_package,
+                    updated_at = excluded.updated_at
+                """,
+                (product_id, name, catalog_available, stock_group, stock_units_per_package, now),
+            )
+
+        for stock_group, unit in shared_groups.items():
+            existing_stock = connection.execute(
+                "SELECT 1 FROM shared_stock WHERE stock_group = ?", (stock_group,)
+            ).fetchone()
+            if existing_stock is None:
+                legacy_rows = connection.execute(
+                    "SELECT quantity, stock_units_per_package FROM products WHERE stock_group = ?",
+                    (stock_group,),
+                ).fetchall()
+                initial_quantity = (
+                    sum(int(row["quantity"]) * int(row["stock_units_per_package"]) for row in legacy_rows)
+                    if legacy_rows and all(row["quantity"] is not None for row in legacy_rows)
+                    else None
+                )
+                connection.execute(
+                    "INSERT INTO shared_stock (stock_group, quantity, unit, updated_at) VALUES (?, ?, ?, ?)",
+                    (stock_group, initial_quantity, unit, now),
+                )
+            else:
+                connection.execute(
+                    "UPDATE shared_stock SET unit = ?, updated_at = ? WHERE stock_group = ?",
+                    (unit, now, stock_group),
+                )
+            connection.execute("UPDATE products SET quantity = NULL WHERE stock_group = ?", (stock_group,))
+        for stock_group in groups_to_mark_unknown:
+            connection.execute(
+                "UPDATE shared_stock SET quantity = NULL, updated_at = ? WHERE stock_group = ?",
+                (now, stock_group),
+            )
+        for stock_group, quantity in joining_stock_units.items():
+            if stock_group not in groups_to_mark_unknown and quantity:
+                connection.execute(
+                    "UPDATE shared_stock SET quantity = quantity + ?, updated_at = ? "
+                    "WHERE stock_group = ? AND quantity IS NOT NULL",
+                    (quantity, now, stock_group),
+                )
     return len(products)
 
 
 def set_stock(connection: sqlite3.Connection, product_id: str, quantity: int, add: bool = False) -> int:
     if quantity < 0:
         raise AppError("La giacenza non può essere negativa.")
-    row = connection.execute("SELECT quantity FROM products WHERE product_id = ?", (product_id,)).fetchone()
-    if row is None:
+    product = _product_stock_record(connection, product_id)
+    if product is None:
         raise AppError(f"Prodotto '{product_id}' non presente in data/products.json.")
-    if add:
-        if row["quantity"] is None:
-            raise AppError("La giacenza non è impostata: usare prima il comando stock set.")
-        quantity += int(row["quantity"])
-    connection.execute(
-        "UPDATE products SET quantity = ?, updated_at = ? WHERE product_id = ?",
-        (quantity, datetime.now(ROME).isoformat(timespec="seconds"), product_id),
-    )
+    now = datetime.now(ROME).isoformat(timespec="seconds")
+    if product["stock_group"]:
+        factor = int(product["stock_units_per_package"])
+        current_quantity = product["stock_quantity"]
+        if add:
+            if current_quantity is None:
+                raise AppError("La giacenza non è impostata: usare prima il comando stock set.")
+            quantity = int(current_quantity) + quantity * factor
+        else:
+            quantity *= factor
+        cursor = connection.execute(
+            "UPDATE shared_stock SET quantity = ?, updated_at = ? WHERE stock_group = ?",
+            (quantity, now, product["stock_group"]),
+        )
+        if cursor.rowcount != 1:
+            raise AppError(f"Giacenza condivisa non configurata per '{product_id}'.")
+        display_quantity = quantity // factor
+    else:
+        if add:
+            if product["stock_quantity"] is None:
+                raise AppError("La giacenza non è impostata: usare prima il comando stock set.")
+            quantity += int(product["stock_quantity"])
+        connection.execute(
+            "UPDATE products SET quantity = ?, updated_at = ? WHERE product_id = ?",
+            (quantity, now, product_id),
+        )
+        display_quantity = quantity
     connection.commit()
-    return quantity
+    return display_quantity
 
 
 def list_stock(connection: sqlite3.Connection) -> List[sqlite3.Row]:
     return connection.execute(
-        "SELECT product_id, name, catalog_available, quantity FROM products ORDER BY name COLLATE NOCASE"
+        """
+        SELECT p.product_id, p.name, p.catalog_available,
+            CASE WHEN p.stock_group <> '' THEN
+                CASE WHEN s.quantity IS NULL THEN NULL
+                    ELSE CAST(s.quantity / p.stock_units_per_package AS INTEGER) END
+                ELSE p.quantity END AS quantity,
+            p.stock_group, p.stock_units_per_package,
+            (p.stock_group <> '') AS shared_stock,
+            CASE WHEN p.stock_group <> '' THEN s.quantity ELSE NULL END AS shared_quantity,
+            CASE WHEN p.stock_group <> '' THEN s.unit ELSE '' END AS shared_unit
+        FROM products AS p
+        LEFT JOIN shared_stock AS s ON s.stock_group = p.stock_group
+        ORDER BY p.name COLLATE NOCASE
+        """
     ).fetchall()
 
 
-def _availability(connection: sqlite3.Connection, items: Sequence[OrderItem]) -> List[Dict[str, Any]]:
+def _product_stock_record(connection: sqlite3.Connection, product_id: str) -> Optional[Dict[str, Any]]:
+    row = connection.execute(
+        """
+        SELECT p.product_id, p.name, p.catalog_available, p.quantity, p.stock_group,
+            p.stock_units_per_package, s.quantity AS shared_quantity, s.unit AS shared_unit
+        FROM products AS p
+        LEFT JOIN shared_stock AS s ON s.stock_group = p.stock_group
+        WHERE p.product_id = ?
+        """,
+        (product_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    product = dict(row)
+    shared = bool(product["stock_group"])
+    product["shared_stock"] = shared
+    product["inventory_key"] = (
+        f"group:{product['stock_group']}" if shared else f"product:{product_id}"
+    )
+    product["stock_quantity"] = product["shared_quantity"] if shared else product["quantity"]
+    product["stock_unit"] = product["shared_unit"] if shared else "confezioni"
+    if not shared:
+        product["stock_units_per_package"] = 1
+    return product
+
+
+def get_stock_balances(connection: sqlite3.Connection) -> Dict[str, Optional[int]]:
+    balances: Dict[str, Optional[int]] = {}
+    products = connection.execute("SELECT product_id, stock_group, quantity FROM products").fetchall()
+    for product in products:
+        if product["stock_group"]:
+            key = f"group:{product['stock_group']}"
+            if key not in balances:
+                row = connection.execute(
+                    "SELECT quantity FROM shared_stock WHERE stock_group = ?",
+                    (product["stock_group"],),
+                ).fetchone()
+                balances[key] = None if row is None or row["quantity"] is None else int(row["quantity"])
+        else:
+            key = f"product:{product['product_id']}"
+            balances[key] = None if product["quantity"] is None else int(product["quantity"])
+    return balances
+
+
+def _availability(
+    connection: sqlite3.Connection,
+    items: Sequence[OrderItem],
+    stock_balances: Optional[Dict[str, Optional[int]]] = None,
+) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]] = []
+    entries = []
+    requested_by_inventory: Dict[str, int] = {}
     for item in items:
-        product = connection.execute(
-            "SELECT name, catalog_available, quantity FROM products WHERE product_id = ?",
-            (item.product_id,),
-        ).fetchone()
+        product = _product_stock_record(connection, item.product_id)
+        if product is None:
+            entries.append((item, None, f"product:{item.product_id}", 1, 0, 0))
+        elif not product["catalog_available"]:
+            entries.append((item, product, product["inventory_key"], 1, 0, 0))
+        else:
+            factor = int(product["stock_units_per_package"])
+            requested_units = int(item.quantity) * factor
+            inventory_quantity = (
+                stock_balances.get(product["inventory_key"])
+                if stock_balances is not None
+                else product["stock_quantity"]
+            )
+            entries.append(
+                (item, product, product["inventory_key"], factor, requested_units, inventory_quantity)
+            )
+            requested_by_inventory[product["inventory_key"]] = (
+                requested_by_inventory.get(product["inventory_key"], 0) + requested_units
+            )
+
+    for item, product, inventory_key, factor, requested_units, inventory_quantity in entries:
         if product is None:
             state = "catalogo_mancante"
-            available: Optional[int] = 0
+            available = 0
             name = item.name
+            stock_unit = "confezioni"
+            shared = False
         elif not product["catalog_available"]:
             state = "catalogo_non_disponibile"
             available = 0
             name = product["name"]
-        elif product["quantity"] is None:
+            stock_unit = product["stock_unit"]
+            shared = product["shared_stock"]
+        elif inventory_quantity is None:
             state = "da_verificare"
             available = None
             name = product["name"]
+            stock_unit = product["stock_unit"]
+            shared = product["shared_stock"]
         else:
-            available = int(product["quantity"])
-            state = "disponibile" if available >= item.quantity else "quantita_insufficiente"
+            available = int(inventory_quantity) // factor
+            state = (
+                "disponibile"
+                if requested_by_inventory[inventory_key] <= int(inventory_quantity)
+                else "quantita_insufficiente"
+            )
             name = product["name"]
+            stock_unit = product["stock_unit"]
+            shared = product["shared_stock"]
         results.append(
             {
                 "product_id": item.product_id,
@@ -688,6 +936,12 @@ def _availability(connection: sqlite3.Connection, items: Sequence[OrderItem]) ->
                 "requested": item.quantity,
                 "available": available,
                 "state": state,
+                "inventory_key": inventory_key,
+                "requested_stock_units": requested_units,
+                "stock_group_requested_units": requested_by_inventory.get(inventory_key, requested_units),
+                "stock_available_units": inventory_quantity,
+                "stock_unit": stock_unit,
+                "shared_stock": shared,
             }
         )
     return results
@@ -704,6 +958,7 @@ def _availability_status(stock: Sequence[Dict[str, Any]]) -> str:
 def current_order_availability(
     connection: sqlite3.Connection,
     order_row: Dict[str, Any],
+    stock_balances: Optional[Dict[str, Optional[int]]] = None,
 ) -> Tuple[List[Dict[str, Any]], str]:
     try:
         stored_items = json.loads(order_row["availability_json"])
@@ -719,7 +974,7 @@ def current_order_availability(
         raise AppError("Dati dei prodotti dell'ordine non leggibili.") from exc
     if not items:
         raise AppError("L'ordine non contiene prodotti verificabili.")
-    stock = _availability(connection, items)
+    stock = _availability(connection, items, stock_balances)
     return stock, _availability_status(stock)
 
 
@@ -1599,8 +1854,7 @@ def mark_order_delivered(
         if not isinstance(stored_items, list) or not stored_items:
             raise AppError("L'ordine non contiene prodotti verificabili.")
 
-        quantities: Dict[str, int] = {}
-        names: Dict[str, str] = {}
+        stock_deductions: Dict[str, Dict[str, Any]] = {}
         for item in stored_items:
             if not isinstance(item, dict):
                 raise AppError("Dati dei prodotti dell'ordine non leggibili.")
@@ -1608,32 +1862,78 @@ def mark_order_delivered(
             requested = item.get("requested")
             if not product_id or isinstance(requested, bool) or not isinstance(requested, int) or requested < 1:
                 raise AppError("Quantità prodotto non valida nell'ordine.")
-            quantities[product_id] = quantities.get(product_id, 0) + requested
-            names[product_id] = str(item.get("name") or product_id)
-
-        for product_id, requested in quantities.items():
-            product = connection.execute(
-                "SELECT name, quantity FROM products WHERE product_id = ?",
-                (product_id,),
-            ).fetchone()
+            product = _product_stock_record(connection, product_id)
             if product is None:
-                raise OrderNotReady(f"{names[product_id]}: prodotto assente dall'inventario; scarico annullato.")
-            if product["quantity"] is None:
-                raise OrderNotReady(f"{product['name']}: giacenza da impostare; scarico annullato.")
-            available = int(product["quantity"])
-            if available < requested:
+                name = str(item.get("name") or product_id)
+                raise OrderNotReady(f"{name}: prodotto assente dall'inventario; scarico annullato.")
+            inventory_key = product["inventory_key"]
+            stored_inventory_key = str(item.get("inventory_key") or "")
+            stored_units = item.get("requested_stock_units")
+            if stored_inventory_key and stored_inventory_key != inventory_key:
                 raise OrderNotReady(
-                    f"{product['name']}: richiesti {requested}, disponibili {available}; "
-                    "nessuna quantità è stata scalata. Aggiorna la giacenza e riprova."
+                    f"{item.get('name') or product['name']}: il gruppo di giacenza è cambiato "
+                    "dopo la conferma; nessuna quantità è stata scalata."
+                )
+            stored_stock_unit = str(item.get("stock_unit") or "")
+            if stored_stock_unit and stored_stock_unit != product["stock_unit"]:
+                raise OrderNotReady(
+                    f"{item.get('name') or product['name']}: l'unità di giacenza è cambiata "
+                    "dopo la conferma; nessuna quantità è stata scalata."
+                )
+            if (
+                stored_inventory_key == inventory_key
+                and isinstance(stored_units, int)
+                and not isinstance(stored_units, bool)
+                and stored_units > 0
+            ):
+                requested_units = stored_units
+            else:
+                requested_units = requested * int(product["stock_units_per_package"])
+            if inventory_key not in stock_deductions:
+                stock_deductions[inventory_key] = {
+                    "product_id": product_id,
+                    "name": product["name"],
+                    "requested_units": requested_units,
+                    "available_units": product["stock_quantity"],
+                    "shared_stock": product["shared_stock"],
+                    "stock_group": product["stock_group"],
+                    "stock_unit": product["stock_unit"],
+                }
+            else:
+                stock_deductions[inventory_key]["requested_units"] += requested_units
+
+        for deduction in stock_deductions.values():
+            available = deduction["available_units"]
+            requested = deduction["requested_units"]
+            if available is None:
+                raise OrderNotReady(f"{deduction['name']}: giacenza da impostare; scarico annullato.")
+            if int(available) < requested:
+                if deduction["shared_stock"]:
+                    shortage = (
+                        f"{deduction['name']}: richiesti {requested} {deduction['stock_unit']}, "
+                        f"disponibili {available} {deduction['stock_unit']}; "
+                    )
+                else:
+                    shortage = f"{deduction['name']}: richiesti {requested}, disponibili {available}; "
+                raise OrderNotReady(
+                    shortage + "nessuna quantità è stata scalata. Aggiorna la giacenza e riprova."
                 )
 
         delivered_at = datetime.now(ROME).isoformat(timespec="seconds")
-        for product_id, requested in quantities.items():
-            cursor = connection.execute(
-                "UPDATE products SET quantity = quantity - ?, updated_at = ? "
-                "WHERE product_id = ? AND quantity >= ?",
-                (requested, delivered_at, product_id, requested),
-            )
+        for inventory_key, deduction in stock_deductions.items():
+            requested = deduction["requested_units"]
+            if deduction["shared_stock"]:
+                cursor = connection.execute(
+                    "UPDATE shared_stock SET quantity = quantity - ?, updated_at = ? "
+                    "WHERE stock_group = ? AND quantity >= ?",
+                    (requested, delivered_at, deduction["stock_group"], requested),
+                )
+            else:
+                cursor = connection.execute(
+                    "UPDATE products SET quantity = quantity - ?, updated_at = ? "
+                    "WHERE product_id = ? AND quantity >= ?",
+                    (requested, delivered_at, deduction["product_id"], requested),
+                )
             if cursor.rowcount != 1:
                 raise OrderNotReady("La giacenza è cambiata; nessuna quantità è stata scalata. Aggiorna e riprova.")
         if recurring_occurrence:
@@ -1955,6 +2255,8 @@ def _print_stock(connection: sqlite3.Connection) -> None:
     print(f"{'ID':38} {'Giacenza':12} {'Catalogo':12} Prodotto")
     for row in list_stock(connection):
         quantity = "da impostare" if row["quantity"] is None else str(row["quantity"])
+        if row["shared_stock"] and row["shared_quantity"] is not None:
+            quantity = f"{quantity} pacchi ({row['shared_quantity']} {row['shared_unit']})"
         available = "attivo" if row["catalog_available"] else "non disponibile"
         print(f"{row['product_id'][:38]:38} {quantity:12} {available:12} {row['name']}")
 

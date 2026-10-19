@@ -985,6 +985,11 @@ def create_server(
                         "name": row["name"],
                         "catalog_available": bool(row["catalog_available"]),
                         "quantity": row["quantity"],
+                        "stock_group": row["stock_group"],
+                        "stock_units_per_package": row["stock_units_per_package"],
+                        "shared_stock": bool(row["shared_stock"]),
+                        "shared_quantity": row["shared_quantity"],
+                        "shared_unit": row["shared_unit"],
                     }
                     for row in gestionale.list_stock(connection)
                 ]
@@ -1222,9 +1227,19 @@ def create_server(
             connection = gestionale.open_database(database)
             try:
                 total = gestionale.set_stock(connection, product_id, quantity, add=action == "add")
+                stock_row = next(
+                    (row for row in gestionale.list_stock(connection) if row["product_id"] == product_id),
+                    None,
+                )
             finally:
                 connection.close()
-            return {"product_id": product_id, "quantity": total}
+            return {
+                "product_id": product_id,
+                "quantity": total,
+                "shared_stock": bool(stock_row and stock_row["shared_stock"]),
+                "shared_quantity": stock_row["shared_quantity"] if stock_row else None,
+                "shared_unit": stock_row["shared_unit"] if stock_row else "",
+            }
 
         def _check_mail(self, payload: Dict[str, Any]) -> Dict[str, Any]:
             limit = payload.get("limit", 50)
@@ -1305,13 +1320,7 @@ def create_server(
                         event_date.isoformat(),
                     ),
                 ).fetchall()
-                inventory = {
-                    row["product_id"]: {
-                        "catalog_available": bool(row["catalog_available"]),
-                        "quantity": row["quantity"],
-                    }
-                    for row in gestionale.list_stock(connection)
-                }
+                inventory = gestionale.get_stock_balances(connection)
                 occurrences = []
                 for row in rows:
                     base_order = dict(row)
@@ -1361,37 +1370,30 @@ def create_server(
                     order["occurrence_ready"] = not is_recurring_projection
                     order["previous_delivery_date"] = previous_delivery_date if is_recurring_projection else ""
                     try:
-                        availability, _ = gestionale.current_order_availability(connection, order)
+                        availability, _ = gestionale.current_order_availability(
+                            connection,
+                            order,
+                            inventory,
+                        )
                     except gestionale.AppError as exc:
                         availability = []
                         order["availability_issue"] = str(exc)
-                    for item in availability:
-                        product = inventory.get(item["product_id"])
-                        if product is None:
-                            item["state"] = "catalogo_mancante"
-                            item["available"] = 0
-                        elif not product["catalog_available"]:
-                            item["state"] = "catalogo_non_disponibile"
-                            item["available"] = 0
-                        elif product["quantity"] is None:
-                            item["state"] = "da_verificare"
-                            item["available"] = None
-                        else:
-                            item["available"] = int(product["quantity"])
-                            item["state"] = (
-                                "disponibile"
-                                if item["available"] >= int(item["requested"])
-                                else "quantita_insufficiente"
-                            )
                     availability_status = (
                         gestionale._availability_status(availability) if availability else "da_verificare"
                     )
                     issues = []
                     for item in availability:
                         if item["state"] == "quantita_insufficiente":
-                            issues.append(
-                                f"{item['name']}: richiesti {item['requested']}, disponibili {item['available']}"
-                            )
+                            if item["shared_stock"]:
+                                issues.append(
+                                    f"{item['name']}: stock condiviso, richiesti "
+                                    f"{item['stock_group_requested_units']} {item['stock_unit']}, disponibili "
+                                    f"{item['stock_available_units']} {item['stock_unit']}"
+                                )
+                            else:
+                                issues.append(
+                                    f"{item['name']}: richiesti {item['requested']}, disponibili {item['available']}"
+                                )
                         elif item["state"] == "catalogo_non_disponibile":
                             issues.append(f"{item['name']}: non disponibile a catalogo")
                         elif item["state"] in {"da_verificare", "catalogo_mancante"}:
@@ -1409,7 +1411,7 @@ def create_server(
                     order.pop("availability_json", None)
                     if order["deliverable"]:
                         for item in availability:
-                            inventory[item["product_id"]]["quantity"] -= int(item["requested"])
+                            inventory[item["inventory_key"]] -= int(item["requested_stock_units"])
                     if order["delivery_date"] == event_date.isoformat():
                         orders.append(order)
                 return {"date": event_date.isoformat(), "orders": orders}

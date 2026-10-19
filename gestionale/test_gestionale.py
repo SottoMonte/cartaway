@@ -29,6 +29,7 @@ from gestionale.gestionale import (
         disable_recurring_schedule,
         get_delivery_load_config,
     initialize_database,
+    list_stock,
     list_mail_folders,
     mark_order_delivered,
     open_database,
@@ -82,8 +83,13 @@ class GestionaleTests(unittest.TestCase):
             connection.execute(
                 "CREATE TABLE orders (order_id TEXT PRIMARY KEY, voucher_code TEXT NOT NULL)"
             )
+            connection.execute(
+                "CREATE TABLE products (product_id TEXT PRIMARY KEY, name TEXT NOT NULL, "
+                "catalog_available INTEGER NOT NULL, quantity INTEGER, updated_at TEXT NOT NULL)"
+            )
             initialize_database(connection)
             columns = {row[1] for row in connection.execute("PRAGMA table_info(orders)")}
+            product_columns = {row[1] for row in connection.execute("PRAGMA table_info(products)")}
         finally:
             connection.close()
         self.assertIn("preferred_delivery_date", columns)
@@ -98,6 +104,8 @@ class GestionaleTests(unittest.TestCase):
         self.assertIn("recurring_fixed_day", columns)
         self.assertIn("next_recurring_delivery_date", columns)
         self.assertIn("last_delivered_date", columns)
+        self.assertIn("stock_group", product_columns)
+        self.assertIn("stock_units_per_package", product_columns)
         tables = {
             row[0]
             for row in self.connection.execute(
@@ -106,6 +114,7 @@ class GestionaleTests(unittest.TestCase):
         }
         self.assertIn("delivery_load_volumes", tables)
         self.assertIn("delivery_vehicles", tables)
+        self.assertIn("shared_stock", tables)
 
     def test_delivery_load_config_persists_volumes_and_vehicle_capacities(self):
         saved = save_delivery_load_config(
@@ -132,6 +141,217 @@ class GestionaleTests(unittest.TestCase):
                 ],
             )
         self.assertEqual(get_delivery_load_config(self.connection), saved)
+
+    def test_stock_is_shared_across_product_pack_sizes(self):
+        product_variants = [
+            {
+                "id": "splash-2-rolls",
+                "name": "Asciugatutto Splash · 2 rotoli",
+                "unit": {"quantity": 2, "measure": "rotoli"},
+            },
+            {
+                "id": "splash-6-rolls",
+                "name": "Asciugatutto Splash · 6 rotoli",
+                "unit": {"quantity": 6, "measure": "rotoli"},
+            },
+        ]
+        sync_catalog(self.connection, product_variants)
+        set_stock(self.connection, "splash-2-rolls", 3)
+        set_stock(self.connection, "splash-6-rolls", 2)
+        sync_catalog(
+            self.connection,
+            [{**product, "stock_group": "splash-rolls"} for product in product_variants],
+        )
+        set_stock(self.connection, "splash-2-rolls", 1, add=True)
+
+        stock = {row["product_id"]: row for row in list_stock(self.connection)}
+        self.assertEqual(stock["splash-2-rolls"]["quantity"], 10)
+        self.assertEqual(stock["splash-6-rolls"]["quantity"], 3)
+        self.assertEqual(stock["splash-2-rolls"]["shared_quantity"], 20)
+        self.assertEqual(stock["splash-6-rolls"]["shared_unit"], "rotoli")
+
+        order = self._order("ORD-SHARED-STOCK-6", "cliente@example.org", "+39 333 1234567")
+        order.items = [
+            OrderItem("splash-2-rolls", "Asciugatutto Splash · 2 rotoli", 1),
+            OrderItem("splash-6-rolls", "Asciugatutto Splash · 6 rotoli", 1),
+        ]
+        prepared = prepare_order(self.connection, order, self.site)
+        self.assertEqual(prepared["status"], "disponibile")
+        with patch("gestionale.gestionale.send_email"):
+            confirm_order(self.connection, order.order_id, self.site)
+        mark_order_delivered(self.connection, order.order_id)
+
+        stock = {row["product_id"]: row for row in list_stock(self.connection)}
+        self.assertEqual(stock["splash-2-rolls"]["shared_quantity"], 12)
+        self.assertEqual(stock["splash-2-rolls"]["quantity"], 6)
+        self.assertEqual(stock["splash-6-rolls"]["quantity"], 2)
+
+        shortage_order = self._order("ORD-SHARED-STOCK-SHORT", "altro@example.org", "+39 333 7654321")
+        shortage_order.items = [OrderItem("splash-6-rolls", "Asciugatutto Splash · 6 rotoli", 3)]
+        shortage = prepare_order(self.connection, shortage_order, self.site)
+        self.assertEqual(shortage["status"], "disponibilita_insufficiente")
+
+    def test_delivery_uses_confirmed_package_size_after_catalog_change(self):
+        product_variants = [
+            {
+                "id": "splash-2-rolls",
+                "name": "Asciugatutto Splash · 2 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 2, "measure": "rotoli"},
+            },
+            {
+                "id": "splash-6-rolls",
+                "name": "Asciugatutto Splash · 6 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 6, "measure": "rotoli"},
+            },
+        ]
+        sync_catalog(self.connection, product_variants)
+        set_stock(self.connection, "splash-2-rolls", 3)
+        order = self._order("ORD-SHARED-FACTOR-SNAPSHOT", "cliente@example.org", "+39 333 1234567")
+        order.items = [OrderItem("splash-2-rolls", "Asciugatutto Splash · 2 rotoli", 1)]
+        prepare_order(self.connection, order, self.site)
+        with patch("gestionale.gestionale.send_email"):
+            confirm_order(self.connection, order.order_id, self.site)
+
+        sync_catalog(
+            self.connection,
+            [{**product, "unit": {**product["unit"], "quantity": 4}}
+             if product["id"] == "splash-2-rolls" else product
+             for product in product_variants],
+        )
+        mark_order_delivered(self.connection, order.order_id)
+
+        remaining = self.connection.execute(
+            "SELECT quantity FROM shared_stock WHERE stock_group = ?", ("splash-rolls",)
+        ).fetchone()["quantity"]
+        self.assertEqual(remaining, 4)
+
+    def test_catalog_cannot_change_stock_group_with_remaining_quantity(self):
+        product_variants = [
+            {
+                "id": "splash-2-rolls",
+                "name": "Asciugatutto Splash · 2 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 2, "measure": "rotoli"},
+            },
+            {
+                "id": "splash-6-rolls",
+                "name": "Asciugatutto Splash · 6 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 6, "measure": "rotoli"},
+            },
+        ]
+        sync_catalog(self.connection, product_variants)
+        set_stock(self.connection, "splash-2-rolls", 3)
+
+        with self.assertRaisesRegex(AppError, "imposta prima la giacenza condivisa a 0"):
+            sync_catalog(
+                self.connection,
+                [{**product_variants[0], "stock_group": ""}, product_variants[1]],
+            )
+        with self.assertRaisesRegex(AppError, "imposta prima la giacenza a 0"):
+            sync_catalog(
+                self.connection,
+                [
+                    {
+                        **product,
+                        "unit": {**product["unit"], "measure": "confezioni"},
+                    }
+                    for product in product_variants
+                ],
+            )
+
+        stock = {row["product_id"]: row for row in list_stock(self.connection)}
+        self.assertEqual(stock["splash-2-rolls"]["shared_quantity"], 6)
+        self.assertEqual(stock["splash-2-rolls"]["stock_group"], "splash-rolls")
+
+    def test_delivery_refuses_stock_group_changed_after_order_confirmation(self):
+        product_variants = [
+            {
+                "id": "splash-2-rolls",
+                "name": "Asciugatutto Splash · 2 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 2, "measure": "rotoli"},
+            },
+            {
+                "id": "splash-6-rolls",
+                "name": "Asciugatutto Splash · 6 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 6, "measure": "rotoli"},
+            },
+        ]
+        sync_catalog(self.connection, product_variants)
+        set_stock(self.connection, "splash-2-rolls", 3)
+        order = self._order("ORD-SHARED-GROUP-CHANGED", "cliente@example.org", "+39 333 1234567")
+        order.items = [OrderItem("splash-2-rolls", "Asciugatutto Splash · 2 rotoli", 1)]
+        prepare_order(self.connection, order, self.site)
+        with patch("gestionale.gestionale.send_email"):
+            confirm_order(self.connection, order.order_id, self.site)
+
+        set_stock(self.connection, "splash-2-rolls", 0)
+        changed_unit_variants = [
+            {
+                **product,
+                "unit": {**product["unit"], "measure": "confezioni"},
+            }
+            for product in product_variants
+        ]
+        sync_catalog(self.connection, changed_unit_variants)
+
+        with self.assertRaisesRegex(OrderNotReady, "unità di giacenza è cambiata"):
+            mark_order_delivered(self.connection, order.order_id)
+
+        sync_catalog(
+            self.connection,
+            [
+                {**changed_unit_variants[0], "stock_group": "splash-rolls-new"},
+                changed_unit_variants[1],
+            ],
+        )
+
+        with self.assertRaisesRegex(OrderNotReady, "gruppo di giacenza è cambiato"):
+            mark_order_delivered(self.connection, order.order_id)
+
+        quantities = {
+            row["stock_group"]: row["quantity"]
+            for row in self.connection.execute("SELECT stock_group, quantity FROM shared_stock")
+        }
+        self.assertEqual(quantities["splash-rolls"], 0)
+        self.assertEqual(quantities["splash-rolls-new"], 0)
+
+    def test_adding_standalone_stock_to_existing_group_preserves_quantity(self):
+        shared_products = [
+            {
+                "id": "splash-2-rolls",
+                "name": "Asciugatutto Splash · 2 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 2, "measure": "rotoli"},
+            },
+            {
+                "id": "splash-6-rolls",
+                "name": "Asciugatutto Splash · 6 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 6, "measure": "rotoli"},
+            },
+        ]
+        standalone_product = {
+            "id": "splash-3-rolls",
+            "name": "Asciugatutto Splash · 3 rotoli",
+            "unit": {"quantity": 3, "measure": "rotoli"},
+        }
+        sync_catalog(self.connection, [*shared_products, standalone_product])
+        set_stock(self.connection, "splash-2-rolls", 3)
+        set_stock(self.connection, "splash-3-rolls", 2)
+
+        sync_catalog(
+            self.connection,
+            [*shared_products, {**standalone_product, "stock_group": "splash-rolls"}],
+        )
+
+        stock = {row["product_id"]: row for row in list_stock(self.connection)}
+        self.assertEqual(stock["splash-2-rolls"]["shared_quantity"], 12)
+        self.assertEqual(stock["splash-3-rolls"]["quantity"], 4)
 
     def test_parses_order_rows_and_customer_fields_from_template_email(self):
         email = EmailMessage()
@@ -966,6 +1186,94 @@ class GestionaleWebTests(unittest.TestCase):
         self.assertIn("ORD-VEHICLE-LOAD", parse_qs(urlsplit(vehicle["calendar_url"]).query)["details"][0])
         maps_query = parse_qs(urlsplit(vehicle["maps_urls"][0]).query)
         self.assertEqual(maps_query["destination"], ["Via Roma 4, Montoro"])
+
+    def test_delivery_preview_shares_stock_between_package_variants(self):
+        product_variants = [
+            {
+                "id": "splash-2-rolls",
+                "name": "Asciugatutto Splash · 2 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 2, "measure": "rotoli"},
+            },
+            {
+                "id": "splash-6-rolls",
+                "name": "Asciugatutto Splash · 6 rotoli",
+                "stock_group": "splash-rolls",
+                "unit": {"quantity": 6, "measure": "rotoli"},
+            },
+        ]
+        delivery_date = datetime.now(ROME).date().isoformat()
+        connection = open_database(self.database)
+        try:
+            sync_catalog(connection, product_variants)
+            with self._post(
+                "/api/stock",
+                {"product_id": "splash-2-rolls", "action": "set", "quantity": 3},
+                origin=self.base_url,
+            ) as response:
+                stock_update = json.load(response)
+            self.assertEqual(stock_update["quantity"], 3)
+            self.assertTrue(stock_update["shared_stock"])
+            self.assertEqual(stock_update["shared_quantity"], 6)
+            orders = [
+                ParsedOrder(
+                    order_id="ORD-SHARED-STOCK-EARLY",
+                    items=[OrderItem("splash-2-rolls", "Asciugatutto Splash · 2 rotoli", 1)],
+                    customer_name="Cliente confezione piccola",
+                    customer_email="small@example.org",
+                    customer_phone="+39 333 1112233",
+                    delivery_address="Via Roma 1",
+                    delivery_city="Montoro",
+                    recurring=False,
+                    voucher_candidate="",
+                    voucher_value="",
+                    products_subtotal="€ 4,99",
+                    recurring_discount="Nessuno",
+                    order_datetime=datetime.now(ROME),
+                    message_id="<shared-stock-early@example.org>",
+                ),
+                ParsedOrder(
+                    order_id="ORD-SHARED-STOCK-LATE",
+                    items=[OrderItem("splash-6-rolls", "Asciugatutto Splash · 6 rotoli", 1)],
+                    customer_name="Cliente confezione grande",
+                    customer_email="large@example.org",
+                    customer_phone="+39 333 2223344",
+                    delivery_address="Via Roma 2",
+                    delivery_city="Montoro",
+                    recurring=False,
+                    voucher_candidate="",
+                    voucher_value="",
+                    products_subtotal="€ 9,99",
+                    recurring_discount="Nessuno",
+                    order_datetime=datetime.now(ROME) + timedelta(minutes=1),
+                    message_id="<shared-stock-late@example.org>",
+                ),
+            ]
+            with patch("gestionale.gestionale.send_email"):
+                for order in orders:
+                    prepare_order(connection, order, self.site)
+                    confirm_order(connection, order.order_id, self.site)
+        finally:
+            connection.close()
+
+        with urlopen(f"{self.base_url}/api/dashboard", timeout=3) as response:
+            dashboard = json.load(response)
+        stock_by_id = {item["product_id"]: item for item in dashboard["stock"]}
+        self.assertTrue(stock_by_id["splash-2-rolls"]["shared_stock"])
+        self.assertEqual(stock_by_id["splash-2-rolls"]["shared_quantity"], 6)
+        self.assertEqual(stock_by_id["splash-6-rolls"]["quantity"], 1)
+
+        with urlopen(
+            f"{self.base_url}/api/deliveries?date={delivery_date}",
+            timeout=3,
+        ) as response:
+            result = json.load(response)
+
+        orders_by_id = {order["order_id"]: order for order in result["orders"]}
+        self.assertTrue(orders_by_id["ORD-SHARED-STOCK-EARLY"]["deliverable"])
+        later_order = orders_by_id["ORD-SHARED-STOCK-LATE"]
+        self.assertFalse(later_order["deliverable"])
+        self.assertIn("richiesti 6 rotoli, disponibili 4 rotoli", later_order["availability_issues"][0])
 
     def test_single_vehicle_route_api_splits_load_into_deadline_ordered_tours(self):
         delivery_date = datetime.now(ROME).date()

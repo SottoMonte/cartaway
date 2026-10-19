@@ -10,6 +10,7 @@ Dalla cartella del progetto avvia un server statico:
 
 ```bash
 python3 -m http.server 4173
+python3 -m gestionale web --port 8765
 ```
 
 Apri `http://localhost:4173`. La pagina `/admin` va collegata a Decap Turbo prima di consentire modifiche online.

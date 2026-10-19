@@ -2,6 +2,7 @@
   "products": [
     {
       "id": "rotoloni-asciugatutto-splash-2000",
+      "stock_group": "splash-2000-rotoli",
       "profiles": ["meccanico"],
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 2 rotoli",
       "category": ["Monouso in carta","Rotoloni"],
@@ -52,6 +53,7 @@
     },
     {
       "id": "rotoloni-asciugatutto-splash-2000-6",
+      "stock_group": "splash-2000-rotoli",
       "profiles": ["meccanico"],
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 6 rotoli",
       "category": ["Monouso in carta","Rotoloni"],
@@ -102,6 +104,7 @@
     },
     {
       "id": "carta-igienica-lavanda-singolo",
+      "stock_group": "carta-igienica-lavanda-rotoli",
       "name": "Carta igienica lavanda · 4 rotoli, 2 veli",
       "category": ["Monouso in carta","Carta igienica"],
       "unit": {
@@ -148,6 +151,7 @@
     },
     {
       "id": "carta-igienica-lavanda-40-rotoli",
+      "stock_group": "carta-igienica-lavanda-rotoli",
       "profiles": ["parrucchiere", "ufficio"],
       "name": "Carta igienica lavanda Carta Corona · 40 rotoli, 2 veli",
       "category": ["Monouso in carta","Carta igienica"],

@@ -314,6 +314,7 @@
               <label class="field search-field" for="stock-search"><span>Cerca prodotto</span><input class="search-input" id="stock-search" type="search" placeholder="Nome o ID prodotto" autocomplete="off" /></label>
             </div>
           </div>
+          <p class="subtle">Per i formati collegati, imposta i pacchi della variante; il saldo condiviso viene convertito nell'unità base.</p>
           <div class="table-wrap"><table><thead><tr><th scope="col">Prodotto</th><th scope="col">Catalogo</th><th scope="col">Giacenza registrata</th><th scope="col">Aggiorna</th></tr></thead><tbody id="stock-body"><tr><td class="empty-state" colspan="4">Caricamento catalogo…</td></tr></tbody></table></div>
         </section>
 
@@ -503,9 +504,21 @@
           const productCell = cell(row, "", "product-name");
           productCell.append(element("span", product.name));
           productCell.append(element("span", product.product_id, "product-id"));
+          if (product.shared_stock) {
+            productCell.append(element(
+              "small",
+              `Stock condiviso · confezioni da ${product.stock_units_per_package} ${product.shared_unit}`,
+              "subtle",
+            ));
+          }
           const [label, kind] = stockStatus(product);
           cell(row, "").append(badge(label, kind));
-          cell(row, product.quantity === null ? "Da impostare" : product.quantity);
+          const quantityLabel = product.quantity === null
+            ? "Da impostare"
+            : product.shared_stock
+              ? `${product.quantity} pacchi · ${product.shared_quantity} ${product.shared_unit} condivisi`
+              : product.quantity;
+          cell(row, quantityLabel);
           const actionCell = cell(row, "");
           const form = element("form", undefined, "stock-edit");
           form.dataset.productId = product.product_id;
@@ -515,7 +528,13 @@
           quantity.step = "1";
           quantity.required = true;
           quantity.value = "";
-          quantity.setAttribute("aria-label", `Quantità per ${product.name}`);
+          quantity.setAttribute(
+            "aria-label",
+            product.shared_stock
+              ? `Pacchi da ${product.stock_units_per_package} ${product.shared_unit} per ${product.name}`
+              : `Quantità per ${product.name}`,
+          );
+          if (product.shared_stock) quantity.title = `Inserire il numero di pacchi da ${product.stock_units_per_package} ${product.shared_unit}`;
           const button = element("button", "Salva", "button small");
           button.type = "submit";
           form.append(quantity, button);
@@ -1159,7 +1178,11 @@
               quantity: Number(input.value),
             }),
           });
-          showNotice(`Giacenza aggiornata: ${result.quantity} pezzi.`);
+          showNotice(
+            result.shared_stock
+              ? `Saldo condiviso aggiornato: ${result.shared_quantity} ${result.shared_unit}. ${result.quantity} pacchi disponibili per questa variante.`
+              : `Giacenza aggiornata: ${result.quantity} pezzi.`,
+          );
           await loadDashboard();
         } catch (error) {
           showNotice(error.message, "error");
