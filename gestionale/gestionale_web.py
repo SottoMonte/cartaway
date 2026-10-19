@@ -11,14 +11,17 @@ import sqlite3
 import unicodedata
 from io import BytesIO
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from urllib.parse import parse_qs, urlsplit
+from uuid import uuid4
 from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
@@ -38,21 +41,258 @@ TOUR_RELOAD_MINUTES = 20
 TOUR_MAX_STOP_WAIT_MINUTES = 120
 
 
-def _pdf_value(value: Any, fallback: str = "Da verificare") -> str:
+def _pdf_value(value: Any, fallback: str = "—") -> str:
     normalized = str(value or "").strip()
     return escape(normalized).replace("\n", "<br/>") if normalized else fallback
 
 
-def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any]) -> bytes:
+def _pdf_datetime(value: Any, fallback: str = "Non registrato") -> str:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return fallback
+    try:
+        return datetime.fromisoformat(normalized).strftime("%d/%m/%Y, ore %H:%M")
+    except ValueError:
+        return normalized
+
+
+def _pdf_duration(value: Any) -> str:
+    try:
+        minutes = max(0, int(value))
+    except (TypeError, ValueError):
+        return "Da verificare"
+    hours, remaining_minutes = divmod(minutes, 60)
+    return f"{hours} h {remaining_minutes:02d} min" if hours else f"{remaining_minutes} min"
+
+
+def _pdf_money(value: Any, fallback: str = "Non registrato", zero_for_none: bool = False) -> str:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return fallback
+    if zero_for_none and normalized.casefold() in {"nessuno", "nessuna", "nessun"}:
+        return "€ 0,00"
+    return normalized
+
+
+def _format_pdf_currency(value: Any) -> str:
+    formatted = f"{value:,.2f}"
+    formatted = formatted.replace(",", "\0").replace(".", ",").replace("\0", ".")
+    return f"€ {formatted}"
+
+
+def _pdf_product_amounts(
+    order: Dict[str, Any],
+    catalog_products: Dict[str, Dict[str, Any]],
+) -> Tuple[List[Dict[str, str]], Optional[Decimal], bool]:
+    request_details = order.get("request_details") or {}
+    product_lines = request_details.get("product_lines")
+    if not isinstance(product_lines, list):
+        product_lines = []
+    prices_by_product = {
+        str(line.get("product_id") or ""): line
+        for line in product_lines
+        if isinstance(line, dict)
+    }
+    rows = []
+    line_amounts = []
+    missing_line_amount = False
+
+    for item in order.get("availability") or []:
+        if not isinstance(item, dict):
+            continue
+        product_id = str(item.get("product_id") or "")
+        line = prices_by_product.get(product_id, {})
+        catalog_product = catalog_products.get(product_id, {})
+        quantity_value = item.get("requested", item.get("quantity", line.get("quantity")))
+        quantity = gestionale._parse_money(str(quantity_value or ""))
+        unit_price_value = line.get("unit_price")
+        unit_price = (
+            gestionale._parse_money(str(unit_price_value))
+            if unit_price_value not in (None, "")
+            else None
+        )
+        if unit_price is None and catalog_product.get("price") is not None:
+            unit_price = gestionale._parse_money(str(catalog_product["price"]))
+            unit_price_value = _format_pdf_currency(unit_price) if unit_price is not None else None
+
+        line_total_value = line.get("line_total")
+        line_total = (
+            gestionale._parse_money(str(line_total_value))
+            if line_total_value not in (None, "")
+            else None
+        )
+        if line_total is None and unit_price is not None and quantity is not None:
+            line_total = (unit_price * quantity).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            line_total_value = _format_pdf_currency(line_total)
+
+        if line_total is None:
+            missing_line_amount = True
+        else:
+            line_amounts.append(line_total)
+
+        rows.append({
+            "quantity": str(quantity_value or "—"),
+            "name": str(item.get("name") or catalog_product.get("name") or "Prodotto"),
+            "unit_price": str(unit_price_value or "—"),
+            "line_total": str(line_total_value or "—"),
+        })
+
+    if rows and not missing_line_amount:
+        return rows, sum(line_amounts, Decimal("0")), False
+
+    saved_subtotal = gestionale._parse_money(str(order.get("products_subtotal") or ""))
+    if saved_subtotal is not None:
+        return rows, saved_subtotal, missing_line_amount
+    return rows, None, missing_line_amount or bool(rows)
+
+
+def _pdf_discount_amount(value: Any, subtotal: Optional[Decimal], recurring: bool) -> Optional[Decimal]:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return Decimal("0") if not recurring else None
+    if normalized.casefold() in {"nessuno", "nessuna", "nessun"}:
+        return Decimal("0")
+    amount = gestionale._parse_money(normalized)
+    if amount is None:
+        return None
+    amount = abs(amount)
+    if "%" in normalized:
+        if subtotal is None:
+            return None
+        return (subtotal * amount / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return amount
+
+
+def _pdf_shipping_amount(value: Any) -> Optional[Decimal]:
+    normalized = str(value or "").strip().casefold()
+    if normalized in {"gratuito", "gratuita", "gratis", "free"}:
+        return Decimal("0")
+    return gestionale._parse_money(str(value or ""))
+
+
+def _pdf_payment_summary(
+    order: Dict[str, Any],
+    request_details: Dict[str, Any],
+    calculated_total: Optional[Decimal] = None,
+) -> Dict[str, str]:
+    confirmed_total_value = order.get("confirmed_total") or request_details.get("confirmed_total")
+    paid_amount_value = (
+        order.get("paid_amount")
+        or request_details.get("paid_amount")
+        or request_details.get("amount_paid")
+    )
+    payment_status = str(
+        order.get("payment_status") or request_details.get("payment_status") or ""
+    ).strip().casefold()
+    confirmed_total = (
+        gestionale._parse_money(str(confirmed_total_value))
+        if confirmed_total_value not in (None, "")
+        else None
+    )
+    requested_total = gestionale._parse_money(str(request_details.get("cost_total") or ""))
+    if confirmed_total is None and calculated_total is not None and requested_total is not None:
+        if abs(calculated_total - requested_total) <= Decimal("0.01"):
+            confirmed_total = requested_total
+    paid_amount = (
+        gestionale._parse_money(str(paid_amount_value))
+        if paid_amount_value not in (None, "")
+        else None
+    )
+
+    if confirmed_total is None:
+        confirmed_label = "Non registrato"
+        remaining_label = "Non registrato"
+        state = {
+            "paid": "Già pagato",
+            "pagato": "Già pagato",
+            "pagata": "Già pagato",
+            "unpaid": "Da incassare",
+            "da incassare": "Da incassare",
+            "partial": "Importo residuo non registrato",
+            "parziale": "Importo residuo non registrato",
+        }.get(payment_status, "Non registrato")
+        if paid_amount is not None and paid_amount > 0 and state == "Non registrato":
+            state = "Importo residuo non registrato"
+    else:
+        confirmed_label = _format_pdf_currency(confirmed_total)
+        zero_amount = confirmed_total - confirmed_total
+        remaining = confirmed_total - paid_amount if paid_amount is not None else confirmed_total
+        remaining = max(remaining, zero_amount)
+        payment_method = str(request_details.get("payment_information") or "").strip().casefold()
+        if remaining <= 0 or payment_status in {"paid", "pagato", "pagata", "già pagato"}:
+            state = "Già pagato"
+            remaining_label = _format_pdf_currency(zero_amount)
+        elif payment_status in {"partial", "parziale"} and paid_amount is None:
+            state = "Importo residuo non registrato"
+            remaining_label = "Non registrato"
+        elif paid_amount is not None and paid_amount > 0:
+            state = "Importo residuo"
+            remaining_label = _format_pdf_currency(remaining)
+        elif payment_status in {"unpaid", "da incassare"} or any(
+            keyword in payment_method for keyword in ("alla consegna", "contrassegno")
+        ):
+            state = "Da incassare"
+            remaining_label = _format_pdf_currency(remaining)
+        else:
+            state = "Non registrato"
+            remaining_label = "Non registrato"
+
+    return {
+        "method": _pdf_money(request_details.get("payment_information"), "Non indicata"),
+        "confirmed_total": confirmed_label,
+        "remaining": remaining_label,
+        "state": state,
+    }
+
+
+class _NumberedCanvas(Canvas):
+    def __init__(self, *args: Any, page_renderer: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._saved_page_states: List[Dict[str, Any]] = []
+        self._page_renderer = page_renderer
+
+    def showPage(self) -> None:
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self) -> None:
+        page_count = len(self._saved_page_states)
+        for page_number, page_state in enumerate(self._saved_page_states, start=1):
+            self.__dict__.update(page_state)
+            self._page_renderer(self, page_number, page_count)
+            Canvas.showPage(self)
+        Canvas.save(self)
+
+
+def _attach_delivery_plan_metadata(result: Dict[str, Any]) -> None:
+    generated_at = datetime.now(gestionale.ROME).replace(microsecond=0)
+    result["generated_at"] = generated_at.isoformat()
+    result["plan_reference"] = (
+        f"PIANO-{generated_at.strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:6].upper()}"
+    )
+    for vehicle in result.get("vehicles", []):
+        vehicle["generated_at"] = result["generated_at"]
+        vehicle["plan_reference"] = result["plan_reference"]
+
+
+def _vehicle_delivery_pdf(
+    brand: str,
+    delivery_date: str,
+    vehicle: Dict[str, Any],
+    catalog_products: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> bytes:
     output = BytesIO()
     document = SimpleDocTemplate(
         output,
         pagesize=A4,
         rightMargin=13 * mm,
         leftMargin=13 * mm,
-        topMargin=13 * mm,
+        topMargin=20 * mm,
         bottomMargin=16 * mm,
-        title=f"Consegne {vehicle.get('display_name') or vehicle.get('name') or 'Furgone'}",
+        title=(
+            f"Consegne {vehicle.get('display_name') or vehicle.get('name') or 'Furgone'} "
+            f"{vehicle.get('plan_reference') or ''}"
+        ).strip(),
         author=brand,
     )
     styles = getSampleStyleSheet()
@@ -113,12 +353,24 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
         leading=10,
         textColor=colors.HexColor("#4e5b57"),
     ))
+    styles.add(ParagraphStyle(
+        name="Verify",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#a2342b"),
+    ))
 
-    def paragraph(value: Any, style: str = "Cell", fallback: str = "Da verificare") -> Paragraph:
+    def paragraph(value: Any, style: str = "Cell", fallback: str = "—") -> Paragraph:
         return Paragraph(_pdf_value(value, fallback), styles[style])
 
     orders = vehicle.get("orders") or []
-    vehicle_name = vehicle.get("display_name") or vehicle.get("name") or "Furgone"
+    vehicle_name = vehicle.get("name") or "Furgone"
+    tour_number = vehicle.get("tour_number", "Da verificare")
+    tour_count = vehicle.get("tour_count", "Da verificare")
+    plan_reference = str(vehicle.get("plan_reference") or "Da verificare")
+    generated_at = vehicle.get("generated_at")
     try:
         formatted_date = date.fromisoformat(delivery_date).strftime("%d/%m/%Y")
     except ValueError:
@@ -127,10 +379,55 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
         paragraph(brand, "CartawayTitle", "Cartaway"),
         paragraph("Distinta di consegna", "OrderHeading"),
         paragraph(
-            f"Data: {formatted_date} | {vehicle_name} | {len(orders)} consegne",
+            f"{len(orders)} consegne | Giro {tour_number}/{tour_count}",
             "CartawaySubtitle",
         ),
     ]
+    summary_rows = [
+        [paragraph("Furgone", "CellLabel"), paragraph(vehicle_name)],
+        [paragraph("Numero giro", "CellLabel"), paragraph(f"{tour_number}/{tour_count}")],
+        [paragraph("Partenza", "CellLabel"), paragraph(_pdf_datetime(vehicle.get("departure_at")))],
+        [
+            paragraph("Ultimo arrivo stimato", "CellLabel"),
+            paragraph(_pdf_datetime(vehicle.get("last_arrival_at"))),
+        ],
+        [
+            paragraph("Ultima consegna terminata", "CellLabel"),
+            paragraph(_pdf_datetime(vehicle.get("last_delivery_completed_at"))),
+        ],
+        [
+            paragraph("Rientro previsto al deposito", "CellLabel"),
+            paragraph(
+                _pdf_datetime(vehicle.get("estimated_return_at"), "Non previsto")
+                if vehicle.get("return_to_origin")
+                else "Non previsto"
+            ),
+        ],
+        [paragraph("Durata totale del giro", "CellLabel"), paragraph(_pdf_duration(vehicle.get("duration_minutes")))],
+        [
+            paragraph("Disponibile per il giro successivo", "CellLabel"),
+            paragraph(
+                f"{_pdf_datetime(vehicle.get('next_available_at'))} "
+                f"(ricarica di {vehicle.get('reload_duration_minutes', TOUR_RELOAD_MINUTES)} min inclusa)"
+                if vehicle.get("next_available_at")
+                else "Nessun giro successivo pianificato"
+            ),
+        ],
+    ]
+    summary_table = Table(summary_rows, colWidths=[50 * mm, 134 * mm])
+    summary_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#eef3f1")),
+        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#d7dfdc")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+    ]))
+    story.extend([paragraph("Riepilogo giro", "OrderHeading"), summary_table])
+    for warning in vehicle.get("schedule_warnings") or []:
+        story.append(Paragraph(f"- {_pdf_value(warning)}", styles["Verify"]))
+    story.append(Spacer(1, 3 * mm))
 
     for index, order in enumerate(orders, start=1):
         if index > 1:
@@ -138,14 +435,15 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
         request_details = order.get("request_details")
         if not isinstance(request_details, dict):
             request_details = {}
-        product_lines = request_details.get("product_lines")
-        if not isinstance(product_lines, list):
-            product_lines = []
-        prices_by_product = {
-            str(line.get("product_id") or ""): line
-            for line in product_lines
-            if isinstance(line, dict)
-        }
+        product_rows, product_subtotal, missing_product_prices = _pdf_product_amounts(
+            order,
+            catalog_products or {},
+        )
+        products_subtotal = (
+            _format_pdf_currency(product_subtotal)
+            if product_subtotal is not None
+            else _pdf_money(order.get("products_subtotal"))
+        )
 
         block = [
             paragraph(
@@ -155,6 +453,7 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
         ]
         customer_rows = [
             [
+                paragraph("Cliente", "CellLabel"),
                 paragraph(order.get("customer_name")),
                 paragraph("Telefono", "CellLabel"),
                 paragraph(order.get("customer_phone")),
@@ -162,8 +461,8 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
             [
                 paragraph("Email", "CellLabel"),
                 paragraph(order.get("customer_email")),
-                paragraph("Arrivo", "CellLabel"),
-                paragraph(order.get("estimated_arrival_at") or order.get("preferred_delivery_time")),
+                paragraph("Arrivo stimato", "CellLabel"),
+                paragraph(_pdf_datetime(order.get("estimated_arrival_at"), "Non pianificato")),
             ],
             [
                 paragraph("Indirizzo", "CellLabel"),
@@ -217,20 +516,22 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
             paragraph("Q.tà", "TableHeader"),
             paragraph("Prodotto", "TableHeader"),
             paragraph("Prezzo unit.", "TableHeader"),
-            paragraph("Importo", "TableHeader"),
+            paragraph("Subtotale", "TableHeader"),
         ]]
-        for item in order.get("availability") or []:
-            if not isinstance(item, dict):
-                continue
-            line = prices_by_product.get(str(item.get("product_id") or ""), {})
+        for item in product_rows:
             item_rows.append([
-                paragraph(item.get("requested", ""), fallback="-"),
+                paragraph(item.get("quantity", "")),
                 paragraph(item.get("name")),
-                paragraph(line.get("unit_price"), fallback="-"),
-                paragraph(line.get("line_total"), fallback="-"),
+                paragraph(item.get("unit_price")),
+                paragraph(item.get("line_total")),
             ])
         if len(item_rows) == 1:
-            item_rows.append([paragraph("-"), paragraph("Articoli da verificare"), paragraph("-"), paragraph("-")])
+            item_rows.append([
+                paragraph("—"),
+                paragraph("Nessuna riga prodotto presente"),
+                paragraph("—"),
+                paragraph("—"),
+            ])
         item_table = Table(
             item_rows,
             colWidths=[14 * mm, 88 * mm, 38 * mm, 44 * mm],
@@ -249,17 +550,53 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
         ]))
         block.append(item_table)
 
+        payment_summary = _pdf_payment_summary(order, request_details)
+        recurring_discount = order.get("recurring_discount")
+        if not recurring_discount and not order.get("recurring_order"):
+            recurring_discount = "Nessuno"
+        discount_amount = _pdf_discount_amount(
+            recurring_discount,
+            product_subtotal,
+            bool(order.get("recurring_order")),
+        )
+        shipping_amount = _pdf_shipping_amount(request_details.get("cost_shipping"))
+        calculated_total = None
+        if product_subtotal is not None and discount_amount is not None and shipping_amount is not None:
+            calculated_total = max(
+                product_subtotal - discount_amount + shipping_amount,
+                Decimal("0"),
+            ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            payment_summary = _pdf_payment_summary(order, request_details, calculated_total)
+        missing_financial_data = []
+        if missing_product_prices or products_subtotal == "Non registrato":
+            missing_financial_data.append("prezzi prodotto")
+        requested_total = gestionale._parse_money(str(request_details.get("cost_total") or ""))
+        if calculated_total is not None and requested_total is not None:
+            if abs(calculated_total - requested_total) > Decimal("0.01"):
+                missing_financial_data.append("il totale richiesto differisce dal calcolo")
+        elif payment_summary["confirmed_total"] == "Non registrato":
+            missing_financial_data.append("il totale da incassare")
+        if missing_financial_data:
+            block.append(Paragraph(
+                "<b>Dati economici da verificare prima dell'incasso:</b> "
+                f"{_pdf_value('; '.join(missing_financial_data))}.",
+                styles["Verify"],
+            ))
         costs = [
-            ("Prodotti (IVA inclusa)", order.get("products_subtotal")),
-            ("Sconto", order.get("recurring_discount")),
-            ("Consegna", request_details.get("cost_shipping")),
-            ("IVA prodotti", request_details.get("cost_tax")),
-            ("Totale indicato nella richiesta", request_details.get("cost_total")),
+            ("Totale prodotti (IVA inclusa)", products_subtotal),
+            ("Sconto", _pdf_money(recurring_discount, "Non indicato", zero_for_none=True)),
+            ("Costo consegna", _pdf_money(request_details.get("cost_shipping"), "Non indicato", zero_for_none=True)),
+            ("IVA prodotti", _pdf_money(request_details.get("cost_tax"), "Non indicata")),
+            (
+                "Totale indicato nella richiesta",
+                _pdf_money(request_details.get("cost_total"), "Non indicato"),
+            ),
+            ("Totale ordine calcolato", _format_pdf_currency(calculated_total) if calculated_total is not None else "Non registrato"),
+            ("Importo residuo / da incassare", payment_summary["remaining"]),
         ]
-        cost_rows = [
-            [paragraph(label, "CellLabel"), paragraph(value, "Cell", "Da verificare")]
-            for label, value in costs
-        ]
+        cost_rows = []
+        for label, value in costs:
+            cost_rows.append([paragraph(label, "CellLabel"), paragraph(value)])
         cost_table = Table(cost_rows, colWidths=[140 * mm, 44 * mm], hAlign="RIGHT")
         cost_table.setStyle(TableStyle([
             ("ALIGN", (1, 0), (1, -1), "RIGHT"),
@@ -272,32 +609,66 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
             ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
         ]))
         block.extend([Spacer(1, 2 * mm), cost_table])
-        payment_note = request_details.get("payment_information")
-        block.append(Paragraph(
-            f"<b>Nota pagamento:</b> {_pdf_value(payment_note, 'Modalità da concordare.')}",
-            styles["SmallNote"],
-        ))
+        payment_table = Table([
+            [paragraph("Modalità di pagamento", "CellLabel"), paragraph(payment_summary["method"])],
+            [paragraph("Stato incasso", "CellLabel"), paragraph(payment_summary["state"])],
+        ], colWidths=[50 * mm, 134 * mm])
+        payment_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#eef3f1")),
+            ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#d7dfdc")),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ]))
+        block.extend([Spacer(1, 2 * mm), payment_table])
         block.append(Paragraph("Firma per ricevuta: __________________________________________", styles["SmallNote"]))
         story.append(KeepTogether(block[:2]))
         story.extend(block[2:])
         story.append(Spacer(1, 5 * mm))
 
-    def draw_footer(canvas: Any, page_document: Any) -> None:
-        canvas.saveState()
-        canvas.setFont("Helvetica", 7)
-        canvas.setFillColor(colors.HexColor("#5c6864"))
-        canvas.drawString(13 * mm, 8 * mm, "Documento operativo non fiscale. Verificare importo e pagamento prima dell'incasso.")
-        canvas.drawRightString(A4[0] - 13 * mm, 8 * mm, f"Pagina {page_document.page}")
-        canvas.restoreState()
+    def draw_page_chrome(pdf_canvas: Canvas, page_number: int, page_count: int) -> None:
+        pdf_canvas.saveState()
+        pdf_canvas.setFillColor(colors.HexColor("#173b35"))
+        pdf_canvas.setFont("Helvetica-Bold", 7)
+        pdf_canvas.drawString(
+            13 * mm,
+            A4[1] - 7 * mm,
+            f"{formatted_date} | {vehicle_name} | Giro {tour_number}/{tour_count}",
+        )
+        pdf_canvas.setFont("Helvetica", 6.5)
+        pdf_canvas.drawString(
+            13 * mm,
+            A4[1] - 11 * mm,
+            f"Piano {plan_reference} | Generato {_pdf_datetime(generated_at)}",
+        )
+        pdf_canvas.setFillColor(colors.HexColor("#5c6864"))
+        pdf_canvas.setFont("Helvetica", 7)
+        pdf_canvas.drawString(
+            13 * mm,
+            8 * mm,
+            "Documento operativo non fiscale. Verificare importo e pagamento prima dell'incasso.",
+        )
+        pdf_canvas.drawRightString(A4[0] - 13 * mm, 8 * mm, f"Pagina {page_number} di {page_count}")
+        pdf_canvas.restoreState()
 
-    document.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
+    def numbered_canvasmaker(*args: Any, **kwargs: Any) -> _NumberedCanvas:
+        return _NumberedCanvas(*args, page_renderer=draw_page_chrome, **kwargs)
+
+    document.build(story, canvasmaker=numbered_canvasmaker)
     return output.getvalue()
 
 
-def _attach_vehicle_delivery_pdfs(brand: str, delivery_date: str, vehicles: Sequence[Dict[str, Any]]) -> None:
+def _attach_vehicle_delivery_pdfs(
+    brand: str,
+    delivery_date: str,
+    vehicles: Sequence[Dict[str, Any]],
+    catalog_products: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> None:
     for vehicle in vehicles:
         if vehicle.get("orders"):
-            pdf_bytes = _vehicle_delivery_pdf(brand, delivery_date, vehicle)
+            pdf_bytes = _vehicle_delivery_pdf(brand, delivery_date, vehicle, catalog_products)
             vehicle["delivery_pdf_base64"] = base64.b64encode(pdf_bytes).decode("ascii")
 
 
@@ -926,6 +1297,7 @@ def _estimate_vehicle_tour_schedule(
         current_minute = arrival_minute + TOUR_STOP_SERVICE_MINUTES
         previous_point = destination_point
 
+    last_delivery_completed_minute = current_minute
     if return_to_origin and route_orders:
         return_minutes, has_return_coordinates = _estimated_leg_minutes(previous_point, origin_point)
         if has_return_coordinates:
@@ -934,9 +1306,14 @@ def _estimate_vehicle_tour_schedule(
             missing_coordinate_legs += 1
         current_minute += return_minutes
 
-    if current_minute > shift_end_minute:
+    if route_orders and last_delivery_completed_minute > shift_end_minute:
         schedule_warnings.append(
-            f"Rientro stimato {_format_tour_minute(current_minute)} oltre la fine del turno "
+            f"Ultima consegna terminata {_format_tour_minute(last_delivery_completed_minute)} "
+            f"oltre la fine del turno ({_format_tour_minute(shift_end_minute)})."
+        )
+    if return_to_origin and current_minute > shift_end_minute:
+        schedule_warnings.append(
+            f"Rientro stimato al deposito {_format_tour_minute(current_minute)} oltre la fine del turno "
             f"({_format_tour_minute(shift_end_minute)})."
         )
     if departure_minute > shift_end_minute:
@@ -960,6 +1337,7 @@ def _estimate_vehicle_tour_schedule(
     return {
         "orders": scheduled_orders,
         "departure_minute": departure_minute,
+        "last_delivery_completed_minute": last_delivery_completed_minute,
         "finish_minute": current_minute,
         "return_to_origin": return_to_origin,
         "order_time_warnings": order_time_warnings,
@@ -969,6 +1347,53 @@ def _estimate_vehicle_tour_schedule(
         "estimated_legs": estimated_legs,
         "missing_coordinate_legs": missing_coordinate_legs,
     }
+
+
+def _attach_tour_schedule(
+    vehicle: Dict[str, Any],
+    schedule: Dict[str, Any],
+    event_date: date,
+) -> None:
+    vehicle["orders"] = schedule["orders"]
+    vehicle["departure_at"] = _format_tour_instant(event_date, schedule["departure_minute"])
+    vehicle["last_arrival_at"] = (
+        schedule["orders"][-1]["estimated_arrival_at"] if schedule["orders"] else None
+    )
+    vehicle["last_delivery_completed_at"] = _format_tour_instant(
+        event_date,
+        schedule["last_delivery_completed_minute"],
+    )
+    vehicle["estimated_finish_at"] = _format_tour_instant(event_date, schedule["finish_minute"])
+    vehicle["estimated_return_at"] = (
+        vehicle["estimated_finish_at"] if schedule["return_to_origin"] else None
+    )
+    vehicle["duration_minutes"] = schedule["finish_minute"] - schedule["departure_minute"]
+    vehicle["return_to_origin"] = schedule["return_to_origin"]
+    vehicle["schedule_warnings"] = list(schedule["schedule_warnings"])
+    vehicle["estimate_note"] = schedule["estimate_note"]
+
+
+def _vehicle_tour_sequence_warning(
+    previous_finish_minute: int,
+    next_departure_minute: int,
+    previous_tour_number: int,
+    next_tour_number: int,
+) -> Optional[str]:
+    if next_departure_minute < previous_finish_minute:
+        return (
+            f"Sovrapposizione tra giri: il giro {next_tour_number} parte alle "
+            f"{_format_tour_minute(next_departure_minute)} prima del rientro del giro "
+            f"{previous_tour_number}, previsto alle {_format_tour_minute(previous_finish_minute)}."
+        )
+
+    reload_complete_minute = previous_finish_minute + TOUR_RELOAD_MINUTES
+    if next_departure_minute < reload_complete_minute:
+        return (
+            f"Il giro {next_tour_number} parte alle {_format_tour_minute(next_departure_minute)} "
+            f"prima del termine della ricarica del giro {previous_tour_number}, prevista alle "
+            f"{_format_tour_minute(reload_complete_minute)}."
+        )
+    return None
 
 
 def _plan_single_vehicle_tours(
@@ -1084,13 +1509,19 @@ def _plan_single_vehicle_tours(
         tour["display_name"] = f"{vehicle['name']} · Giro {index}/{tour_count}"
         tour["tour_number"] = index
         tour["tour_count"] = tour_count
-        tour["orders"] = schedule["orders"]
-        tour["departure_at"] = _format_tour_instant(event_date, schedule["departure_minute"])
-        tour["estimated_return_at"] = _format_tour_instant(event_date, schedule["finish_minute"])
-        tour["return_to_origin"] = schedule["return_to_origin"]
-        tour["schedule_warnings"] = schedule["schedule_warnings"]
-        tour["estimate_note"] = schedule["estimate_note"]
+        _attach_tour_schedule(tour, schedule, event_date)
+        if index > 1:
+            previous_schedule = tour_specs[index - 2][1]
+            sequence_warning = _vehicle_tour_sequence_warning(
+                previous_schedule["finish_minute"],
+                schedule["departure_minute"],
+                index - 1,
+                index,
+            )
+            if sequence_warning:
+                tour["schedule_warnings"].append(sequence_warning)
         if index < tour_count:
+            tour["reload_duration_minutes"] = TOUR_RELOAD_MINUTES
             next_available_minute = schedule["finish_minute"] + TOUR_RELOAD_MINUTES
             tour["next_available_at"] = _format_tour_instant(event_date, next_available_minute)
         else:
@@ -1125,14 +1556,14 @@ def _plan_single_vehicle_tours(
             details += "\n\nAvvisi sugli orari:\n" + "\n".join(tour["schedule_warnings"])
 
         departure_datetime = datetime.fromisoformat(tour["departure_at"])
-        return_datetime = datetime.fromisoformat(tour["estimated_return_at"])
+        finish_datetime = datetime.fromisoformat(tour["estimated_finish_at"])
         tour["calendar_url"] = ""
-        if departure_datetime.date() == event_date and return_datetime.date() == event_date:
+        if departure_datetime.date() == event_date and finish_datetime.date() == event_date:
             tour["calendar_url"] = gestionale.build_calendar_url(
                 f"Giro {index}/{tour_count} - {vehicle['name']}",
                 event_date,
                 departure_datetime.time(),
-                return_datetime.time(),
+                finish_datetime.time(),
                 origin,
                 details,
             )
@@ -1157,6 +1588,8 @@ def create_server(
     products: Dict[str, Dict[str, Any]],
     port: int,
 ) -> ThreadingHTTPServer:
+    catalog_products = products
+
     class RequestHandler(BaseHTTPRequestHandler):
         server_version = "CartawayGestionale"
         sys_version = ""
@@ -1715,10 +2148,12 @@ def create_server(
                     "unassigned_orders": single_vehicle_plan["unassigned_orders"],
                     "excluded_orders": excluded_orders,
                 }
+                _attach_delivery_plan_metadata(result)
                 _attach_vehicle_delivery_pdfs(
                     str(site.get("brand") or "Cartaway"),
                     event_date.isoformat(),
                     result["vehicles"],
+                    catalog_products,
                 )
                 return result
 
@@ -1731,23 +2166,33 @@ def create_server(
             planned_vehicles = []
             for vehicle in allocation["vehicles"]:
                 if vehicle["orders"]:
-                    vehicle_orders = _group_route_orders_by_city(
+                    route_orders = _group_route_orders_by_city(
                         vehicle["orders"],
                         origin,
                         site,
                         return_to_origin,
                     )
+                    schedule = _estimate_vehicle_tour_schedule(
+                        route_orders,
+                        origin,
+                        site,
+                        event_date,
+                        start_time,
+                        end_time,
+                        start_time.hour * 60 + start_time.minute,
+                        return_to_origin,
+                    )
+                    _attach_tour_schedule(vehicle, schedule, event_date)
+                    vehicle["display_name"] = f"{vehicle['name']} · Giro 1/1"
+                    vehicle["tour_number"] = 1
+                    vehicle["tour_count"] = 1
+                    vehicle_orders = vehicle["orders"]
                     destinations = [order["destination"] for order in vehicle_orders]
                     vehicle["maps_urls"] = gestionale.build_maps_urls(
                         origin,
                         destinations,
                         return_to_origin=return_to_origin,
                     )
-                    vehicle["schedule_warnings"] = [
-                        warning
-                        for order in vehicle_orders
-                        if (warning := _route_schedule_warning(order, start_time, end_time))
-                    ]
                     order_details = []
                     for order in vehicle_orders:
                         products = ", ".join(
@@ -1764,34 +2209,41 @@ def create_server(
                             detail += f" - Note: {order['delivery_notes']}"
                         order_details.append(detail)
                     details = "\n\n".join(order_details + vehicle["maps_urls"])
+                    details += f"\n\n{vehicle['estimate_note']}"
                     if vehicle["schedule_warnings"]:
                         details += "\n\nAvvisi sugli orari:\n" + "\n".join(vehicle["schedule_warnings"])
-                    vehicle["calendar_url"] = gestionale.build_calendar_url(
-                        f"Giro consegne {vehicle['name']} - {event_date.isoformat()}",
-                        event_date,
-                        start_time,
-                        end_time,
-                        origin,
-                        details,
-                    )
-                    vehicle["orders"] = vehicle_orders
+                    departure_datetime = datetime.fromisoformat(vehicle["departure_at"])
+                    finish_datetime = datetime.fromisoformat(vehicle["estimated_finish_at"])
+                    vehicle["calendar_url"] = ""
+                    if departure_datetime.date() == event_date and finish_datetime.date() == event_date:
+                        vehicle["calendar_url"] = gestionale.build_calendar_url(
+                            f"Giro consegne {vehicle['name']} - {event_date.isoformat()}",
+                            event_date,
+                            departure_datetime.time(),
+                            finish_datetime.time(),
+                            origin,
+                            details,
+                        )
                 else:
                     vehicle["maps_urls"] = []
                     vehicle["schedule_warnings"] = []
                 planned_vehicles.append(vehicle)
 
-            _attach_vehicle_delivery_pdfs(
-                str(site.get("brand") or "Cartaway"),
-                event_date.isoformat(),
-                planned_vehicles,
-            )
-            return {
+            result = {
                 "date": event_date.isoformat(),
                 "products": allocation["products"],
                 "vehicles": planned_vehicles,
                 "unassigned_orders": allocation["unassigned_orders"],
                 "excluded_orders": excluded_orders,
             }
+            _attach_delivery_plan_metadata(result)
+            _attach_vehicle_delivery_pdfs(
+                str(site.get("brand") or "Cartaway"),
+                event_date.isoformat(),
+                result["vehicles"],
+                catalog_products,
+            )
+            return result
 
         def _plan_route(self, payload: Dict[str, Any]) -> Dict[str, Any]:
             origin = str(payload.get("origin", "")).strip()

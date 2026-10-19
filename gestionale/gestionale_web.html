@@ -476,6 +476,15 @@
             });
       }
 
+      function formatDuration(minutes) {
+        const totalMinutes = Number(minutes);
+        if (!Number.isFinite(totalMinutes) || totalMinutes < 0) return "Da verificare";
+        const roundedMinutes = Math.round(totalMinutes);
+        const hours = Math.floor(roundedMinutes / 60);
+        const remainingMinutes = roundedMinutes % 60;
+        return hours ? `${hours} h ${remainingMinutes} min` : `${remainingMinutes} min`;
+      }
+
       function formatLiters(value) {
         return `${new Intl.NumberFormat("it-IT", { maximumFractionDigits: 2 }).format(value)} L`;
       }
@@ -955,18 +964,32 @@
             "subtle",
           ));
           section.append(heading);
-          if (vehicle.departure_at && vehicle.estimated_return_at) {
-            const endLabel = vehicle.return_to_origin ? "Rientro stimato" : "Fine giro stimata";
+          if (vehicle.departure_at && vehicle.estimated_finish_at) {
+            const scheduleSummary = [
+              `Partenza ${formatDeliveryDateTime(vehicle.departure_at)}`,
+              vehicle.last_arrival_at
+                ? `Ultimo arrivo ${formatDeliveryDateTime(vehicle.last_arrival_at)}`
+                : "",
+              vehicle.last_delivery_completed_at
+                ? `Ultima consegna terminata ${formatDeliveryDateTime(vehicle.last_delivery_completed_at)}`
+                : "",
+              vehicle.return_to_origin && vehicle.estimated_return_at
+                ? `Rientro al deposito ${formatDeliveryDateTime(vehicle.estimated_return_at)}`
+                : "Rientro al deposito non previsto",
+              vehicle.duration_minutes !== undefined
+                ? `Durata totale ${formatDuration(vehicle.duration_minutes)}`
+                : "",
+            ].filter(Boolean).join(" · ");
             section.append(element(
               "p",
-              `Partenza ${formatDeliveryDateTime(vehicle.departure_at)} · ${endLabel} ${formatDeliveryDateTime(vehicle.estimated_return_at)}`,
+              scheduleSummary,
               "subtle",
             ));
           }
           if (vehicle.next_available_at) {
             section.append(element(
               "p",
-              `Furgone disponibile per il giro successivo dalle ${formatDeliveryDateTime(vehicle.next_available_at)}.`,
+              `Furgone disponibile per il giro successivo dalle ${formatDeliveryDateTime(vehicle.next_available_at)} (ricarica di ${vehicle.reload_duration_minutes} min inclusa).`,
               "subtle",
             ));
           }

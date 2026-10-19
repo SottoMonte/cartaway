@@ -7,6 +7,7 @@ import tempfile
 import threading
 import unittest
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal
 from email import policy
 from email.message import EmailMessage
 from email.parser import BytesParser
@@ -47,6 +48,10 @@ from gestionale.gestionale_web import (
     _allocate_vehicle_loads,
     _group_route_orders_by_city,
     _plan_single_vehicle_tours,
+    _pdf_datetime,
+    _pdf_payment_summary,
+    _pdf_product_amounts,
+    _vehicle_tour_sequence_warning,
     _vehicle_delivery_pdf,
     create_server,
 )
@@ -105,6 +110,60 @@ class GestionaleTests(unittest.TestCase):
         page_count = re.search(rb"/Count\s+(\d+)\b", pdf_bytes)
         self.assertIsNotNone(page_count)
         self.assertEqual(int(page_count.group(1)), len(orders))
+
+    def test_pdf_times_and_payment_amounts_are_explicit(self):
+        self.assertEqual(
+            _pdf_datetime("2026-10-19T09:10:00+02:00"),
+            "19/10/2026, ore 09:10",
+        )
+        unconfirmed_payment = _pdf_payment_summary({}, {})
+        self.assertEqual(unconfirmed_payment["method"], "Non indicata")
+        self.assertEqual(unconfirmed_payment["confirmed_total"], "Non registrato")
+        self.assertEqual(unconfirmed_payment["remaining"], "Non registrato")
+        self.assertEqual(unconfirmed_payment["state"], "Non registrato")
+
+        partial_payment = _pdf_payment_summary(
+            {"confirmed_total": "€ 23,00", "paid_amount": "€ 10,00"},
+            {"payment_information": "Pagamento alla consegna"},
+        )
+        self.assertEqual(partial_payment["confirmed_total"], "€ 23,00")
+        self.assertEqual(partial_payment["remaining"], "€ 13,00")
+        self.assertEqual(partial_payment["state"], "Importo residuo")
+
+        cash_on_delivery = _pdf_payment_summary(
+            {},
+            {"cost_total": "€ 23,00", "payment_information": "Pagamento alla consegna"},
+            Decimal("23.00"),
+        )
+        self.assertEqual(cash_on_delivery["confirmed_total"], "€ 23,00")
+        self.assertEqual(cash_on_delivery["remaining"], "€ 23,00")
+        self.assertEqual(cash_on_delivery["state"], "Da incassare")
+
+    def test_pdf_product_amounts_use_order_price_then_catalog_fallback(self):
+        order = {
+            "availability": [
+                {"product_id": "rotoloni-asciugatutto-splash-2000", "name": "Rotoloni", "requested": 2},
+                {"product_id": "carta-igienica-lavanda-40-rotoli", "name": "Carta", "requested": 1},
+            ],
+            "request_details": {
+                "product_lines": [{
+                    "product_id": "rotoloni-asciugatutto-splash-2000",
+                    "unit_price": "€ 4,99",
+                    "line_total": "",
+                }],
+            },
+        }
+        catalog_products = {
+            "rotoloni-asciugatutto-splash-2000": {"price": 6.99},
+            "carta-igienica-lavanda-40-rotoli": {"price": 12},
+        }
+
+        rows, subtotal, missing_prices = _pdf_product_amounts(order, catalog_products)
+
+        self.assertEqual([row["unit_price"] for row in rows], ["€ 4,99", "€ 12,00"])
+        self.assertEqual([row["line_total"] for row in rows], ["€ 9,98", "€ 12,00"])
+        self.assertEqual(subtotal, Decimal("21.98"))
+        self.assertFalse(missing_prices)
 
     def test_initialize_database_migrates_existing_orders_table(self):
         connection = sqlite3.connect(":memory:")
@@ -613,9 +672,25 @@ class GestionaleTests(unittest.TestCase):
         first_return = datetime.fromisoformat(first_tour["estimated_return_at"])
         next_available = datetime.fromisoformat(first_tour["next_available_at"])
         second_departure = datetime.fromisoformat(second_tour["departure_at"])
+        self.assertEqual(
+            first_tour["last_arrival_at"],
+            first_tour["orders"][-1]["estimated_arrival_at"],
+        )
+        last_arrival = datetime.fromisoformat(first_tour["last_arrival_at"])
+        last_delivery_completed = datetime.fromisoformat(first_tour["last_delivery_completed_at"])
+        self.assertEqual(last_delivery_completed - last_arrival, timedelta(minutes=10))
+        self.assertEqual(first_tour["estimated_finish_at"], first_tour["estimated_return_at"])
+        self.assertEqual(
+            first_tour["duration_minutes"],
+            int((first_return - first_departure).total_seconds() / 60),
+        )
+        self.assertEqual(first_tour["reload_duration_minutes"], 20)
         self.assertLessEqual(first_departure.time(), time(10, 0))
         self.assertLessEqual(first_tour["orders"][0]["estimated_arrival_at"], "2026-10-19T10:30:00+02:00")
-        self.assertEqual(next_available, first_return + timedelta(minutes=20))
+        self.assertEqual(
+            next_available,
+            first_return + timedelta(minutes=first_tour["reload_duration_minutes"]),
+        )
         self.assertGreaterEqual(second_departure, next_available)
         self.assertLessEqual(second_tour["orders"][0]["estimated_arrival_at"], "2026-10-19T12:30:00+02:00")
         self.assertTrue(first_tour["maps_urls"])
@@ -685,6 +760,47 @@ class GestionaleTests(unittest.TestCase):
             datetime.fromisoformat(result["tours"][1]["departure_at"]).time(),
             time(16, 0),
         )
+
+    def test_single_vehicle_warns_when_return_exceeds_shift_end(self):
+        order = {
+            "order_id": "ORD-RETURN-AFTER-SHIFT",
+            "customer_name": "Cliente Fisciano",
+            "destination": "Via Roma 1, Fisciano",
+            "delivery_city": "Fisciano",
+            "delivery_address": "Via Roma 1",
+            "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+            "preferred_delivery_time": "Dalle 18:22 alle 18:22",
+            "delivery_notes": "",
+        }
+
+        result = _plan_single_vehicle_tours(
+            [order],
+            {"name": "Furgone 1", "capacity_liters": 5},
+            {"roll": 1},
+            "Piazza Roma, Montoro",
+            {"delivery_zones": []},
+            date(2026, 10, 19),
+            time(9, 0),
+            time(18, 0),
+            True,
+        )
+
+        tour = result["tours"][0]
+        self.assertEqual(tour["last_arrival_at"], "2026-10-19T18:22+02:00")
+        self.assertEqual(tour["last_delivery_completed_at"], "2026-10-19T18:32+02:00")
+        self.assertEqual(tour["estimated_return_at"], "2026-10-19T18:57+02:00")
+        self.assertEqual(tour["duration_minutes"], 60)
+        self.assertTrue(any(
+            "Rientro stimato al deposito 18:57 oltre la fine del turno (18:00)" in warning
+            for warning in tour["schedule_warnings"]
+        ))
+
+    def test_tour_sequence_warns_before_return_or_reload_is_complete(self):
+        overlap_warning = _vehicle_tour_sequence_warning(18 * 60 + 20, 18 * 60 + 10, 1, 2)
+        reload_warning = _vehicle_tour_sequence_warning(17 * 60, 17 * 60 + 10, 1, 2)
+
+        self.assertIn("Sovrapposizione tra giri", overlap_warning)
+        self.assertIn("prima del termine della ricarica", reload_warning)
 
     def test_single_vehicle_warns_when_estimated_arrival_misses_delivery_window(self):
         order = {
@@ -1487,6 +1603,10 @@ class GestionaleWebTests(unittest.TestCase):
 
         tours = result["vehicles"]
         self.assertEqual(len(tours), 2)
+        self.assertTrue(result["plan_reference"].startswith("PIANO-"))
+        self.assertTrue(result["generated_at"])
+        self.assertEqual({tour["plan_reference"] for tour in tours}, {result["plan_reference"]})
+        self.assertEqual({tour["generated_at"] for tour in tours}, {result["generated_at"]})
         self.assertEqual(
             [[order["order_id"] for order in tour["orders"]] for tour in tours],
             [["ORD-API-TOUR-EARLY"], ["ORD-API-TOUR-LATE"]],
