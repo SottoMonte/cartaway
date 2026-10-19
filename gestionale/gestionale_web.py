@@ -2,17 +2,26 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import imaplib
 import math
 import re
 import sqlite3
 import unicodedata
+from io import BytesIO
 from datetime import date, datetime, time, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from urllib.parse import parse_qs, urlsplit
+from xml.sax.saxutils import escape
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from . import gestionale
 
@@ -26,6 +35,268 @@ TOUR_MINIMUM_LEG_MINUTES = 10
 TOUR_FALLBACK_LEG_MINUTES = 25
 TOUR_STOP_SERVICE_MINUTES = 10
 TOUR_RELOAD_MINUTES = 20
+
+
+def _pdf_value(value: Any, fallback: str = "Da verificare") -> str:
+    normalized = str(value or "").strip()
+    return escape(normalized).replace("\n", "<br/>") if normalized else fallback
+
+
+def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any]) -> bytes:
+    output = BytesIO()
+    document = SimpleDocTemplate(
+        output,
+        pagesize=A4,
+        rightMargin=13 * mm,
+        leftMargin=13 * mm,
+        topMargin=13 * mm,
+        bottomMargin=16 * mm,
+        title=f"Consegne {vehicle.get('display_name') or vehicle.get('name') or 'Furgone'}",
+        author=brand,
+    )
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name="CartawayTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=18,
+        leading=22,
+        alignment=0,
+        textColor=colors.HexColor("#173b35"),
+        spaceAfter=2 * mm,
+    ))
+    styles.add(ParagraphStyle(
+        name="CartawaySubtitle",
+        parent=styles["Normal"],
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#4e5b57"),
+        spaceAfter=5 * mm,
+    ))
+    styles.add(ParagraphStyle(
+        name="OrderHeading",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#173b35"),
+        spaceBefore=2 * mm,
+        spaceAfter=2 * mm,
+    ))
+    styles.add(ParagraphStyle(
+        name="Cell",
+        parent=styles["Normal"],
+        fontSize=8,
+        leading=10,
+    ))
+    styles.add(ParagraphStyle(
+        name="CellLabel",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=7,
+        leading=9,
+        textColor=colors.HexColor("#4e5b57"),
+    ))
+    styles.add(ParagraphStyle(
+        name="TableHeader",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=10,
+        textColor=colors.white,
+    ))
+    styles.add(ParagraphStyle(
+        name="SmallNote",
+        parent=styles["Normal"],
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#4e5b57"),
+    ))
+
+    def paragraph(value: Any, style: str = "Cell", fallback: str = "Da verificare") -> Paragraph:
+        return Paragraph(_pdf_value(value, fallback), styles[style])
+
+    orders = vehicle.get("orders") or []
+    vehicle_name = vehicle.get("display_name") or vehicle.get("name") or "Furgone"
+    try:
+        formatted_date = date.fromisoformat(delivery_date).strftime("%d/%m/%Y")
+    except ValueError:
+        formatted_date = delivery_date
+    story = [
+        paragraph(brand, "CartawayTitle", "Cartaway"),
+        paragraph("Distinta di consegna", "OrderHeading"),
+        paragraph(
+            f"Data: {formatted_date} | {vehicle_name} | {len(orders)} consegne",
+            "CartawaySubtitle",
+        ),
+    ]
+
+    for index, order in enumerate(orders, start=1):
+        request_details = order.get("request_details")
+        if not isinstance(request_details, dict):
+            request_details = {}
+        product_lines = request_details.get("product_lines")
+        if not isinstance(product_lines, list):
+            product_lines = []
+        prices_by_product = {
+            str(line.get("product_id") or ""): line
+            for line in product_lines
+            if isinstance(line, dict)
+        }
+
+        block = [
+            paragraph(
+                f"Consegna {index} - Ordine #{order.get('order_id') or ''}",
+                "OrderHeading",
+            ),
+        ]
+        customer_rows = [
+            [
+                paragraph("Cliente", "CellLabel"),
+                paragraph(order.get("customer_name")),
+                paragraph("Telefono", "CellLabel"),
+                paragraph(order.get("customer_phone")),
+            ],
+            [
+                paragraph("Email", "CellLabel"),
+                paragraph(order.get("customer_email")),
+                paragraph("Arrivo", "CellLabel"),
+                paragraph(order.get("estimated_arrival_at") or order.get("preferred_delivery_time")),
+            ],
+            [
+                paragraph("Indirizzo", "CellLabel"),
+                paragraph(order.get("delivery_address")),
+                "",
+                "",
+            ],
+            [
+                paragraph("Città", "CellLabel"),
+                paragraph(order.get("delivery_city")),
+                paragraph("Fascia", "CellLabel"),
+                paragraph(order.get("preferred_delivery_time")),
+            ],
+            [
+                paragraph("Note", "CellLabel"),
+                paragraph(order.get("delivery_notes"), fallback="Nessuna"),
+                "",
+                "",
+            ],
+        ]
+        if str(request_details.get("billing_requested") or "").casefold() in {"sì", "si", "yes", "true"}:
+            customer_rows.append([
+                paragraph("Fatturare a", "CellLabel"),
+                paragraph(request_details.get("billing_business_name") or order.get("customer_name")),
+                paragraph("P. IVA", "CellLabel"),
+                paragraph(request_details.get("billing_vat_number")),
+            ])
+            customer_rows.append([
+                paragraph("SDI / PEC", "CellLabel"),
+                paragraph(request_details.get("billing_recipient")),
+                "",
+                "",
+            ])
+        customer_table = Table(customer_rows, colWidths=[18 * mm, 62 * mm, 18 * mm, 86 * mm])
+        customer_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#eef3f1")),
+            ("BACKGROUND", (2, 0), (2, -1), colors.HexColor("#eef3f1")),
+            ("SPAN", (1, 2), (3, 2)),
+            ("SPAN", (1, 4), (3, 4)),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#d7dfdc")),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        block.append(customer_table)
+        block.append(Spacer(1, 2 * mm))
+
+        item_rows = [[
+            paragraph("Q.tà", "TableHeader"),
+            paragraph("Prodotto", "TableHeader"),
+            paragraph("Prezzo unit.", "TableHeader"),
+            paragraph("Importo", "TableHeader"),
+        ]]
+        for item in order.get("availability") or []:
+            if not isinstance(item, dict):
+                continue
+            line = prices_by_product.get(str(item.get("product_id") or ""), {})
+            item_rows.append([
+                paragraph(item.get("requested", ""), fallback="-"),
+                paragraph(item.get("name")),
+                paragraph(line.get("unit_price"), fallback="-"),
+                paragraph(line.get("line_total"), fallback="-"),
+            ])
+        if len(item_rows) == 1:
+            item_rows.append([paragraph("-"), paragraph("Articoli da verificare"), paragraph("-"), paragraph("-")])
+        item_table = Table(
+            item_rows,
+            colWidths=[14 * mm, 88 * mm, 38 * mm, 44 * mm],
+            repeatRows=1,
+        )
+        item_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#173b35")),
+            ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#d7dfdc")),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (0, 1), (0, -1), "CENTER"),
+            ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        block.append(item_table)
+
+        costs = [
+            ("Prodotti (IVA inclusa)", order.get("products_subtotal")),
+            ("Sconto", order.get("recurring_discount")),
+            ("Consegna", request_details.get("cost_shipping")),
+            ("IVA prodotti", request_details.get("cost_tax")),
+            ("Totale indicato nella richiesta", request_details.get("cost_total")),
+        ]
+        cost_rows = [
+            [paragraph(label, "CellLabel"), paragraph(value, "Cell", "Da verificare")]
+            for label, value in costs
+        ]
+        cost_table = Table(cost_rows, colWidths=[140 * mm, 44 * mm], hAlign="RIGHT")
+        cost_table.setStyle(TableStyle([
+            ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+            ("LINEABOVE", (0, -1), (-1, -1), 0.8, colors.HexColor("#173b35")),
+            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#eef3f1")),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ]))
+        block.extend([Spacer(1, 2 * mm), cost_table])
+        payment_note = request_details.get("payment_information")
+        block.append(Paragraph(
+            f"<b>Nota pagamento:</b> {_pdf_value(payment_note, 'Modalità da concordare.')}",
+            styles["SmallNote"],
+        ))
+        block.append(Paragraph("Firma per ricevuta: __________________________________________", styles["SmallNote"]))
+        story.append(KeepTogether(block[:2]))
+        story.extend(block[2:])
+        story.append(Spacer(1, 5 * mm))
+
+    def draw_footer(canvas: Any, page_document: Any) -> None:
+        canvas.saveState()
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#5c6864"))
+        canvas.drawString(13 * mm, 8 * mm, "Documento operativo non fiscale. Verificare importo e pagamento prima dell'incasso.")
+        canvas.drawRightString(A4[0] - 13 * mm, 8 * mm, f"Pagina {page_document.page}")
+        canvas.restoreState()
+
+    document.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
+    return output.getvalue()
+
+
+def _attach_vehicle_delivery_pdfs(brand: str, delivery_date: str, vehicles: Sequence[Dict[str, Any]]) -> None:
+    for vehicle in vehicles:
+        if vehicle.get("orders"):
+            pdf_bytes = _vehicle_delivery_pdf(brand, delivery_date, vehicle)
+            vehicle["delivery_pdf_base64"] = base64.b64encode(pdf_bytes).decode("ascii")
 
 
 def _requested_delivery_times(value: str) -> List[time]:
@@ -1299,9 +1570,11 @@ def create_server(
                 today = datetime.now(gestionale.ROME).date()
                 rows = connection.execute(
                     """
-                    SELECT order_id, customer_name, delivery_address, delivery_city,
+                    SELECT order_id, customer_name, customer_email, customer_phone,
+                        delivery_address, delivery_city,
                         preferred_delivery_date, preferred_delivery_time, delivery_notes,
                         confirmed_at, delivery_date, ordered_at, availability_json,
+                        products_subtotal, recurring_discount,
                         recurring_order, recurring_enabled, recurring_frequency_days,
                         next_recurring_delivery_date, request_details_json
                     FROM orders
@@ -1330,6 +1603,7 @@ def create_server(
                         request_details = {}
                     if not isinstance(request_details, dict):
                         request_details = {}
+                    base_order["request_details"] = request_details
                     base_order["recurring_order"] = bool(base_order["recurring_order"])
                     base_order["recurring_enabled"] = bool(base_order["recurring_enabled"])
                     base_order["recurring_frequency_days"] = int(base_order["recurring_frequency_days"])
@@ -1470,13 +1744,19 @@ def create_server(
                     end_time,
                     payload.get("return_to_origin") is True,
                 )
-                return {
+                result = {
                     "date": event_date.isoformat(),
                     "products": single_vehicle_plan["products"],
                     "vehicles": single_vehicle_plan["tours"],
                     "unassigned_orders": single_vehicle_plan["unassigned_orders"],
                     "excluded_orders": excluded_orders,
                 }
+                _attach_vehicle_delivery_pdfs(
+                    str(site.get("brand") or "Cartaway"),
+                    event_date.isoformat(),
+                    result["vehicles"],
+                )
+                return result
 
             allocation = _allocate_vehicle_loads(
                 route_orders,
@@ -1536,6 +1816,11 @@ def create_server(
                     vehicle["schedule_warnings"] = []
                 planned_vehicles.append(vehicle)
 
+            _attach_vehicle_delivery_pdfs(
+                str(site.get("brand") or "Cartaway"),
+                event_date.isoformat(),
+                planned_vehicles,
+            )
             return {
                 "date": event_date.isoformat(),
                 "products": allocation["products"],

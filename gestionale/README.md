@@ -2,11 +2,12 @@
 
 Backend, interfaccia web e test sono raccolti in questa cartella. I file `../data/products.json` e `../data/site.json` restano nella radice perché sono condivisi con il negozio e il CMS; il programma non legge la configurazione YAML del CMS. Se necessario, i percorsi dei JSON si possono cambiare con le opzioni `--products` e `--site`. Il database SQLite viene salvato fuori dal repository in `~/.local/share/cartaway/gestionale.sqlite3`.
 
-I comandi seguenti si eseguono dalla cartella principale del progetto. Il gestionale richiede Python 3.9 o successivo e usa solo la libreria standard.
+I comandi seguenti si eseguono dalla cartella principale del progetto. Il gestionale richiede Python 3.9 o successivo; la generazione dei PDF usa ReportLab.
 
 ## Avvio e comandi
 
 ```bash
+python3 -m pip install -r gestionale/requirements.txt
 python3 -m gestionale init
 python3 -m gestionale stock list
 python3 -m gestionale stock set carta-igienica-mini-jumbo-12-rotoli 20

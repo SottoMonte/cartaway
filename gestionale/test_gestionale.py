@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import sqlite3
@@ -1146,10 +1147,42 @@ class GestionaleWebTests(unittest.TestCase):
                 recurring_discount="Nessuno",
                 order_datetime=datetime.now(ROME),
                 message_id=f"<{order_id.lower()}@example.org>",
+                request_details={
+                    "product_lines": [{
+                        "product_id": "carta-igienica",
+                        "unit_price": "€ 3,00",
+                        "line_total": "€ 6,00",
+                    }],
+                    "cost_shipping": "€ 2,00",
+                    "cost_tax": "Inclusa",
+                    "cost_total": "€ 8,00",
+                    "payment_information": "Pagamento alla consegna",
+                    "billing_requested": "Sì",
+                    "billing_business_name": "Cartoleria Bianchi",
+                    "billing_vat_number": "IT12345678901",
+                    "billing_recipient": "ABC1234",
+                },
             )
-            prepare_order(connection, order, self.site)
+            second_order = ParsedOrder(
+                order_id="ORD-VEHICLE-LOAD-SECOND",
+                items=[OrderItem("carta-igienica", "Carta igienica lavanda", 2)],
+                customer_name="Laura Verdi",
+                customer_email="laura@example.org",
+                customer_phone="+39 333 7654321",
+                delivery_address="Via Roma 5",
+                delivery_city="Montoro",
+                recurring=False,
+                voucher_candidate="",
+                voucher_value="",
+                products_subtotal="€ 6,00",
+                recurring_discount="Nessuno",
+                order_datetime=datetime.now(ROME) + timedelta(minutes=1),
+                message_id="<ord-vehicle-load-second@example.org>",
+            )
             with patch("gestionale.gestionale.send_email"):
-                confirm_order(connection, order_id, self.site)
+                for delivery_order in (order, second_order):
+                    prepare_order(connection, delivery_order, self.site)
+                    confirm_order(connection, delivery_order.order_id, self.site)
         finally:
             connection.close()
 
@@ -1157,7 +1190,10 @@ class GestionaleWebTests(unittest.TestCase):
             "/api/load-config",
             {
                 "product_volumes": {"carta-igienica": 2.5},
-                "vehicles": [{"name": "Furgone 1", "capacity_liters": 5}],
+                "vehicles": [
+                    {"name": "Furgone 1", "capacity_liters": 5},
+                    {"name": "Furgone 2", "capacity_liters": 5},
+                ],
             },
             origin=self.base_url,
         ) as response:
@@ -1180,8 +1216,17 @@ class GestionaleWebTests(unittest.TestCase):
         vehicle = result["vehicles"][0]
         self.assertEqual(vehicle["name"], "Furgone 1")
         self.assertEqual(vehicle["used_volume_liters"], 5)
+        planned_vehicles = [item for item in result["vehicles"] if item["orders"]]
+        self.assertEqual(len(planned_vehicles), 2)
+        for planned_vehicle in planned_vehicles:
+            delivery_pdf = base64.b64decode(planned_vehicle["delivery_pdf_base64"], validate=True)
+            self.assertTrue(delivery_pdf.startswith(b"%PDF-"))
+        self.assertEqual(vehicle["orders"][0]["customer_email"], "mario@example.org")
+        self.assertEqual(
+            vehicle["orders"][0]["request_details"]["cost_total"],
+            "€ 8,00",
+        )
         self.assertEqual([order["order_id"] for order in vehicle["orders"]], [order_id])
-        self.assertEqual(vehicle["products"][0]["quantity"], 2)
         self.assertEqual(len(vehicle["maps_urls"]), 1)
         self.assertIn("ORD-VEHICLE-LOAD", parse_qs(urlsplit(vehicle["calendar_url"]).query)["details"][0])
         maps_query = parse_qs(urlsplit(vehicle["maps_urls"][0]).query)
@@ -1354,6 +1399,9 @@ class GestionaleWebTests(unittest.TestCase):
             [[order["order_id"] for order in tour["orders"]] for tour in tours],
             [["ORD-API-TOUR-EARLY"], ["ORD-API-TOUR-LATE"]],
         )
+        for tour in tours:
+            delivery_pdf = base64.b64decode(tour["delivery_pdf_base64"], validate=True)
+            self.assertTrue(delivery_pdf.startswith(b"%PDF-"))
         requested_windows = [(time(10, 0), time(11, 0)), (time(12, 0), time(13, 0))]
         destinations = ["Via Roma 4, Montoro", "Via Roma 5, Montoro"]
         for tour, requested_window, destination in zip(tours, requested_windows, destinations):

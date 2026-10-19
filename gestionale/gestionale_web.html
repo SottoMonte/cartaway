@@ -376,7 +376,7 @@
                 <label class="field" for="route-start"><span>Ora inizio</span><input id="route-start" name="start" type="time" value="09:00" required /></label>
                 <label class="field" for="route-end"><span>Ora fine</span><input id="route-end" name="end" type="time" value="13:00" required /></label>
               </div>
-              <div><button class="button" id="route-button" type="submit">Ripartisci il carico e crea link</button></div>
+              <div><button class="button" id="route-button" type="submit">Crea giri, link e PDF</button></div>
             </form>
             <div class="route-results" id="route-results" hidden>
               <h3>Carichi e itinerari per furgone</h3>
@@ -1005,6 +1005,16 @@
               link.rel = "noopener noreferrer";
               section.append(link);
             }
+            if (vehicle.delivery_pdf_base64) {
+              const pdfLink = element("a", "Scarica PDF consegne", "button secondary small");
+              const filePart = String(vehicle.display_name || vehicle.name || "furgone")
+                .toLocaleLowerCase("it")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "");
+              pdfLink.href = `data:application/pdf;base64,${vehicle.delivery_pdf_base64}`;
+              pdfLink.download = `consegne-${filePart}-${result.date}.pdf`;
+              section.append(pdfLink);
+            }
             if (vehicle.calendar_url) {
               const calendarLink = element("a", "Aggiungi giro a Google Calendar", "button secondary small");
               calendarLink.href = vehicle.calendar_url;
@@ -1384,14 +1394,15 @@
           const assignedCount = result.vehicles.reduce((total, vehicle) => total + vehicle.orders.length, 0);
           const linkCount = result.vehicles.reduce((total, vehicle) => total + vehicle.maps_urls.length, 0);
           const tourCount = result.vehicles.filter((vehicle) => vehicle.orders.length).length;
+          const pdfCount = result.vehicles.filter((vehicle) => vehicle.delivery_pdf_base64).length;
           const assignedLabel = assignedCount === 1 ? "ordine assegnato" : "ordini assegnati";
           showNotice(
-            `${assignedCount} ${assignedLabel} · ${tourCount} ${tourCount === 1 ? "giro" : "giri"} · ${linkCount} link Maps${result.unassigned_orders.length ? ` · ${result.unassigned_orders.length} non assegnati` : ""}${result.excluded_orders.length ? ` · ${result.excluded_orders.length} esclusi` : ""}.`,
+            `${assignedCount} ${assignedLabel} · ${tourCount} ${tourCount === 1 ? "giro" : "giri"} · ${linkCount} link Maps · ${pdfCount} PDF${result.unassigned_orders.length ? ` · ${result.unassigned_orders.length} non assegnati` : ""}${result.excluded_orders.length ? ` · ${result.excluded_orders.length} esclusi` : ""}.`,
           );
         } catch (error) {
           showNotice(error.message, "error");
         } finally {
-          setButtonBusy(button, false, "Ripartisci il carico e crea link");
+          setButtonBusy(button, false, "Crea giri, link e PDF");
         }
       });
 
