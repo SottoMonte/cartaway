@@ -594,6 +594,70 @@ class GestionaleTests(unittest.TestCase):
         self.assertIn("ORD-TOUR-EARLY", parse_qs(urlsplit(first_tour["calendar_url"]).query)["details"][0])
         self.assertEqual(result["unassigned_orders"], [])
 
+    def test_single_vehicle_splits_tour_after_excessive_wait_for_late_delivery(self):
+        site = {
+            "delivery_zones": [{
+                "locations": [
+                    {"name": "Montoro", "lat": 40.8328763, "lon": 14.7917765},
+                    {"name": "Solofra", "lat": 40.8291308, "lon": 14.8456516},
+                    {"name": "Fisciano", "lat": 40.7746500, "lon": 14.8000000},
+                ]
+            }]
+        }
+        orders = [
+            {
+                "order_id": "ORD-MORNING-MONTORO",
+                "customer_name": "Cliente Montoro",
+                "destination": "Via Roma 1, Montoro",
+                "delivery_city": "Montoro",
+                "delivery_address": "Via Roma 1",
+                "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+                "preferred_delivery_time": "",
+                "delivery_notes": "",
+            },
+            {
+                "order_id": "ORD-MORNING-SOLOFRA",
+                "customer_name": "Cliente Solofra",
+                "destination": "Via Roma 2, Solofra",
+                "delivery_city": "Solofra",
+                "delivery_address": "Via Roma 2",
+                "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+                "preferred_delivery_time": "",
+                "delivery_notes": "",
+            },
+            {
+                "order_id": "ORD-LATE-FISCIANO",
+                "customer_name": "Cliente Fisciano",
+                "destination": "Via Roma 3, Fisciano",
+                "delivery_city": "Fisciano",
+                "delivery_address": "Via Roma 3",
+                "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+                "preferred_delivery_time": "Dalle 17:00 alle 17:00",
+                "delivery_notes": "",
+            },
+        ]
+
+        result = _plan_single_vehicle_tours(
+            orders,
+            {"name": "Furgone 1", "capacity_liters": 20},
+            {"roll": 1},
+            "Piazza Roma, Montoro",
+            site,
+            date(2026, 10, 19),
+            time(9, 0),
+            time(19, 0),
+            True,
+        )
+
+        self.assertEqual(
+            [[order["order_id"] for order in tour["orders"]] for tour in result["tours"]],
+            [["ORD-MORNING-MONTORO", "ORD-MORNING-SOLOFRA"], ["ORD-LATE-FISCIANO"]],
+        )
+        self.assertGreaterEqual(
+            datetime.fromisoformat(result["tours"][1]["departure_at"]).time(),
+            time(16, 0),
+        )
+
     def test_single_vehicle_warns_when_estimated_arrival_misses_delivery_window(self):
         order = {
             "order_id": "ORD-TOUR-MISSED-WINDOW",

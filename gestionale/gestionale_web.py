@@ -35,6 +35,7 @@ TOUR_MINIMUM_LEG_MINUTES = 10
 TOUR_FALLBACK_LEG_MINUTES = 25
 TOUR_STOP_SERVICE_MINUTES = 10
 TOUR_RELOAD_MINUTES = 20
+TOUR_MAX_STOP_WAIT_MINUTES = 120
 
 
 def _pdf_value(value: Any, fallback: str = "Da verificare") -> str:
@@ -312,12 +313,12 @@ def _delivery_time_sort_key(order: Dict[str, Any]) -> Tuple[int, int]:
     if requested_times:
         requested_start = requested_times[0]
         minutes = requested_start.hour * 60 + requested_start.minute
-        return (0 if requested_start < time(12, 0) else 1, minutes)
+        return (0 if requested_start < time(12, 0) else 2, minutes)
     if "mattina" in preference:
-        return (0, -1)
+        return (1, 9 * 60)
     if "pomeriggio" in preference:
-        return (1, 12 * 60)
-    return (2, 0)
+        return (2, 12 * 60)
+    return (1, 0)
 
 
 def _normalized_place(value: Any) -> str:
@@ -501,12 +502,13 @@ def _route_time_constraint(order: Dict[str, Any]) -> Optional[Tuple[int, int]]:
     requested_times = _requested_order_times(order)
     if requested_times:
         requested_start = requested_times[0]
-        return (0, requested_start.hour * 60 + requested_start.minute)
+        minutes = requested_start.hour * 60 + requested_start.minute
+        return (0 if requested_start < time(12, 0) else 2, minutes)
     preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
     if "mattina" in preference:
-        return (1, 0)
+        return (1, 9 * 60)
     if "pomeriggio" in preference:
-        return (2, 0)
+        return (2, 12 * 60)
     return None
 
 
@@ -579,13 +581,12 @@ def _minimum_distance_city_order(
     city_keys: List[Tuple[str, str]],
     coordinates: Dict[Tuple[str, str], Tuple[float, float]],
     origin_coordinate: Tuple[float, float],
-    required_order: List[Tuple[str, str]],
+    city_priorities: Dict[Tuple[str, str], Tuple[int, int]],
     return_to_origin: bool,
 ) -> List[Tuple[str, str]]:
     city_count = len(city_keys)
-    city_indexes = {city_key: index for index, city_key in enumerate(city_keys)}
-    required_indexes = [city_indexes[city_key] for city_key in required_order]
-    required_ranks = {city_index: rank for rank, city_index in enumerate(required_indexes)}
+    priorities = [city_priorities.get(city_key, (1, 0)) for city_key in city_keys]
+    priority_levels = sorted(set(priorities))
     distance_matrix = [
         [
             _distance_km(coordinates[first_city], coordinates[second_city])
@@ -596,46 +597,31 @@ def _minimum_distance_city_order(
     origin_distances = [_distance_km(origin_coordinate, coordinates[city_key]) for city_key in city_keys]
 
     if city_count > 12:
-        route_indexes = list(required_indexes)
-        unplaced_indexes = [index for index in range(city_count) if index not in required_ranks]
-        if not route_indexes and unplaced_indexes:
-            first_index = min(unplaced_indexes, key=lambda index: (origin_distances[index], index))
-            route_indexes.append(first_index)
-            unplaced_indexes.remove(first_index)
-        while unplaced_indexes:
-            best_addition = math.inf
-            best_city_index = unplaced_indexes[0]
-            best_position = len(route_indexes)
-            minimum_position = 1 if required_order else 1
-            for city_index in unplaced_indexes:
-                for position in range(minimum_position, len(route_indexes) + 1):
-                    previous_distance = (
-                        origin_distances[city_index]
-                        if position == 0
-                        else distance_matrix[route_indexes[position - 1]][city_index]
+        route_indexes = []
+        for priority in priority_levels:
+            unplaced_indexes = [index for index, value in enumerate(priorities) if value == priority]
+            previous_index = None
+            while unplaced_indexes:
+                if previous_index is None:
+                    next_index = min(
+                        unplaced_indexes,
+                        key=lambda index: (origin_distances[index], index),
                     )
-                    addition = previous_distance
-                    if position < len(route_indexes):
-                        addition += distance_matrix[city_index][route_indexes[position]]
-                        addition -= (
-                            origin_distances[route_indexes[position]]
-                            if position == 0
-                            else distance_matrix[route_indexes[position - 1]][route_indexes[position]]
-                        )
-                    elif return_to_origin:
-                        addition += origin_distances[city_index]
-                    if (addition, city_index, position) < (best_addition, best_city_index, best_position):
-                        best_addition = addition
-                        best_city_index = city_index
-                        best_position = position
-            route_indexes.insert(best_position, best_city_index)
-            unplaced_indexes.remove(best_city_index)
+                else:
+                    next_index = min(
+                        unplaced_indexes,
+                        key=lambda index: (distance_matrix[previous_index][index], index),
+                    )
+                route_indexes.append(next_index)
+                unplaced_indexes.remove(next_index)
+                previous_index = next_index
         return [city_keys[index] for index in route_indexes]
 
     full_mask = (1 << city_count) - 1
     costs: Dict[Tuple[int, int], float] = {}
     parents: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {}
-    start_indexes = [required_indexes[0]] if required_indexes else list(range(city_count))
+    first_priority = priority_levels[0]
+    start_indexes = [index for index, priority in enumerate(priorities) if priority == first_priority]
     for city_index in start_indexes:
         state = (1 << city_index, city_index)
         costs[state] = origin_distances[city_index]
@@ -646,18 +632,16 @@ def _minimum_distance_city_order(
             state = (visited_mask, last_index)
             if state not in costs or visited_mask == full_mask:
                 continue
-            visited_required_count = sum(
-                bool(visited_mask & (1 << required_index))
-                for required_index in required_indexes
+            next_priority = min(
+                priority
+                for index, priority in enumerate(priorities)
+                if not visited_mask & (1 << index)
             )
             for next_index in range(city_count):
                 next_bit = 1 << next_index
                 if visited_mask & next_bit:
                     continue
-                if next_index in required_ranks:
-                    if required_ranks[next_index] != visited_required_count:
-                        continue
-                elif required_indexes and visited_required_count == 0:
+                if priorities[next_index] != next_priority:
                     continue
                 next_state = (visited_mask | next_bit, next_index)
                 next_cost = costs[state] + distance_matrix[last_index][next_index]
@@ -745,35 +729,22 @@ def _group_route_orders_by_city(
     if origin_coordinate is None:
         return _fallback_city_order(orders, origin)
 
-    city_rank = {city_key: rank for rank, city_key in enumerate(grouped_orders)}
-    city_constraints: Dict[Tuple[str, str], Tuple[int, int]] = {}
+    city_priorities: Dict[Tuple[str, str], Tuple[int, int]] = {}
     for city_key, city_orders in grouped_orders.items():
         constraints = [
             priority
             for order in city_orders
             if (priority := _route_time_constraint(order)) is not None
         ]
-        if constraints:
-            city_constraints[city_key] = min(constraints)
-    constrained_cities = sorted(
-        city_constraints,
-        key=lambda city_key: (city_constraints[city_key], city_rank[city_key]),
-    )
-    if origin_city in grouped_orders:
-        if origin_city in city_constraints:
-            required_order = constrained_cities
-        else:
-            required_order = [origin_city] + [
-                city_key for city_key in constrained_cities if city_key != origin_city
-            ]
-    else:
-        required_order = constrained_cities
+        city_priorities[city_key] = min(constraints) if constraints else (1, 0)
+    if origin_city in city_priorities and city_priorities[origin_city] == (1, 0):
+        city_priorities[origin_city] = (0, -1)
 
     route_city_order = _minimum_distance_city_order(
         list(grouped_orders),
         {city_key: point for city_key, point in city_coordinates.items() if point is not None},
         origin_coordinate,
-        required_order,
+        city_priorities,
         return_to_origin,
     )
     return [
@@ -839,16 +810,8 @@ def _delivery_window_minutes(
     return None
 
 
-def _tour_order_sort_key(
-    order: Dict[str, Any],
-    shift_start_minute: int,
-    shift_end_minute: int,
-) -> Tuple[int, int, int, int, str]:
-    window = _delivery_window_minutes(order, shift_start_minute, shift_end_minute)
-    if window is None:
-        window = (shift_start_minute, shift_end_minute)
-    preference = _delivery_time_sort_key(order)
-    return (*window[::-1], preference[0], preference[1], str(order.get("order_id") or ""))
+def _tour_order_sort_key(order: Dict[str, Any]) -> Tuple[int, int, str]:
+    return (*_delivery_time_sort_key(order), str(order.get("order_id") or ""))
 
 
 def _estimated_leg_minutes(
@@ -919,6 +882,7 @@ def _estimate_vehicle_tour_schedule(
     scheduled_orders = []
     order_time_warnings = []
     schedule_warnings = []
+    longest_wait_minutes = 0
 
     for order in route_orders:
         destination_point = _matching_location_coordinate(
@@ -935,6 +899,7 @@ def _estimate_vehicle_tour_schedule(
         if window is not None:
             window_start, window_end = window
             if arrival_minute < window_start:
+                longest_wait_minutes = max(longest_wait_minutes, window_start - arrival_minute)
                 arrival_minute = window_start
             if arrival_minute > window_end:
                 warning = (
@@ -998,6 +963,7 @@ def _estimate_vehicle_tour_schedule(
         "return_to_origin": return_to_origin,
         "order_time_warnings": order_time_warnings,
         "schedule_warnings": list(dict.fromkeys(schedule_warnings)),
+        "longest_wait_minutes": longest_wait_minutes,
         "estimate_note": estimate_note,
         "estimated_legs": estimated_legs,
         "missing_coordinate_legs": missing_coordinate_legs,
@@ -1029,13 +995,7 @@ def _plan_single_vehicle_tours(
         elif single_order["vehicles"][0]["orders"]:
             prepared_orders.append(single_order["vehicles"][0]["orders"][0])
 
-    prepared_orders.sort(
-        key=lambda order: _tour_order_sort_key(
-            order,
-            shift_start_minute,
-            shift_end_minute,
-        )
-    )
+    prepared_orders.sort(key=_tour_order_sort_key)
 
     tour_specs = []
     current_orders = []
@@ -1101,7 +1061,10 @@ def _plan_single_vehicle_tours(
                 candidate_schedule["finish_minute"] > shift_end_minute
                 and current_schedule["finish_minute"] <= shift_end_minute
             )
-            if new_order_warnings or new_shift_conflict:
+            new_excessive_wait = (
+                candidate_schedule["longest_wait_minutes"] > TOUR_MAX_STOP_WAIT_MINUTES
+            )
+            if new_order_warnings or new_shift_conflict or new_excessive_wait:
                 close_tour(current_orders, True)
                 current_orders = []
                 current_volume = 0.0
