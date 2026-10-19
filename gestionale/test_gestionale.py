@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 import sqlite3
 import tempfile
 import threading
@@ -46,6 +47,7 @@ from gestionale.gestionale_web import (
     _allocate_vehicle_loads,
     _group_route_orders_by_city,
     _plan_single_vehicle_tours,
+    _vehicle_delivery_pdf,
     create_server,
 )
 
@@ -77,6 +79,32 @@ class GestionaleTests(unittest.TestCase):
 
     def tearDown(self):
         self.connection.close()
+
+    def test_delivery_pdf_places_each_order_on_its_own_page(self):
+        orders = [
+            {
+                "order_id": "ORD-PDF-1",
+                "customer_name": "Mario Rossi",
+                "availability": [],
+                "request_details": {},
+            },
+            {
+                "order_id": "ORD-PDF-2",
+                "customer_name": "Laura Verdi",
+                "availability": [],
+                "request_details": {},
+            },
+        ]
+
+        pdf_bytes = _vehicle_delivery_pdf(
+            "Cartaway",
+            "2026-10-19",
+            {"name": "Furgone 1", "orders": orders},
+        )
+
+        page_count = re.search(rb"/Count\s+(\d+)\b", pdf_bytes)
+        self.assertIsNotNone(page_count)
+        self.assertEqual(int(page_count.group(1)), len(orders))
 
     def test_initialize_database_migrates_existing_orders_table(self):
         connection = sqlite3.connect(":memory:")

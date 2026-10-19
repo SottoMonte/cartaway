@@ -21,7 +21,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
-from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from . import gestionale
 
@@ -133,6 +133,8 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
     ]
 
     for index, order in enumerate(orders, start=1):
+        if index > 1:
+            story.append(PageBreak())
         request_details = order.get("request_details")
         if not isinstance(request_details, dict):
             request_details = {}
@@ -153,7 +155,6 @@ def _vehicle_delivery_pdf(brand: str, delivery_date: str, vehicle: Dict[str, Any
         ]
         customer_rows = [
             [
-                paragraph("Cliente", "CellLabel"),
                 paragraph(order.get("customer_name")),
                 paragraph("Telefono", "CellLabel"),
                 paragraph(order.get("customer_phone")),
