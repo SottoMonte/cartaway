@@ -906,7 +906,7 @@ function productNetPricePerUnit(product) {
 function productCard(product) {
   const id = escapeHtml(product.id);
   const name = String(product.name || "Prodotto");
-  const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
+  const productUrl = productPagePath(product.id);
   const images = productImages(product);
   const imageCount = images.length;
   const unitLabel = productUnitLabel(product.unit);
@@ -953,7 +953,7 @@ function productCard(product) {
 function productSheetRow(product) {
   const id = escapeHtml(product.id);
   const name = String(product.name || "Prodotto");
-  const productUrl = `prodotto.html?id=${encodeURIComponent(String(product.id || ""))}`;
+  const productUrl = productPagePath(product.id);
   const image = productImages(product)[0] || fallbackImage;
   const pricePerUnit = Number(product.unit?.quantity) > 1 ? productPricePerUnit(product) : null;
   const netPricePerUnit = Number(product.unit?.quantity) > 1 ? productNetPricePerUnit(product) : null;
@@ -1086,7 +1086,7 @@ function openProductDialog(productId) {
       : `${formatPrice(pricePerUnit.amount)} / ${pricePerUnit.label}`;
   }
   elements.productDialogDescription.textContent = product.description || "";
-  elements.productDialogDetail.href = `prodotto.html?id=${encodeURIComponent(String(product.id))}`;
+  elements.productDialogDetail.href = productPagePath(product.id);
   renderProductDialogImage();
   elements.productDialog.showModal();
 }
@@ -1124,7 +1124,15 @@ function renderDetailImage(index = 0) {
 function renderProductDetail() {
   if (!elements.productDetail) return;
 
-  const requestedId = new URLSearchParams(window.location.search).get("id");
+  const requestedId = new URLSearchParams(window.location.search).get("id") || (() => {
+    const match = window.location.pathname.match(/^\/prodotti\/([^/]+)\/?$/);
+    if (!match) return "";
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      return "";
+    }
+  })();
   const product = state.products.find((item) => item.id === requestedId && item.available !== false);
   if (!product) {
     elements.productDetail.hidden = true;
@@ -1725,16 +1733,21 @@ function buildWhatsappUrl(message) {
 
 const canonicalSiteOrigin = "https://cartaway.it";
 
+function productPagePath(productId) {
+  return `/prodotti/${encodeURIComponent(String(productId || ""))}/`;
+}
+
 function seoCanonicalUrl(page = state.page, productId = "") {
   const pathname = page === "catalog"
     ? "/"
     : page === "help"
       ? "/primi-passi.html"
       : page === "product"
-        ? "/prodotto.html"
+        ? productId
+          ? productPagePath(productId)
+          : "/prodotto.html"
         : "/";
   const url = new URL(pathname, canonicalSiteOrigin);
-  if (page === "product" && productId) url.searchParams.set("id", String(productId));
   return url.href;
 }
 
@@ -3055,15 +3068,13 @@ function setupEvents() {
       : `CW-${Date.now()}`;
     const emailOrders = items.map(({ product, quantity }) => {
       const unitPriceCents = productPriceInCents(product);
-      const productUrl = new URL("/prodotto.html", canonicalSiteOrigin);
-      productUrl.searchParams.set("id", String(product.id || ""));
       return {
         name: productNameWithFormat(product),
         units: quantity,
         price: formatPrice(unitPriceCents / 100),
         line_total: formatPrice((unitPriceCents * quantity) / 100),
         image_url: safeImageUrl(product.image || fallbackImage),
-        product_url: productUrl.href,
+        product_url: new URL(productPagePath(product.id), canonicalSiteOrigin).href,
       };
     });
     const vatAmountCents = orderVatAmountCents(items, recurringOrder);

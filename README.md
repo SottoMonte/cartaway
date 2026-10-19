@@ -2,7 +2,7 @@
 
 Negozio statico in italiano per prodotti di carta con consegna locale a Montoro e nei comuni vicini. Contatti e catalogo sono file JSON; Decap CMS li modifica senza database o server applicativo. Il carrello invia al cliente un riepilogo via email con EmailJS; non inoltra la richiesta all'attività. WhatsApp resta disponibile per i contatti diretti. Data e fascia oraria sono facoltative, e non sono attivi pagamenti online.
 
-`index.html` è la pagina principale e ospita il catalogo completo con ricerca, filtri, carrello e confronto dei prezzi. `catalogo.html` è mantenuta come URL storico e reindirizzata alla pagina principale su Netlify. `chi-siamo.html` presenta il servizio, `primi-passi.html` spiega come ordinare e `faq.html` raccoglie le risposte frequenti. Ogni scheda prodotto apre `prodotto.html?id=ID-PRODOTTO`.
+`index.html` è la pagina principale e ospita il catalogo completo con ricerca, filtri, carrello e confronto dei prezzi. `catalogo.html` è mantenuta come URL storico e reindirizzata alla pagina principale su Netlify. `chi-siamo.html` presenta il servizio, `primi-passi.html` spiega come ordinare e `faq.html` raccoglie le risposte frequenti. Ogni scheda prodotto apre `/prodotti/ID-PRODOTTO/`; gli URL storici `prodotto.html?id=ID-PRODOTTO` restano supportati.
 
 ## Avvio locale
 
@@ -18,7 +18,7 @@ Apri `http://localhost:4173`. La pagina `/admin` va collegata a Decap Turbo prim
 ## Pubblicazione
 
 1. Crea un repository GitHub sul branch `main` e carica il progetto.
-2. Su Netlify importa quel repository. Lascia vuoto il comando di build e imposta la cartella di pubblicazione su `.`; aggiungi poi il dominio personalizzato.
+2. Su Netlify importa quel repository. Imposta il comando di build su `node scripts/generate-sitemap.mjs` e la cartella di pubblicazione su `.`; aggiungi poi il dominio personalizzato. Le schede statiche dei prodotti e la sitemap vengono rigenerate dal catalogo a ogni pubblicazione.
 3. Crea l'organizzazione Decap Turbo con l'account del cliente. Il piano Free include un sito e un utente, quindi l'account cliente deve essere il proprietario. Collega GitHub, installa l'app Turbo sul repository e crea un sito con branch `main`, percorso di configurazione `admin/config.yml` e URL admin `https://IL-TUO-SITO/admin/`.
 4. Copia la Site ID mostrata da Turbo in `admin/config.yml`, al posto di `SOSTITUISCI-CON-LA-SITE-ID-DECAP-TURBO`, e invia la modifica a GitHub. Netlify pubblicherà la configurazione aggiornata.
 5. Accedi da `https://IL-TUO-SITO/admin/` con Decap Turbo. Da lì il cliente può aggiornare i recapiti e i prodotti; ogni salvataggio aggiorna il JSON su GitHub e avvia una nuova pubblicazione.
@@ -59,4 +59,4 @@ Per un sito commerciale non usare il piano Vercel Hobby: i termini attuali lo li
 
 ## SEO
 
-La pagina principale `/` è il catalogo e la sua canonical è l'URL principale. `_redirects` consolida `/index.html` e `/catalogo.html` su `/`. Le pagine pubbliche usano canonical assoluti, metadati Open Graph e dati strutturati specifici per catalogo, schede prodotto, guida e FAQ. Il `robots.txt` pubblica `sitemap.xml`; quando aggiungi, rimuovi o cambi l'ID di un prodotto nel CMS, aggiorna anche il relativo URL nella sitemap. Lo schema prodotto non dichiara offerte o prezzi acquistabili: il sito invia solo una richiesta e disponibilità e importi vanno confermati. I dati generici `Organization` non sostituiscono una scheda Google Business Profile verificata. Su Netlify, `_headers` applica `X-Robots-Tag: noindex` al frammento HTML usato come template email.
+La pagina principale `/` è il catalogo e la sua canonical è l'URL principale. `_redirects` consolida `/index.html` e `/catalogo.html` su `/`. Il comando di build genera una pagina HTML distinta per ogni prodotto disponibile in `/prodotti/ID/`, con contenuti, canonical, metadati e JSON-LD già presenti nell'HTML iniziale. Genera inoltre `sitemap.xml` con gli URL canonici delle pagine pubbliche e dei prodotti disponibili in `data/products.json`; `robots.txt` la pubblica. Gli URL storici `prodotto.html?id=ID` continuano a funzionare e impostano la canonical sulla nuova scheda. Lo schema `Product` include un'offerta solo quando il prezzo visualizzato è calcolabile; non vengono inventate recensioni o valutazioni. I dati generici `Organization` non sostituiscono una scheda Google Business Profile verificata. Su Netlify, `_headers` applica `X-Robots-Tag: noindex` al frammento HTML usato come template email.

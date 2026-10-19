@@ -12,20 +12,25 @@
     </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="/" />
     <meta name="theme-color" content="#183d32" />
     <link rel="icon" href="assets/cartaway-cart.svg" type="image/svg+xml" />
     <meta name="description" content="Dettagli e caratteristiche di carta igienica, carta per cucina e ufficio. Consegna a Montoro e nei comuni vicini; tempi e disponibilità da confermare." />
     <meta name="robots" content="max-image-preview:large" />
-    <link rel="canonical" href="https://cartaway.it/prodotto.html" />
+    <!-- PRODUCT_CANONICAL -->
     <meta property="og:type" content="product" />
     <meta property="og:locale" content="it_IT" />
     <meta property="og:site_name" content="Cartaway" />
     <meta property="og:url" content="https://cartaway.it/prodotto.html" />
     <meta property="og:title" content="Prodotti di carta per la casa, il lavoro e l'ufficio a Montoro | Cartaway" />
     <meta property="og:description" content="Dettagli e caratteristiche di carta igienica, carta per cucina e ufficio. Consegna a Montoro e nei comuni vicini; tempi e disponibilità da confermare." />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="" />
+    <meta property="og:image:alt" content="" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Prodotti di carta per la casa, il lavoro e l'ufficio a Montoro | Cartaway" />
     <meta name="twitter:description" content="Dettagli e caratteristiche di carta igienica, carta per cucina e ufficio. Consegna a Montoro e nei comuni vicini; tempi e disponibilità da confermare." />
+    <meta name="twitter:image" content="" />
+    <meta name="twitter:image:alt" content="" />
     <title>Scheda prodotto | Cartaway, prodotti a Montoro</title>
     <script id="seo-structured-data" type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebPage","@id":"https://cartaway.it/prodotto.html#webpage","url":"https://cartaway.it/prodotto.html","name":"Schede prodotto Cartaway","inLanguage":"it-IT"}
@@ -38,7 +43,7 @@
     />
     <link rel="stylesheet" href="shop.css?v=81" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js" defer></script>
-      <script src="shop.js?v=108" defer></script>
+      <script src="shop.js?v=110" defer></script>
   </head>
   <body data-page="product">
     <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -91,7 +96,7 @@
         <section class="product-detail" id="product-detail" aria-labelledby="detail-title" hidden>
           <div class="product-detail__gallery">
             <div class="product-detail__stage">
-              <img id="detail-image" src="" alt="" />
+              <img id="detail-image" src="" alt="" loading="eager" fetchpriority="high" />
               <p class="product-detail__unit" id="detail-unit"></p>
               <span class="product-detail__counter" id="detail-image-counter" aria-live="polite"></span>
               <button class="product-detail__arrow product-detail__arrow--previous" id="detail-image-previous" type="button" aria-label="Foto precedente">←</button>
@@ -105,7 +110,7 @@
             <div class="product-price-set product-detail__prices">
               <div class="product-price-set__item product-price-set__item--total">
                 <p class="product-price-set__value product-detail__price" id="detail-price"></p>
-                <span class="product-price-set__label" data-vat-status>IVA da confermare</span>
+                <span class="product-price-set__label" id="detail-vat-status" data-vat-status>IVA da confermare</span>
               </div>
               <div class="product-price-set__item product-price-set__item--unit" id="detail-unit-price-wrap" hidden>
                 <span class="product-price-set__label">Unitario IVA incl.</span>
