@@ -8,7 +8,7 @@ import math
 import re
 import sqlite3
 import unicodedata
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -20,6 +20,12 @@ from . import gestionale
 ROOT = Path(__file__).resolve().parent
 MAX_REQUEST_BYTES = 64 * 1024
 DELIVERY_TIMES_PATTERN = re.compile(r"(?<!\d)(?:[01]?\d|2[0-3]):[0-5]\d(?!\d)")
+TOUR_AVERAGE_SPEED_KMH = 30
+TOUR_ROAD_DISTANCE_FACTOR = 1.35
+TOUR_MINIMUM_LEG_MINUTES = 10
+TOUR_FALLBACK_LEG_MINUTES = 25
+TOUR_STOP_SERVICE_MINUTES = 10
+TOUR_RELOAD_MINUTES = 20
 
 
 def _requested_delivery_times(value: str) -> List[time]:
@@ -66,6 +72,150 @@ def _origin_city_key(origin: str, orders: List[Dict[str, Any]]) -> Optional[Tupl
         and f" {key[1]} " in normalized_origin
     }
     return max(matching_cities, key=lambda city: len(city[1]), default=None)
+
+
+def _allocate_vehicle_loads(
+    orders: Sequence[Dict[str, Any]],
+    vehicles: Sequence[Dict[str, Any]],
+    product_volumes: Dict[str, float],
+) -> Dict[str, Any]:
+    vehicle_loads = [
+        {
+            "name": str(vehicle["name"]),
+            "capacity_liters": float(vehicle["capacity_liters"]),
+            "used_volume_liters": 0.0,
+            "remaining_liters": float(vehicle["capacity_liters"]),
+            "orders": [],
+            "products": {},
+        }
+        for vehicle in vehicles
+    ]
+    product_totals: Dict[str, Dict[str, Any]] = {}
+    loadable_orders = []
+    unassigned_orders = []
+
+    for order_index, order in enumerate(orders):
+        order_volume = 0.0
+        order_products = []
+        missing_products = []
+        for item in order.get("availability", []):
+            product_id = str(item.get("product_id") or "").strip()
+            quantity = item.get("requested")
+            if not product_id or isinstance(quantity, bool) or not isinstance(quantity, int) or quantity <= 0:
+                continue
+            name = str(item.get("name") or product_id)
+            unit_volume = product_volumes.get(product_id)
+            summary = product_totals.setdefault(
+                product_id,
+                {
+                    "product_id": product_id,
+                    "name": name,
+                    "quantity": 0,
+                    "unit_volume_liters": unit_volume,
+                    "total_volume_liters": None,
+                },
+            )
+            summary["quantity"] += quantity
+            if unit_volume is None or not math.isfinite(unit_volume) or unit_volume <= 0:
+                missing_products.append(name)
+                continue
+            if summary["total_volume_liters"] is None:
+                summary["total_volume_liters"] = 0.0
+                summary["unit_volume_liters"] = unit_volume
+            summary["total_volume_liters"] += unit_volume * quantity
+            order_volume += unit_volume * quantity
+            order_products.append((product_id, name, quantity, unit_volume * quantity))
+
+        if not order_products and not missing_products:
+            unassigned_orders.append({
+                "order": order,
+                "required_volume_liters": None,
+                "reason": "L'ordine non contiene quantità prodotto valide.",
+            })
+        elif missing_products:
+            unassigned_orders.append({
+                "order": order,
+                "required_volume_liters": None,
+                "reason": "Ingombro da configurare: " + ", ".join(sorted(set(missing_products))) + ".",
+            })
+        else:
+            loadable_orders.append((order_index, order_volume, order, order_products))
+
+    for _, order_volume, order, order_products in sorted(
+        loadable_orders,
+        key=lambda item: (-item[1], item[0]),
+    ):
+        fitting_vehicles = [
+            (vehicle["capacity_liters"] - vehicle["used_volume_liters"] - order_volume, index)
+            for index, vehicle in enumerate(vehicle_loads)
+            if vehicle["remaining_liters"] + 1e-9 >= order_volume
+        ]
+        if not fitting_vehicles:
+            unassigned_orders.append({
+                "order": order,
+                "required_volume_liters": round(order_volume, 3),
+                "reason": (
+                    "Nessun furgone ha spazio residuo sufficiente "
+                    f"per {order_volume:.3f} L."
+                ),
+            })
+            continue
+
+        _, vehicle_index = min(fitting_vehicles)
+        vehicle = vehicle_loads[vehicle_index]
+        assigned_order = dict(order)
+        assigned_order["load_volume_liters"] = round(order_volume, 3)
+        vehicle["orders"].append(assigned_order)
+        vehicle["used_volume_liters"] += order_volume
+        vehicle["remaining_liters"] -= order_volume
+        for product_id, name, quantity, total_volume in order_products:
+            product = vehicle["products"].setdefault(
+                product_id,
+                {
+                    "product_id": product_id,
+                    "name": name,
+                    "quantity": 0,
+                    "total_volume_liters": 0.0,
+                },
+            )
+            product["quantity"] += quantity
+            product["total_volume_liters"] += total_volume
+
+    for vehicle in vehicle_loads:
+        vehicle["used_volume_liters"] = round(vehicle["used_volume_liters"], 3)
+        vehicle["remaining_liters"] = round(max(0.0, vehicle["remaining_liters"]), 3)
+        vehicle["products"] = sorted(
+            (
+                {**product, "total_volume_liters": round(product["total_volume_liters"], 3)}
+                for product in vehicle["products"].values()
+            ),
+            key=lambda product: product["name"].casefold(),
+        )
+
+    products = sorted(
+        (
+            {
+                **product,
+                "unit_volume_liters": (
+                    round(product["unit_volume_liters"], 3)
+                    if product["unit_volume_liters"] is not None
+                    else None
+                ),
+                "total_volume_liters": (
+                    round(product["total_volume_liters"], 3)
+                    if product["total_volume_liters"] is not None
+                    else None
+                ),
+            }
+            for product in product_totals.values()
+        ),
+        key=lambda product: product["name"].casefold(),
+    )
+    return {
+        "products": products,
+        "vehicles": vehicle_loads,
+        "unassigned_orders": unassigned_orders,
+    }
 
 
 def _requested_order_times(order: Dict[str, Any]) -> List[time]:
@@ -399,6 +549,367 @@ def _route_schedule_warning(
     )
 
 
+def _delivery_window_minutes(
+    order: Dict[str, Any],
+    shift_start_minute: int,
+    shift_end_minute: int,
+) -> Optional[Tuple[int, int]]:
+    requested_times = _requested_order_times(order)
+    if requested_times:
+        start = requested_times[0].hour * 60 + requested_times[0].minute
+        end = requested_times[-1].hour * 60 + requested_times[-1].minute
+        return start, end
+
+    preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
+    if "mattina" in preference:
+        return max(shift_start_minute, 9 * 60), min(shift_end_minute, 12 * 60)
+    if "pomeriggio" in preference:
+        return max(shift_start_minute, 12 * 60), min(shift_end_minute, 17 * 60)
+    return None
+
+
+def _tour_order_sort_key(
+    order: Dict[str, Any],
+    shift_start_minute: int,
+    shift_end_minute: int,
+) -> Tuple[int, int, int, int, str]:
+    window = _delivery_window_minutes(order, shift_start_minute, shift_end_minute)
+    if window is None:
+        window = (shift_start_minute, shift_end_minute)
+    preference = _delivery_time_sort_key(order)
+    return (*window[::-1], preference[0], preference[1], str(order.get("order_id") or ""))
+
+
+def _estimated_leg_minutes(
+    origin: Optional[Tuple[float, float]],
+    destination: Optional[Tuple[float, float]],
+) -> Tuple[int, bool]:
+    if origin is None or destination is None:
+        return TOUR_FALLBACK_LEG_MINUTES, False
+    distance_km = _distance_km(origin, destination)
+    driving_minutes = math.ceil(
+        distance_km * TOUR_ROAD_DISTANCE_FACTOR * 60 / TOUR_AVERAGE_SPEED_KMH
+    )
+    return max(TOUR_MINIMUM_LEG_MINUTES, driving_minutes), True
+
+
+def _format_tour_instant(event_date: date, minute_of_day: int) -> str:
+    instant = datetime.combine(event_date, time.min, tzinfo=gestionale.ROME)
+    return (instant + timedelta(minutes=minute_of_day)).isoformat(timespec="minutes")
+
+
+def _format_tour_minute(minute_of_day: int) -> str:
+    day_offset, minute = divmod(minute_of_day, 24 * 60)
+    label = f"{minute // 60:02d}:{minute % 60:02d}"
+    return f"+{day_offset} giorno {label}" if day_offset else label
+
+
+def _estimate_vehicle_tour_schedule(
+    orders: Sequence[Dict[str, Any]],
+    origin: str,
+    site: Dict[str, Any],
+    event_date: date,
+    shift_start: time,
+    shift_end: time,
+    available_from_minute: int,
+    return_to_origin: bool,
+) -> Dict[str, Any]:
+    shift_start_minute = shift_start.hour * 60 + shift_start.minute
+    shift_end_minute = shift_end.hour * 60 + shift_end.minute
+    coordinates = _delivery_location_coordinates(site)
+    origin_point = _matching_location_coordinate(origin, coordinates)
+    route_orders = _group_route_orders_by_city(list(orders), origin, site, return_to_origin)
+    departure_minute = max(shift_start_minute, available_from_minute)
+    estimated_legs = 0
+    missing_coordinate_legs = 0
+
+    first_destination = (
+        _matching_location_coordinate(str(route_orders[0].get("delivery_city") or ""), coordinates)
+        if route_orders
+        else None
+    )
+    first_leg, has_first_coordinates = _estimated_leg_minutes(origin_point, first_destination)
+    if route_orders and not has_first_coordinates:
+        missing_coordinate_legs += 1
+    else:
+        estimated_legs += 1
+    if route_orders:
+        first_window = _delivery_window_minutes(
+            route_orders[0], shift_start_minute, shift_end_minute
+        )
+        if first_window is not None:
+            departure_minute = max(
+                departure_minute,
+                first_window[0] - first_leg,
+            )
+
+    current_minute = departure_minute
+    previous_point = origin_point
+    scheduled_orders = []
+    order_time_warnings = []
+    schedule_warnings = []
+
+    for order in route_orders:
+        destination_point = _matching_location_coordinate(
+            str(order.get("delivery_city") or ""),
+            coordinates,
+        )
+        leg_minutes, has_coordinates = _estimated_leg_minutes(previous_point, destination_point)
+        if has_coordinates:
+            estimated_legs += 1
+        else:
+            missing_coordinate_legs += 1
+        arrival_minute = current_minute + leg_minutes
+        window = _delivery_window_minutes(order, shift_start_minute, shift_end_minute)
+        if window is not None:
+            window_start, window_end = window
+            if arrival_minute < window_start:
+                arrival_minute = window_start
+            if arrival_minute > window_end:
+                warning = (
+                    f"#{order['order_id']}: arrivo stimato {_format_tour_minute(arrival_minute)} "
+                    f"oltre la finestra richiesta {_format_tour_minute(window_start)}–"
+                    f"{_format_tour_minute(window_end)}."
+                )
+                order_time_warnings.append(warning)
+                schedule_warnings.append(warning)
+
+        existing_warning = _route_schedule_warning(order, shift_start, shift_end)
+        if existing_warning:
+            schedule_warnings.append(existing_warning)
+        if arrival_minute > shift_end_minute:
+            schedule_warnings.append(
+                f"#{order['order_id']}: arrivo stimato {_format_tour_minute(arrival_minute)} "
+                f"oltre la fine del turno ({_format_tour_minute(shift_end_minute)})."
+            )
+
+        scheduled_order = dict(order)
+        scheduled_order["estimated_arrival_at"] = _format_tour_instant(event_date, arrival_minute)
+        scheduled_orders.append(scheduled_order)
+        current_minute = arrival_minute + TOUR_STOP_SERVICE_MINUTES
+        previous_point = destination_point
+
+    if return_to_origin and route_orders:
+        return_minutes, has_return_coordinates = _estimated_leg_minutes(previous_point, origin_point)
+        if has_return_coordinates:
+            estimated_legs += 1
+        else:
+            missing_coordinate_legs += 1
+        current_minute += return_minutes
+
+    if current_minute > shift_end_minute:
+        schedule_warnings.append(
+            f"Rientro stimato {_format_tour_minute(current_minute)} oltre la fine del turno "
+            f"({_format_tour_minute(shift_end_minute)})."
+        )
+    if departure_minute > shift_end_minute:
+        schedule_warnings.append(
+            f"Partenza stimata {_format_tour_minute(departure_minute)} oltre la fine del turno "
+            f"({_format_tour_minute(shift_end_minute)})."
+        )
+
+    estimate_note = (
+        "Stima indicativa: coordinate dei comuni, distanza stradale stimata al fattore "
+        f"{TOUR_ROAD_DISTANCE_FACTOR:g} e velocità media {TOUR_AVERAGE_SPEED_KMH} km/h; "
+        f"{TOUR_STOP_SERVICE_MINUTES} min per consegna e {TOUR_RELOAD_MINUTES} min per ricaricare. "
+        "Verifica traffico e tempi reali in Google Maps."
+    )
+    if missing_coordinate_legs:
+        estimate_note += (
+            f" {missing_coordinate_legs} tratte senza coordinate usano il valore prudenziale "
+            f"di {TOUR_FALLBACK_LEG_MINUTES} min ciascuna."
+        )
+
+    return {
+        "orders": scheduled_orders,
+        "departure_minute": departure_minute,
+        "finish_minute": current_minute,
+        "return_to_origin": return_to_origin,
+        "order_time_warnings": order_time_warnings,
+        "schedule_warnings": list(dict.fromkeys(schedule_warnings)),
+        "estimate_note": estimate_note,
+        "estimated_legs": estimated_legs,
+        "missing_coordinate_legs": missing_coordinate_legs,
+    }
+
+
+def _plan_single_vehicle_tours(
+    orders: Sequence[Dict[str, Any]],
+    vehicle: Dict[str, Any],
+    product_volumes: Dict[str, float],
+    origin: str,
+    site: Dict[str, Any],
+    event_date: date,
+    shift_start: time,
+    shift_end: time,
+    return_to_origin: bool,
+) -> Dict[str, Any]:
+    capacity_liters = float(vehicle["capacity_liters"])
+    shift_start_minute = shift_start.hour * 60 + shift_start.minute
+    shift_end_minute = shift_end.hour * 60 + shift_end.minute
+    prepared_orders = []
+    unassigned_orders = []
+    summary = _allocate_vehicle_loads(orders, [vehicle], product_volumes)
+
+    for order in orders:
+        single_order = _allocate_vehicle_loads([order], [vehicle], product_volumes)
+        if single_order["unassigned_orders"]:
+            unassigned_orders.extend(single_order["unassigned_orders"])
+        elif single_order["vehicles"][0]["orders"]:
+            prepared_orders.append(single_order["vehicles"][0]["orders"][0])
+
+    prepared_orders.sort(
+        key=lambda order: _tour_order_sort_key(
+            order,
+            shift_start_minute,
+            shift_end_minute,
+        )
+    )
+
+    tour_specs = []
+    current_orders = []
+    current_volume = 0.0
+    available_from_minute = shift_start_minute
+
+    def close_tour(tour_orders: List[Dict[str, Any]], tour_return_to_origin: bool) -> None:
+        nonlocal available_from_minute
+        route = _group_route_orders_by_city(
+            tour_orders,
+            origin,
+            site,
+            tour_return_to_origin,
+        )
+        schedule = _estimate_vehicle_tour_schedule(
+            route,
+            origin,
+            site,
+            event_date,
+            shift_start,
+            shift_end,
+            available_from_minute,
+            tour_return_to_origin,
+        )
+        tour_specs.append((tour_orders, schedule))
+        available_from_minute = schedule["finish_minute"] + TOUR_RELOAD_MINUTES
+
+    for order in prepared_orders:
+        order_volume = float(order["load_volume_liters"])
+        if current_orders and current_volume + order_volume > capacity_liters + 1e-9:
+            close_tour(current_orders, True)
+            current_orders = []
+            current_volume = 0.0
+
+        if current_orders:
+            current_route = _group_route_orders_by_city(current_orders, origin, site, True)
+            current_schedule = _estimate_vehicle_tour_schedule(
+                current_route,
+                origin,
+                site,
+                event_date,
+                shift_start,
+                shift_end,
+                available_from_minute,
+                True,
+            )
+            candidate_orders = [*current_orders, order]
+            candidate_route = _group_route_orders_by_city(candidate_orders, origin, site, True)
+            candidate_schedule = _estimate_vehicle_tour_schedule(
+                candidate_route,
+                origin,
+                site,
+                event_date,
+                shift_start,
+                shift_end,
+                available_from_minute,
+                True,
+            )
+            new_order_warnings = set(candidate_schedule["order_time_warnings"]) - set(
+                current_schedule["order_time_warnings"]
+            )
+            new_shift_conflict = (
+                candidate_schedule["finish_minute"] > shift_end_minute
+                and current_schedule["finish_minute"] <= shift_end_minute
+            )
+            if new_order_warnings or new_shift_conflict:
+                close_tour(current_orders, True)
+                current_orders = []
+                current_volume = 0.0
+
+        current_orders.append(order)
+        current_volume += order_volume
+
+    if current_orders:
+        close_tour(current_orders, return_to_origin)
+
+    tours = []
+    tour_count = len(tour_specs)
+    for index, (tour_orders, schedule) in enumerate(tour_specs, start=1):
+        allocation = _allocate_vehicle_loads(tour_orders, [vehicle], product_volumes)
+        tour = allocation["vehicles"][0]
+        tour["display_name"] = f"{vehicle['name']} · Giro {index}/{tour_count}"
+        tour["tour_number"] = index
+        tour["tour_count"] = tour_count
+        tour["orders"] = schedule["orders"]
+        tour["departure_at"] = _format_tour_instant(event_date, schedule["departure_minute"])
+        tour["estimated_return_at"] = _format_tour_instant(event_date, schedule["finish_minute"])
+        tour["return_to_origin"] = schedule["return_to_origin"]
+        tour["schedule_warnings"] = schedule["schedule_warnings"]
+        tour["estimate_note"] = schedule["estimate_note"]
+        if index < tour_count:
+            next_available_minute = schedule["finish_minute"] + TOUR_RELOAD_MINUTES
+            tour["next_available_at"] = _format_tour_instant(event_date, next_available_minute)
+        else:
+            next_available_minute = None
+
+        destinations = [order["destination"] for order in tour["orders"]]
+        tour["maps_urls"] = gestionale.build_maps_urls(
+            origin,
+            destinations,
+            return_to_origin=schedule["return_to_origin"],
+        )
+        order_details = []
+        for order in tour["orders"]:
+            products = ", ".join(
+                f"{item['requested']} × {item['name']}"
+                for item in order["availability"]
+            )
+            arrival_at = order["estimated_arrival_at"]
+            detail = (
+                f"#{order['order_id']} - {order['customer_name']} - {order['destination']} - "
+                f"Arrivo stimato: {arrival_at} - Carico: {order['load_volume_liters']:.3f} L - "
+                f"Prodotti: {products}"
+            )
+            if order["preferred_delivery_time"]:
+                detail += f" - Orario richiesto: {order['preferred_delivery_time']}"
+            if order["delivery_notes"]:
+                detail += f" - Note: {order['delivery_notes']}"
+            order_details.append(detail)
+        details = "\n\n".join(order_details + tour["maps_urls"])
+        details += f"\n\n{schedule['estimate_note']}"
+        if tour["schedule_warnings"]:
+            details += "\n\nAvvisi sugli orari:\n" + "\n".join(tour["schedule_warnings"])
+
+        departure_datetime = datetime.fromisoformat(tour["departure_at"])
+        return_datetime = datetime.fromisoformat(tour["estimated_return_at"])
+        tour["calendar_url"] = ""
+        if departure_datetime.date() == event_date and return_datetime.date() == event_date:
+            tour["calendar_url"] = gestionale.build_calendar_url(
+                f"Giro {index}/{tour_count} - {vehicle['name']}",
+                event_date,
+                departure_datetime.time(),
+                return_datetime.time(),
+                origin,
+                details,
+            )
+        tours.append(tour)
+
+    return {
+        "products": summary["products"],
+        "tours": tours,
+        "unassigned_orders": unassigned_orders,
+    }
+
+
 class WebRequestError(gestionale.AppError):
     def __init__(self, message: str, status: int = 400) -> None:
         super().__init__(message)
@@ -618,6 +1129,18 @@ def create_server(
                 except (OSError, sqlite3.Error) as exc:
                     self._send_json(500, {"error": f"Impossibile leggere il gestionale: {exc}"})
                 return
+            if path == "/api/load-config":
+                if not self._origin_is_local():
+                    self._send_json(403, {"error": "Origine non autorizzata."})
+                    return
+                connection = gestionale.open_database(database)
+                try:
+                    self._send_json(200, gestionale.get_delivery_load_config(connection))
+                except (OSError, sqlite3.Error) as exc:
+                    self._send_json(500, {"error": f"Impossibile leggere la configurazione carichi: {exc}"})
+                finally:
+                    connection.close()
+                return
             if path == "/api/orders/history":
                 if not self._origin_is_local():
                     self._send_json(403, {"error": "Origine non autorizzata."})
@@ -661,6 +1184,10 @@ def create_server(
                     result = self._disable_recurring_schedule(payload)
                 elif path == "/api/route":
                     result = self._plan_route(payload)
+                elif path == "/api/load-config":
+                    result = self._save_delivery_load_config(payload)
+                elif path == "/api/vehicle-routes":
+                    result = self._plan_vehicle_routes(payload)
                 else:
                     self._send_json(404, {"error": "Risorsa non trovata."})
                     return
@@ -739,6 +1266,15 @@ def create_server(
             connection = gestionale.open_database(database)
             try:
                 return gestionale.disable_recurring_schedule(connection, order_id)
+            finally:
+                connection.close()
+
+        def _save_delivery_load_config(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+            product_volumes = payload.get("product_volumes")
+            vehicles = payload.get("vehicles")
+            connection = gestionale.open_database(database)
+            try:
+                return gestionale.save_delivery_load_config(connection, product_volumes, vehicles)
             finally:
                 connection.close()
 
@@ -879,6 +1415,132 @@ def create_server(
                 return {"date": event_date.isoformat(), "orders": orders}
             finally:
                 connection.close()
+
+        def _plan_vehicle_routes(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+            origin = str(payload.get("origin", "")).strip()
+            if not origin:
+                raise WebRequestError("Inserire il punto di partenza.")
+            try:
+                event_date = date.fromisoformat(str(payload.get("date", "")))
+            except ValueError as exc:
+                raise WebRequestError("La data deve essere nel formato AAAA-MM-GG.") from exc
+
+            start_time = gestionale._parse_time(str(payload.get("start", "")), "Ora inizio")
+            end_time = gestionale._parse_time(str(payload.get("end", "")), "Ora fine")
+            if end_time <= start_time:
+                raise WebRequestError("L'orario di fine deve essere successivo all'orario di inizio.")
+            delivery_data = self._delivery_orders(event_date)
+            orders = delivery_data["orders"]
+            route_orders = [
+                order for order in orders
+                if order["deliverable"] and not order["address_missing"] and order["occurrence_ready"]
+            ]
+            excluded_orders = []
+            for order in orders:
+                if order in route_orders:
+                    continue
+                reasons = list(order["availability_issues"])
+                if order["address_missing"]:
+                    reasons.append("Indirizzo mancante")
+                if not order["occurrence_ready"]:
+                    reasons.append(
+                        f"In attesa della consegna precedente del {order['previous_delivery_date']}"
+                    )
+                excluded_orders.append({"order": order, "reason": "; ".join(reasons)})
+
+            connection = gestionale.open_database(database)
+            try:
+                config = gestionale.get_delivery_load_config(connection)
+            finally:
+                connection.close()
+            if not config["vehicles"]:
+                raise WebRequestError("Aggiungere almeno un furgone con la sua capacità in litri.")
+
+            if len(config["vehicles"]) == 1:
+                single_vehicle_plan = _plan_single_vehicle_tours(
+                    route_orders,
+                    config["vehicles"][0],
+                    config["product_volumes"],
+                    origin,
+                    site,
+                    event_date,
+                    start_time,
+                    end_time,
+                    payload.get("return_to_origin") is True,
+                )
+                return {
+                    "date": event_date.isoformat(),
+                    "products": single_vehicle_plan["products"],
+                    "vehicles": single_vehicle_plan["tours"],
+                    "unassigned_orders": single_vehicle_plan["unassigned_orders"],
+                    "excluded_orders": excluded_orders,
+                }
+
+            allocation = _allocate_vehicle_loads(
+                route_orders,
+                config["vehicles"],
+                config["product_volumes"],
+            )
+            return_to_origin = payload.get("return_to_origin") is True
+            planned_vehicles = []
+            for vehicle in allocation["vehicles"]:
+                if vehicle["orders"]:
+                    vehicle_orders = _group_route_orders_by_city(
+                        vehicle["orders"],
+                        origin,
+                        site,
+                        return_to_origin,
+                    )
+                    destinations = [order["destination"] for order in vehicle_orders]
+                    vehicle["maps_urls"] = gestionale.build_maps_urls(
+                        origin,
+                        destinations,
+                        return_to_origin=return_to_origin,
+                    )
+                    vehicle["schedule_warnings"] = [
+                        warning
+                        for order in vehicle_orders
+                        if (warning := _route_schedule_warning(order, start_time, end_time))
+                    ]
+                    order_details = []
+                    for order in vehicle_orders:
+                        products = ", ".join(
+                            f"{item['requested']} × {item['name']}"
+                            for item in order["availability"]
+                        )
+                        detail = (
+                            f"#{order['order_id']} - {order['customer_name']} - {order['destination']} - "
+                            f"Carico: {order['load_volume_liters']:.3f} L - Prodotti: {products}"
+                        )
+                        if order["preferred_delivery_time"]:
+                            detail += f" - Orario richiesto: {order['preferred_delivery_time']}"
+                        if order["delivery_notes"]:
+                            detail += f" - Note: {order['delivery_notes']}"
+                        order_details.append(detail)
+                    details = "\n\n".join(order_details + vehicle["maps_urls"])
+                    if vehicle["schedule_warnings"]:
+                        details += "\n\nAvvisi sugli orari:\n" + "\n".join(vehicle["schedule_warnings"])
+                    vehicle["calendar_url"] = gestionale.build_calendar_url(
+                        f"Giro consegne {vehicle['name']} - {event_date.isoformat()}",
+                        event_date,
+                        start_time,
+                        end_time,
+                        origin,
+                        details,
+                    )
+                    vehicle["orders"] = vehicle_orders
+                else:
+                    vehicle["maps_urls"] = []
+                    vehicle["schedule_warnings"] = []
+                planned_vehicles.append(vehicle)
+
+            return {
+                "date": event_date.isoformat(),
+                "products": allocation["products"],
+                "vehicles": planned_vehicles,
+                "unassigned_orders": allocation["unassigned_orders"],
+                "excluded_orders": excluded_orders,
+            }
 
         def _plan_route(self, payload: Dict[str, Any]) -> Dict[str, Any]:
             origin = str(payload.get("origin", "")).strip()

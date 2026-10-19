@@ -137,6 +137,7 @@
       .order-view-switch { display: flex; gap: 6px; margin-bottom: 14px; }
       .field { display: grid; gap: 5px; }
       .field label { color: var(--muted); font-size: 11px; font-weight: 700; }
+      .field > span { color: var(--muted); font-size: 11px; font-weight: 700; }
       .field input, .field select, .field textarea, .search-input {
         width: 100%;
         min-height: 40px;
@@ -191,6 +192,25 @@
       .delivery-list .delivery-stock-status { color: var(--green); font-weight: 700; }
       .delivery-list .delivery-stock-issue { color: var(--red); }
 
+      .load-panel { display: grid; gap: 18px; margin: 0 0 24px; padding: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+      .load-panel .section-head { margin-bottom: 10px; }
+      .load-panel .section-head h3 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 500; }
+      .load-panel .section-head p { margin-top: 4px; }
+      .load-volume-input { width: 112px; min-height: 34px; padding: 5px 8px; border: 1px solid #cbd7cf; border-radius: 4px; }
+      .load-volume-cell { display: flex; align-items: center; gap: 7px; }
+      .load-vehicle-list { display: grid; gap: 10px; }
+      .load-vehicle-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(140px, .55fr) auto; gap: 12px; align-items: end; }
+      .load-vehicle-row input[type="number"] { width: 100%; }
+      .load-config-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+      .load-result-list { margin: 6px 0 14px; padding-left: 20px; }
+      .vehicle-result { padding: 14px 0; border-top: 1px solid #cbd7cf; }
+      .vehicle-result h4 { margin: 0; font-size: 14px; }
+      .vehicle-result h5 { margin: 13px 0 4px; font-size: 11px; text-transform: uppercase; }
+      .vehicle-result-heading { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+      .vehicle-result progress { width: 100%; height: 10px; accent-color: var(--green); }
+      .vehicle-result a { display: inline-block; margin: 6px 12px 0 0; color: #224c56; font-weight: 700; overflow-wrap: anywhere; }
+      .vehicle-result .route-schedule-warnings { margin-bottom: 0; }
+
       .route-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, .75fr); gap: 26px; align-items: start; }
       .route-form { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
       .route-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -218,6 +238,13 @@
       @media (max-width: 900px) {
         .summary-item { padding: 14px; }
         .route-layout { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 600px) {
+        .load-panel { padding: 14px; }
+        .load-vehicle-row { grid-template-columns: minmax(0, 1fr) auto; }
+        .load-vehicle-row .field:first-child { grid-column: 1 / -1; }
+        .vehicle-result-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
       }
       @media (max-width: 640px) {
         .shell { width: min(100% - 28px, 1440px); }
@@ -321,6 +348,22 @@
           <div class="delivery-preview">
             <ul class="delivery-list" id="delivery-orders-list" aria-live="polite"><li class="subtle">Caricamento ordini…</li></ul>
           </div>
+          <section class="load-panel" aria-labelledby="load-panel-title">
+            <div>
+              <div class="section-head"><div><h3 id="load-panel-title">Carico previsto</h3><p id="load-summary">Solo ordini disponibili, con indirizzo e pronti per la data selezionata.</p></div></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th scope="col">Prodotto</th><th scope="col">Quantità</th><th scope="col">Ingombro unitario</th><th scope="col">Ingombro totale</th></tr></thead>
+                  <tbody id="load-products-body"><tr><td class="empty-state" colspan="4">Nessun prodotto da caricare per questa data.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="section-head"><div><h3>Furgoni</h3><p>Inserisci la capacità utile in litri. Le misure restano salvate nel gestionale locale.</p></div><button class="button secondary small" id="add-vehicle-button" type="button">Aggiungi furgone</button></div>
+              <div class="load-vehicle-list" id="load-vehicle-list"><p class="subtle">Nessun furgone configurato.</p></div>
+              <div class="load-config-actions"><button class="button secondary small" id="save-load-config-button" type="button">Salva misure e furgoni</button><span class="subtle" id="load-config-status" role="status" aria-live="polite"></span></div>
+            </div>
+          </section>
           <div class="route-layout">
             <form class="route-form" id="route-form">
               <div class="route-row">
@@ -332,16 +375,14 @@
                 <label class="field" for="route-start"><span>Ora inizio</span><input id="route-start" name="start" type="time" value="09:00" required /></label>
                 <label class="field" for="route-end"><span>Ora fine</span><input id="route-end" name="end" type="time" value="13:00" required /></label>
               </div>
-              <div><button class="button" id="route-button" type="submit">Crea link per gli ordini</button></div>
+              <div><button class="button" id="route-button" type="submit">Ripartisci il carico e crea link</button></div>
             </form>
             <div class="route-results" id="route-results" hidden>
-              <h3>Itinerario pronto</h3>
-              <p class="subtle">Il percorso dà precedenza alla città di partenza quando gli orari lo consentono; gli appuntamenti vincolanti seguono l'ordine temporale e le altre città vengono inserite con la minore deviazione stimata sui centri comunali. Maps calcola le strade e mantiene l'ordine indicato, ma traffico e orari di arrivo vanno verificati. Le consegne ricorrenti compaiono dopo la conferma manuale del primo ordine.</p>
-              <div class="route-schedule-warnings" id="route-schedule-warnings" hidden><strong>Orari da verificare</strong><ul id="route-schedule-warning-list"></ul></div>
-              <ol id="route-orders"></ol>
-              <div id="route-exclusions" hidden><h3>Ordini non inclusi</h3><ul id="route-excluded"></ul></div>
-              <ol id="maps-links"></ol>
-              <a class="button small" id="calendar-link" href="#" target="_blank" rel="noopener noreferrer">Aggiungi a Google Calendar</a>
+              <h3>Carichi e itinerari per furgone</h3>
+              <p class="subtle">Gli orari sono stime dai centri comunali, con finestre richieste e tempo di ricarica tra i giri. Verifica traffico e tempi reali in Google Maps.</p>
+              <div id="vehicle-route-results"></div>
+              <section id="unassigned-orders-section" hidden><h3>Ordini non assegnati</h3><ul class="load-result-list" id="unassigned-orders-list"></ul></section>
+              <section id="excluded-orders-section" hidden><h3>Ordini esclusi dal carico</h3><ul class="load-result-list" id="excluded-orders-list"></ul></section>
             </div>
           </div>
         </section>
@@ -356,7 +397,7 @@
     </div>
 
     <script>
-      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], noticeTimer: null, mailSyncing: false, autoSyncTimer: null };
+      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], deliveryLoadConfig: { product_volumes: {}, vehicles: [] }, noticeTimer: null, mailSyncing: false, autoSyncTimer: null };
       const notice = document.querySelector("#notice");
       const noticeMessage = document.querySelector("#notice-message");
 
@@ -418,6 +459,24 @@
       function formatDate(value) {
         const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
         return match ? `${match[3]}/${match[2]}/${match[1]}` : value || "";
+      }
+
+      function formatDeliveryDateTime(value) {
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime())
+          ? value || ""
+          : parsed.toLocaleString("it-IT", {
+              timeZone: "Europe/Rome",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+      }
+
+      function formatLiters(value) {
+        return `${new Intl.NumberFormat("it-IT", { maximumFractionDigits: 2 }).format(value)} L`;
       }
 
       function stockStatus(product) {
@@ -710,6 +769,269 @@
         }
       }
 
+      function renderDeliveryLoad() {
+        const body = document.querySelector("#load-products-body");
+        const summary = document.querySelector("#load-summary");
+        const products = new Map();
+        const readyOrders = state.deliveryOrders.filter(
+          (order) => order.deliverable && !order.address_missing && order.occurrence_ready,
+        );
+        for (const order of readyOrders) {
+          for (const item of order.availability || []) {
+            const productId = String(item.product_id || "").trim();
+            const quantity = Number(item.requested);
+            if (!productId || !Number.isInteger(quantity) || quantity <= 0) continue;
+            const product = products.get(productId) || {
+              product_id: productId,
+              name: item.name || productId,
+              quantity: 0,
+            };
+            product.quantity += quantity;
+            products.set(productId, product);
+          }
+        }
+
+        body.replaceChildren();
+        const rows = [...products.values()].sort((first, second) => first.name.localeCompare(second.name, "it"));
+        if (!rows.length) {
+          const row = element("tr");
+          const empty = cell(row, "Nessun prodotto da caricare per questa data.", "empty-state");
+          empty.colSpan = 4;
+          body.append(row);
+          summary.textContent = "Nessun ordine disponibile e pronto con indirizzo per la data selezionata.";
+          return;
+        }
+
+        let totalQuantity = 0;
+        let totalVolume = 0;
+        let unmeasuredCount = 0;
+        for (const product of rows) {
+          totalQuantity += product.quantity;
+          const configuredVolume = Number(state.deliveryLoadConfig.product_volumes[product.product_id]);
+          const hasVolume = Number.isFinite(configuredVolume) && configuredVolume > 0;
+          if (hasVolume) totalVolume += configuredVolume * product.quantity;
+          else unmeasuredCount += 1;
+
+          const row = element("tr");
+          cell(row, product.name, "product-name");
+          cell(row, product.quantity);
+          const volumeCell = cell(row, "", "load-volume-cell");
+          const input = element("input");
+          input.type = "number";
+          input.min = "0.001";
+          input.step = "0.001";
+          input.inputMode = "decimal";
+          input.className = "load-volume-input";
+          input.value = hasVolume ? String(configuredVolume) : "";
+          input.dataset.loadProductId = product.product_id;
+          input.setAttribute("aria-label", `Ingombro per unità di ${product.name}, in litri`);
+          volumeCell.append(input, element("span", "L"));
+          cell(row, hasVolume ? formatLiters(configuredVolume * product.quantity) : "Da misurare");
+          body.append(row);
+        }
+        summary.textContent = `${readyOrders.length} ${readyOrders.length === 1 ? "ordine" : "ordini"} · ${totalQuantity} unità${unmeasuredCount ? ` · ${unmeasuredCount} prodotti da misurare` : ` · ${formatLiters(totalVolume)} totali`}.`;
+      }
+
+      function renderLoadVehicles() {
+        const list = document.querySelector("#load-vehicle-list");
+        list.replaceChildren();
+        if (!state.deliveryLoadConfig.vehicles.length) {
+          list.append(element("p", "Nessun furgone configurato.", "subtle"));
+          return;
+        }
+        for (const [index, vehicle] of state.deliveryLoadConfig.vehicles.entries()) {
+          const row = element("div", undefined, "load-vehicle-row");
+          const nameField = element("label", undefined, "field");
+          nameField.append(element("span", "Nome furgone"));
+          const nameInput = element("input");
+          nameInput.type = "text";
+          nameInput.maxLength = 80;
+          nameInput.value = vehicle.name || "";
+          nameInput.dataset.vehicleIndex = String(index);
+          nameInput.dataset.vehicleField = "name";
+          nameField.append(nameInput);
+
+          const capacityField = element("label", undefined, "field");
+          capacityField.append(element("span", "Capacità utile"));
+          const capacityInput = element("input");
+          capacityInput.type = "number";
+          capacityInput.min = "0.001";
+          capacityInput.step = "0.001";
+          capacityInput.inputMode = "decimal";
+          capacityInput.value = vehicle.capacity_liters || "";
+          capacityInput.dataset.vehicleIndex = String(index);
+          capacityInput.dataset.vehicleField = "capacity_liters";
+          capacityInput.setAttribute("aria-label", `Capacità in litri di ${vehicle.name || `furgone ${index + 1}`}`);
+          capacityField.append(capacityInput);
+
+          const remove = element("button", "Rimuovi", "button secondary small");
+          remove.type = "button";
+          remove.dataset.removeVehicleIndex = String(index);
+          remove.setAttribute("aria-label", `Rimuovi ${vehicle.name || `furgone ${index + 1}`}`);
+          row.append(nameField, capacityField, remove);
+          list.append(row);
+        }
+      }
+
+      function readDeliveryLoadConfig() {
+        const productVolumes = { ...state.deliveryLoadConfig.product_volumes };
+        for (const input of document.querySelectorAll("[data-load-product-id]")) {
+          const productId = input.dataset.loadProductId;
+          const rawValue = input.value.trim();
+          if (!rawValue) {
+            delete productVolumes[productId];
+            continue;
+          }
+          const volume = Number(rawValue);
+          if (!Number.isFinite(volume) || volume <= 0) {
+            throw new Error(`Inserire un ingombro in litri maggiore di zero per ${productId}.`);
+          }
+          productVolumes[productId] = volume;
+        }
+
+        const vehicles = [...document.querySelectorAll(".load-vehicle-row")].map((row) => {
+          const name = row.querySelector('[data-vehicle-field="name"]').value.trim();
+          const rawCapacity = row.querySelector('[data-vehicle-field="capacity_liters"]').value.trim();
+          if (!name) throw new Error("Inserire il nome di ogni furgone.");
+          const capacity = Number(rawCapacity);
+          if (!rawCapacity || !Number.isFinite(capacity) || capacity <= 0) {
+            throw new Error(`Inserire una capacità in litri maggiore di zero per ${name}.`);
+          }
+          return { name, capacity_liters: capacity };
+        });
+        const vehicleNames = vehicles.map((vehicle) => vehicle.name.toLocaleLowerCase("it"));
+        if (new Set(vehicleNames).size !== vehicleNames.length) {
+          throw new Error("I nomi dei furgoni devono essere univoci.");
+        }
+        return { product_volumes: productVolumes, vehicles };
+      }
+
+      async function saveDeliveryLoadConfig() {
+        const config = readDeliveryLoadConfig();
+        state.deliveryLoadConfig = await api("/api/load-config", {
+          method: "POST",
+          body: JSON.stringify(config),
+        });
+        document.querySelector("#load-config-status").textContent = "Configurazione salvata.";
+        renderLoadVehicles();
+        renderDeliveryLoad();
+      }
+
+      async function loadDeliveryLoadConfig() {
+        state.deliveryLoadConfig = await api("/api/load-config");
+        renderLoadVehicles();
+        renderDeliveryLoad();
+      }
+
+      function renderVehicleRoutes(result) {
+        const container = document.querySelector("#vehicle-route-results");
+        container.replaceChildren();
+        for (const vehicle of result.vehicles) {
+          const section = element("section", undefined, "vehicle-result");
+          const heading = element("div", undefined, "vehicle-result-heading");
+          heading.append(element("h4", vehicle.display_name || vehicle.name));
+          heading.append(element(
+            "span",
+            `${formatLiters(vehicle.used_volume_liters)} / ${formatLiters(vehicle.capacity_liters)} · ${formatLiters(vehicle.remaining_liters)} liberi`,
+            "subtle",
+          ));
+          section.append(heading);
+          if (vehicle.departure_at && vehicle.estimated_return_at) {
+            const endLabel = vehicle.return_to_origin ? "Rientro stimato" : "Fine giro stimata";
+            section.append(element(
+              "p",
+              `Partenza ${formatDeliveryDateTime(vehicle.departure_at)} · ${endLabel} ${formatDeliveryDateTime(vehicle.estimated_return_at)}`,
+              "subtle",
+            ));
+          }
+          if (vehicle.next_available_at) {
+            section.append(element(
+              "p",
+              `Furgone disponibile per il giro successivo dalle ${formatDeliveryDateTime(vehicle.next_available_at)}.`,
+              "subtle",
+            ));
+          }
+          if (vehicle.estimate_note) section.append(element("p", vehicle.estimate_note, "subtle"));
+          const progress = element("progress");
+          progress.max = vehicle.capacity_liters;
+          progress.value = vehicle.used_volume_liters;
+          progress.setAttribute("aria-label", `Spazio utilizzato su ${vehicle.name}`);
+          section.append(progress);
+
+          if (vehicle.products.length) {
+            section.append(element("h5", "Da caricare"));
+            const productList = element("ul", undefined, "load-result-list");
+            for (const product of vehicle.products) {
+              productList.append(element("li", `${product.quantity} × ${product.name} · ${formatLiters(product.total_volume_liters)}`));
+            }
+            section.append(productList);
+          }
+          if (vehicle.orders.length) {
+            section.append(element("h5", "Consegne"));
+            const orderList = element("ol", undefined, "load-result-list");
+            for (const order of vehicle.orders) {
+              const estimatedArrival = order.estimated_arrival_at
+                ? ` · arrivo stimato ${formatDeliveryDateTime(order.estimated_arrival_at)}`
+                : "";
+              orderList.append(element(
+                "li",
+                `#${order.order_id} · ${order.customer_name || "Cliente"} · ${order.destination} · ${formatLiters(order.load_volume_liters)}${estimatedArrival}`,
+              ));
+            }
+            section.append(orderList);
+            for (const [index, url] of vehicle.maps_urls.entries()) {
+              const link = element("a", vehicle.maps_urls.length > 1 ? `Apri Google Maps · tratto ${index + 1}` : "Apri itinerario su Google Maps");
+              link.href = url;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              section.append(link);
+            }
+            if (vehicle.calendar_url) {
+              const calendarLink = element("a", "Aggiungi giro a Google Calendar", "button secondary small");
+              calendarLink.href = vehicle.calendar_url;
+              calendarLink.target = "_blank";
+              calendarLink.rel = "noopener noreferrer";
+              section.append(calendarLink);
+            }
+          } else {
+            section.append(element("p", "Nessun ordine assegnato.", "subtle"));
+          }
+          if (vehicle.schedule_warnings.length) {
+            const warnings = element("div", undefined, "route-schedule-warnings");
+            warnings.append(element("strong", "Orari da verificare"));
+            const warningList = element("ul");
+            for (const warning of vehicle.schedule_warnings) warningList.append(element("li", warning));
+            warnings.append(warningList);
+            section.append(warnings);
+          }
+          container.append(section);
+        }
+
+        const unassignedList = document.querySelector("#unassigned-orders-list");
+        unassignedList.replaceChildren();
+        for (const item of result.unassigned_orders) {
+          const order = item.order;
+          const requiredVolume = item.required_volume_liters === null
+            ? ""
+            : ` · ${formatLiters(item.required_volume_liters)}`;
+          unassignedList.append(element(
+            "li",
+            `#${order.order_id} · ${order.customer_name || "Cliente"}${requiredVolume} · ${item.reason}`,
+          ));
+        }
+        document.querySelector("#unassigned-orders-section").hidden = result.unassigned_orders.length === 0;
+
+        const excludedList = document.querySelector("#excluded-orders-list");
+        excludedList.replaceChildren();
+        for (const item of result.excluded_orders) {
+          excludedList.append(element(
+            "li",
+            `#${item.order.order_id} · ${item.order.customer_name || "Cliente"} · ${item.reason || "Ordine non pronto."}`,
+          ));
+        }
+        document.querySelector("#excluded-orders-section").hidden = result.excluded_orders.length === 0;
+      }
+
       function renderValidVouchers() {
         const body = document.querySelector("#valid-vouchers-body");
         body.replaceChildren();
@@ -739,6 +1061,7 @@
         const data = await api(`/api/deliveries?date=${encodeURIComponent(requestedDate)}`);
         state.deliveryOrders = data.orders;
         renderDeliveryOrders();
+        renderDeliveryLoad();
       }
 
       async function loadDashboard() {
@@ -952,15 +1275,78 @@
       }
 
       document.querySelector("#route-date").addEventListener("change", () => {
+        document.querySelector("#route-results").hidden = true;
         loadDeliveryOrders().catch((error) => showNotice(error.message, "error"));
+      });
+
+      document.querySelector("#load-products-body").addEventListener("input", (event) => {
+        const input = event.target.closest("[data-load-product-id]");
+        if (!input) return;
+        const productId = input.dataset.loadProductId;
+        const volume = Number(input.value);
+        state.deliveryLoadConfig.product_volumes[productId] = input.value.trim()
+          ? Number.isFinite(volume) && volume > 0 ? volume : input.value
+          : "";
+        document.querySelector("#load-config-status").textContent = "Modifiche non salvate.";
+        const row = input.closest("tr");
+        const quantity = Number(row.children[1].textContent);
+        row.children[3].textContent = Number.isFinite(volume) && volume > 0
+          ? formatLiters(volume * quantity)
+          : "Da misurare";
+      });
+
+      document.querySelector("#load-vehicle-list").addEventListener("input", (event) => {
+        const input = event.target.closest("[data-vehicle-index]");
+        if (!input) return;
+        const index = Number(input.dataset.vehicleIndex);
+        const field = input.dataset.vehicleField;
+        if (!Number.isInteger(index) || !state.deliveryLoadConfig.vehicles[index] || !field) return;
+        state.deliveryLoadConfig.vehicles[index][field] = input.value;
+        document.querySelector("#load-config-status").textContent = "Modifiche non salvate.";
+      });
+
+      document.querySelector("#load-vehicle-list").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-remove-vehicle-index]");
+        if (!button) return;
+        const index = Number(button.dataset.removeVehicleIndex);
+        if (!Number.isInteger(index)) return;
+        state.deliveryLoadConfig.vehicles.splice(index, 1);
+        renderLoadVehicles();
+        document.querySelector("#load-config-status").textContent = "Modifiche non salvate.";
+      });
+
+      document.querySelector("#add-vehicle-button").addEventListener("click", () => {
+        const existingNames = new Set(
+          state.deliveryLoadConfig.vehicles.map((vehicle) => String(vehicle.name || "").toLocaleLowerCase("it")),
+        );
+        let number = state.deliveryLoadConfig.vehicles.length + 1;
+        while (existingNames.has(`furgone ${number}`)) number += 1;
+        state.deliveryLoadConfig.vehicles.push({ name: `Furgone ${number}`, capacity_liters: "" });
+        renderLoadVehicles();
+        document.querySelector("#load-config-status").textContent = "Modifiche non salvate.";
+      });
+
+      document.querySelector("#save-load-config-button").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        setButtonBusy(button, true, "Salva misure e furgoni", "Salvataggio…");
+        try {
+          await saveDeliveryLoadConfig();
+          showNotice("Misure e furgoni salvati.");
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(button, false, "Salva misure e furgoni");
+        }
       });
 
       document.querySelector("#route-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const button = document.querySelector("#route-button");
         setButtonBusy(button, true);
+        document.querySelector("#route-results").hidden = true;
         try {
-          const result = await api("/api/route", {
+          await saveDeliveryLoadConfig();
+          const result = await api("/api/vehicle-routes", {
             method: "POST",
             body: JSON.stringify({
               origin: document.querySelector("#route-origin").value,
@@ -970,54 +1356,26 @@
               return_to_origin: document.querySelector("#route-return").checked,
             }),
           });
-          const links = document.querySelector("#maps-links");
-          links.replaceChildren();
-          for (const [index, url] of result.maps_urls.entries()) {
-            const item = element("li");
-            const link = element("a", `Apri tratto Maps ${index + 1}`);
-            link.href = url;
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            item.append(link);
-            links.append(item);
-          }
-          const routeOrders = document.querySelector("#route-orders");
-          routeOrders.replaceChildren();
-          for (const order of result.orders) {
-            const recurrence = order.recurring_order
-              ? ` · Ricorrente: ${[order.recurring_frequency, order.recurring_day ? `giorno ${order.recurring_day}` : ""].filter(Boolean).join(" · ") || "da concordare"}`
-              : "";
-            routeOrders.append(element("li", `#${order.order_id} · ${order.customer_name} · ${order.destination} · ${formatDate(order.delivery_date)} · ${order.preferred_delivery_time || "Prima disponibilità"}${recurrence}`));
-          }
-          const scheduleWarnings = document.querySelector("#route-schedule-warnings");
-          const scheduleWarningList = document.querySelector("#route-schedule-warning-list");
-          scheduleWarningList.replaceChildren();
-          for (const warning of result.schedule_warnings) {
-            scheduleWarningList.append(element("li", warning));
-          }
-          scheduleWarnings.hidden = result.schedule_warnings.length === 0;
-          const exclusions = document.querySelector("#route-exclusions");
-          const excludedList = document.querySelector("#route-excluded");
-          excludedList.replaceChildren();
-          for (const order of result.excluded_orders) {
-            const reasons = [...order.availability_issues, ...(order.address_missing ? ["Indirizzo mancante"] : [])];
-            excludedList.append(element("li", `#${order.order_id}: ${reasons.join("; ")}`));
-          }
-          exclusions.hidden = result.excluded_orders.length === 0;
-          const calendar = document.querySelector("#calendar-link");
-          calendar.href = result.calendar_url;
+          renderVehicleRoutes(result);
           document.querySelector("#route-results").hidden = false;
-          showNotice(`Link creati per ${result.orders.length} ordini${result.schedule_warnings.length ? `; ${result.schedule_warnings.length} preferenze fuori fascia` : ""}${result.excluded_unavailable ? `; ${result.excluded_unavailable} sospesi per disponibilità` : ""}${result.excluded_without_address ? `; ${result.excluded_without_address} senza indirizzo` : ""}.`);
+          const assignedCount = result.vehicles.reduce((total, vehicle) => total + vehicle.orders.length, 0);
+          const linkCount = result.vehicles.reduce((total, vehicle) => total + vehicle.maps_urls.length, 0);
+          const tourCount = result.vehicles.filter((vehicle) => vehicle.orders.length).length;
+          const assignedLabel = assignedCount === 1 ? "ordine assegnato" : "ordini assegnati";
+          showNotice(
+            `${assignedCount} ${assignedLabel} · ${tourCount} ${tourCount === 1 ? "giro" : "giri"} · ${linkCount} link Maps${result.unassigned_orders.length ? ` · ${result.unassigned_orders.length} non assegnati` : ""}${result.excluded_orders.length ? ` · ${result.excluded_orders.length} esclusi` : ""}.`,
+          );
         } catch (error) {
           showNotice(error.message, "error");
         } finally {
-          setButtonBusy(button, false, "Crea link per gli ordini");
+          setButtonBusy(button, false, "Ripartisci il carico e crea link");
         }
       });
 
       setDateDefault();
       loadDashboard().catch((error) => showNotice(error.message, "error"));
       loadDeliveryOrders().catch((error) => showNotice(error.message, "error"));
+      loadDeliveryLoadConfig().catch((error) => showNotice(error.message, "error"));
       syncOrders();
       state.autoSyncTimer = window.setInterval(() => syncOrders(), 60_000);
     </script>

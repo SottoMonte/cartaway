@@ -8,6 +8,7 @@ import hashlib
 import html
 import imaplib
 import json
+import math
 import os
 import re
 import smtplib
@@ -407,6 +408,15 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             quantity INTEGER,
             updated_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS delivery_load_volumes (
+            product_id TEXT PRIMARY KEY,
+            volume_liters REAL NOT NULL CHECK (volume_liters > 0)
+        );
+        CREATE TABLE IF NOT EXISTS delivery_vehicles (
+            vehicle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            capacity_liters REAL NOT NULL CHECK (capacity_liters > 0)
+        );
         CREATE TABLE IF NOT EXISTS monthly_orders (
             identity_key TEXT NOT NULL,
             period TEXT NOT NULL,
@@ -513,6 +523,79 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             """
         )
     connection.commit()
+
+
+def get_delivery_load_config(connection: sqlite3.Connection) -> Dict[str, Any]:
+    volumes = connection.execute(
+        "SELECT product_id, volume_liters FROM delivery_load_volumes ORDER BY product_id"
+    ).fetchall()
+    vehicles = connection.execute(
+        "SELECT name, capacity_liters FROM delivery_vehicles ORDER BY vehicle_id"
+    ).fetchall()
+    return {
+        "product_volumes": {str(row["product_id"]): float(row["volume_liters"]) for row in volumes},
+        "vehicles": [
+            {"name": str(row["name"]), "capacity_liters": float(row["capacity_liters"])}
+            for row in vehicles
+        ],
+    }
+
+
+def save_delivery_load_config(
+    connection: sqlite3.Connection,
+    product_volumes: Dict[str, Any],
+    vehicles: Sequence[Dict[str, Any]],
+) -> Dict[str, Any]:
+    if not isinstance(product_volumes, dict) or not isinstance(vehicles, (list, tuple)):
+        raise AppError("Configurazione di carico non valida.")
+
+    known_product_ids = {
+        str(row["product_id"])
+        for row in connection.execute("SELECT product_id FROM products").fetchall()
+    }
+    validated_volumes = []
+    for product_id, value in product_volumes.items():
+        normalized_id = str(product_id).strip()
+        if normalized_id not in known_product_ids:
+            raise AppError(f"Prodotto non presente nel catalogo: {normalized_id or 'senza ID'}.")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise AppError(f"L'ingombro di {normalized_id} deve essere un numero in litri.")
+        volume = float(value)
+        if not math.isfinite(volume) or volume <= 0:
+            raise AppError(f"L'ingombro di {normalized_id} deve essere maggiore di zero.")
+        validated_volumes.append((normalized_id, volume))
+
+    validated_vehicles = []
+    vehicle_names = set()
+    for vehicle in vehicles:
+        if not isinstance(vehicle, dict):
+            raise AppError("Ogni furgone deve avere nome e capacità in litri.")
+        name = str(vehicle.get("name") or "").strip()
+        capacity_value = vehicle.get("capacity_liters")
+        if not name or len(name) > 80:
+            raise AppError("Inserire un nome furgone (massimo 80 caratteri).")
+        if name.casefold() in vehicle_names:
+            raise AppError(f"Nome furgone duplicato: {name}.")
+        if isinstance(capacity_value, bool) or not isinstance(capacity_value, (int, float)):
+            raise AppError(f"La capacità di {name} deve essere espressa in litri.")
+        capacity = float(capacity_value)
+        if not math.isfinite(capacity) or capacity <= 0:
+            raise AppError(f"La capacità di {name} deve essere maggiore di zero.")
+        vehicle_names.add(name.casefold())
+        validated_vehicles.append((name, capacity))
+
+    with connection:
+        connection.execute("DELETE FROM delivery_load_volumes")
+        connection.execute("DELETE FROM delivery_vehicles")
+        connection.executemany(
+            "INSERT INTO delivery_load_volumes (product_id, volume_liters) VALUES (?, ?)",
+            validated_volumes,
+        )
+        connection.executemany(
+            "INSERT INTO delivery_vehicles (name, capacity_liters) VALUES (?, ?)",
+            validated_vehicles,
+        )
+    return get_delivery_load_config(connection)
 
 
 def open_database(path: Path) -> sqlite3.Connection:

@@ -27,6 +27,7 @@ from gestionale.gestionale import (
     check_mail,
     confirm_order,
         disable_recurring_schedule,
+        get_delivery_load_config,
     initialize_database,
     list_mail_folders,
     mark_order_delivered,
@@ -34,11 +35,17 @@ from gestionale.gestionale import (
     parse_order_email,
     prepare_order,
     set_stock,
+    save_delivery_load_config,
     sync_catalog,
     OrderNotReady,
     voucher_validation_status,
 )
-from gestionale.gestionale_web import _group_route_orders_by_city, create_server
+from gestionale.gestionale_web import (
+    _allocate_vehicle_loads,
+    _group_route_orders_by_city,
+    _plan_single_vehicle_tours,
+    create_server,
+)
 
 
 ROME = ZoneInfo("Europe/Rome")
@@ -91,6 +98,40 @@ class GestionaleTests(unittest.TestCase):
         self.assertIn("recurring_fixed_day", columns)
         self.assertIn("next_recurring_delivery_date", columns)
         self.assertIn("last_delivered_date", columns)
+        tables = {
+            row[0]
+            for row in self.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+        self.assertIn("delivery_load_volumes", tables)
+        self.assertIn("delivery_vehicles", tables)
+
+    def test_delivery_load_config_persists_volumes_and_vehicle_capacities(self):
+        saved = save_delivery_load_config(
+            self.connection,
+            {"carta-igienica": 2.5},
+            [{"name": "Furgone 1", "capacity_liters": 1200}],
+        )
+
+        self.assertEqual(
+            saved,
+            {
+                "product_volumes": {"carta-igienica": 2.5},
+                "vehicles": [{"name": "Furgone 1", "capacity_liters": 1200.0}],
+            },
+        )
+        self.assertEqual(get_delivery_load_config(self.connection), saved)
+        with self.assertRaisesRegex(AppError, "duplicato"):
+            save_delivery_load_config(
+                self.connection,
+                {"carta-igienica": 2.5},
+                [
+                    {"name": "Furgone 1", "capacity_liters": 1000},
+                    {"name": "furgone 1", "capacity_liters": 900},
+                ],
+            )
+        self.assertEqual(get_delivery_load_config(self.connection), saved)
 
     def test_parses_order_rows_and_customer_fields_from_template_email(self):
         email = EmailMessage()
@@ -209,6 +250,158 @@ class GestionaleTests(unittest.TestCase):
         self.assertEqual(first["origin"], ["Piazza Roma, Montoro"])
         self.assertEqual(first["destination"], ["Via 10, Montoro"])
         self.assertEqual(first["waypoints"][0].split("|"), stops[:9])
+
+    def test_vehicle_load_allocator_keeps_orders_whole_and_reports_overflow(self):
+        orders = [
+            {
+                "order_id": "ORD-LOAD-1",
+                "availability": [{"product_id": "roll", "name": "Rotoloni", "requested": 2}],
+            },
+            {
+                "order_id": "ORD-LOAD-2",
+                "availability": [{"product_id": "paper", "name": "Carta A4", "requested": 1}],
+            },
+        ]
+
+        result = _allocate_vehicle_loads(
+            orders,
+            [{"name": "Furgone 1", "capacity_liters": 10}],
+            {"roll": 4, "paper": 5},
+        )
+
+        self.assertEqual([order["order_id"] for order in result["vehicles"][0]["orders"]], ["ORD-LOAD-1"])
+        self.assertEqual(result["vehicles"][0]["used_volume_liters"], 8)
+        self.assertEqual(result["vehicles"][0]["remaining_liters"], 2)
+        self.assertEqual(result["unassigned_orders"][0]["order"]["order_id"], "ORD-LOAD-2")
+        self.assertIn("5.000 L", result["unassigned_orders"][0]["reason"])
+        self.assertEqual(sum(product["quantity"] for product in result["products"]), 3)
+
+    def test_vehicle_load_allocator_distributes_whole_orders_across_vans(self):
+        orders = [
+            {
+                "order_id": "ORD-LARGE",
+                "availability": [{"product_id": "roll", "name": "Rotoloni", "requested": 2}],
+            },
+            {
+                "order_id": "ORD-SMALL",
+                "availability": [{"product_id": "paper", "name": "Carta A4", "requested": 1}],
+            },
+        ]
+
+        result = _allocate_vehicle_loads(
+            orders,
+            [
+                {"name": "Furgone piccolo", "capacity_liters": 8},
+                {"name": "Furgone grande", "capacity_liters": 10},
+            ],
+            {"roll": 4, "paper": 5},
+        )
+
+        self.assertEqual(
+            [[order["order_id"] for order in vehicle["orders"]] for vehicle in result["vehicles"]],
+            [["ORD-LARGE"], ["ORD-SMALL"]],
+        )
+        self.assertEqual(result["vehicles"][0]["used_volume_liters"], 8)
+        self.assertEqual(result["vehicles"][1]["used_volume_liters"], 5)
+        self.assertEqual(result["unassigned_orders"], [])
+
+    def test_single_vehicle_plans_sequential_tours_with_estimated_availability(self):
+        site = {
+            "delivery_zones": [
+                {
+                    "locations": [
+                        {"name": "Montoro", "lat": 40.8328763, "lon": 14.7917765},
+                        {"name": "Solofra", "lat": 40.8291308, "lon": 14.8456516},
+                    ]
+                }
+            ]
+        }
+        orders = [
+            {
+                "order_id": "ORD-TOUR-EARLY",
+                "customer_name": "Cliente Montoro",
+                "destination": "Via Roma 1, Montoro",
+                "delivery_city": "Montoro",
+                "delivery_address": "Via Roma 1",
+                "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+                "preferred_delivery_time": "Dalle 10:00 alle 10:30",
+                "delivery_notes": "",
+            },
+            {
+                "order_id": "ORD-TOUR-LATE",
+                "customer_name": "Cliente Solofra",
+                "destination": "Via Solofra 2, Solofra",
+                "delivery_city": "Solofra",
+                "delivery_address": "Via Solofra 2",
+                "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+                "preferred_delivery_time": "Dalle 12:00 alle 12:30",
+                "delivery_notes": "",
+            },
+        ]
+
+        result = _plan_single_vehicle_tours(
+            orders,
+            {"name": "Furgone 1", "capacity_liters": 5},
+            {"roll": 3},
+            "Piazza Roma, Montoro",
+            site,
+            date(2026, 10, 19),
+            time(9, 0),
+            time(14, 0),
+            True,
+        )
+
+        self.assertEqual([tour["display_name"] for tour in result["tours"]], [
+            "Furgone 1 · Giro 1/2",
+            "Furgone 1 · Giro 2/2",
+        ])
+        self.assertEqual(
+            [[order["order_id"] for order in tour["orders"]] for tour in result["tours"]],
+            [["ORD-TOUR-EARLY"], ["ORD-TOUR-LATE"]],
+        )
+        first_tour, second_tour = result["tours"]
+        first_departure = datetime.fromisoformat(first_tour["departure_at"])
+        first_return = datetime.fromisoformat(first_tour["estimated_return_at"])
+        next_available = datetime.fromisoformat(first_tour["next_available_at"])
+        second_departure = datetime.fromisoformat(second_tour["departure_at"])
+        self.assertLessEqual(first_departure.time(), time(10, 0))
+        self.assertLessEqual(first_tour["orders"][0]["estimated_arrival_at"], "2026-10-19T10:30:00+02:00")
+        self.assertEqual(next_available, first_return + timedelta(minutes=20))
+        self.assertGreaterEqual(second_departure, next_available)
+        self.assertLessEqual(second_tour["orders"][0]["estimated_arrival_at"], "2026-10-19T12:30:00+02:00")
+        self.assertTrue(first_tour["maps_urls"])
+        self.assertIn("ORD-TOUR-EARLY", parse_qs(urlsplit(first_tour["calendar_url"]).query)["details"][0])
+        self.assertEqual(result["unassigned_orders"], [])
+
+    def test_single_vehicle_warns_when_estimated_arrival_misses_delivery_window(self):
+        order = {
+            "order_id": "ORD-TOUR-MISSED-WINDOW",
+            "customer_name": "Cliente con finestra breve",
+            "destination": "Via Roma 1, Comune senza coordinate",
+            "delivery_city": "Comune senza coordinate",
+            "delivery_address": "Via Roma 1",
+            "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+            "preferred_delivery_time": "Dalle 09:00 alle 09:05",
+            "delivery_notes": "",
+        }
+
+        result = _plan_single_vehicle_tours(
+            [order],
+            {"name": "Furgone 1", "capacity_liters": 5},
+            {"roll": 3},
+            "Piazza Roma, Comune senza coordinate",
+            {"delivery_zones": []},
+            date(2026, 10, 19),
+            time(9, 0),
+            time(12, 0),
+            True,
+        )
+
+        tour = result["tours"][0]
+        estimated_arrival = datetime.fromisoformat(tour["orders"][0]["estimated_arrival_at"])
+        self.assertGreater(estimated_arrival.time(), time(9, 5))
+        self.assertTrue(any("oltre la finestra richiesta" in warning for warning in tour["schedule_warnings"]))
+        self.assertEqual(result["unassigned_orders"], [])
 
     def test_shortage_requires_a_customer_response_and_does_not_confirm_order(self):
         set_stock(self.connection, "carta-igienica", 1)
@@ -713,6 +906,168 @@ class GestionaleWebTests(unittest.TestCase):
         )
         return urlopen(request, timeout=3)
 
+    def test_vehicle_route_endpoint_assigns_load_and_returns_van_maps_link(self):
+        order_id = "ORD-VEHICLE-LOAD"
+        connection = open_database(self.database)
+        try:
+            set_stock(connection, "carta-igienica", 10)
+            order = ParsedOrder(
+                order_id=order_id,
+                items=[OrderItem("carta-igienica", "Carta igienica lavanda", 2)],
+                customer_name="Mario Bianchi",
+                customer_email="mario@example.org",
+                customer_phone="+39 333 1234567",
+                delivery_address="Via Roma 4",
+                delivery_city="Montoro",
+                recurring=False,
+                voucher_candidate="",
+                voucher_value="",
+                products_subtotal="€ 6,00",
+                recurring_discount="Nessuno",
+                order_datetime=datetime.now(ROME),
+                message_id=f"<{order_id.lower()}@example.org>",
+            )
+            prepare_order(connection, order, self.site)
+            with patch("gestionale.gestionale.send_email"):
+                confirm_order(connection, order_id, self.site)
+        finally:
+            connection.close()
+
+        with self._post(
+            "/api/load-config",
+            {
+                "product_volumes": {"carta-igienica": 2.5},
+                "vehicles": [{"name": "Furgone 1", "capacity_liters": 5}],
+            },
+            origin=self.base_url,
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        delivery_date = datetime.now(ROME).date().isoformat()
+        with self._post(
+            "/api/vehicle-routes",
+            {
+                "origin": "Piazza Roma, Montoro",
+                "date": delivery_date,
+                "start": "09:00",
+                "end": "13:00",
+                "return_to_origin": False,
+            },
+            origin=self.base_url,
+        ) as response:
+            result = json.loads(response.read().decode("utf-8"))
+
+        vehicle = result["vehicles"][0]
+        self.assertEqual(vehicle["name"], "Furgone 1")
+        self.assertEqual(vehicle["used_volume_liters"], 5)
+        self.assertEqual([order["order_id"] for order in vehicle["orders"]], [order_id])
+        self.assertEqual(vehicle["products"][0]["quantity"], 2)
+        self.assertEqual(len(vehicle["maps_urls"]), 1)
+        self.assertIn("ORD-VEHICLE-LOAD", parse_qs(urlsplit(vehicle["calendar_url"]).query)["details"][0])
+        maps_query = parse_qs(urlsplit(vehicle["maps_urls"][0]).query)
+        self.assertEqual(maps_query["destination"], ["Via Roma 4, Montoro"])
+
+    def test_single_vehicle_route_api_splits_load_into_deadline_ordered_tours(self):
+        delivery_date = datetime.now(ROME).date()
+        connection = open_database(self.database)
+        try:
+            set_stock(connection, "carta-igienica", 20)
+            orders = [
+                ParsedOrder(
+                    order_id="ORD-API-TOUR-EARLY",
+                    items=[OrderItem("carta-igienica", "Carta igienica lavanda", 2)],
+                    customer_name="Cliente mattina",
+                    customer_email="early@example.org",
+                    customer_phone="+39 333 1112233",
+                    delivery_address="Via Roma 4",
+                    delivery_city="Montoro",
+                    recurring=False,
+                    voucher_candidate="",
+                    voucher_value="",
+                    products_subtotal="€ 6,00",
+                    recurring_discount="Nessuno",
+                    order_datetime=datetime.now(ROME),
+                    message_id="<api-tour-early@example.org>",
+                    preferred_delivery_date=delivery_date.isoformat(),
+                    preferred_delivery_time="Dalle 10:00 alle 11:00",
+                ),
+                ParsedOrder(
+                    order_id="ORD-API-TOUR-LATE",
+                    items=[OrderItem("carta-igienica", "Carta igienica lavanda", 2)],
+                    customer_name="Cliente pomeriggio",
+                    customer_email="late@example.org",
+                    customer_phone="+39 333 2223344",
+                    delivery_address="Via Roma 5",
+                    delivery_city="Montoro",
+                    recurring=False,
+                    voucher_candidate="",
+                    voucher_value="",
+                    products_subtotal="€ 6,00",
+                    recurring_discount="Nessuno",
+                    order_datetime=datetime.now(ROME) + timedelta(minutes=1),
+                    message_id="<api-tour-late@example.org>",
+                    preferred_delivery_date=delivery_date.isoformat(),
+                    preferred_delivery_time="Dalle 12:00 alle 13:00",
+                ),
+            ]
+            with patch("gestionale.gestionale.send_email"):
+                for order in orders:
+                    prepare_order(connection, order, self.site)
+                    confirm_order(connection, order.order_id, self.site)
+        finally:
+            connection.close()
+
+        with self._post(
+            "/api/load-config",
+            {
+                "product_volumes": {"carta-igienica": 3},
+                "vehicles": [{"name": "Furgone unico", "capacity_liters": 6}],
+            },
+            origin=self.base_url,
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        with self._post(
+            "/api/vehicle-routes",
+            {
+                "origin": "Piazza Roma, Montoro",
+                "date": delivery_date.isoformat(),
+                "start": "09:00",
+                "end": "16:00",
+                "return_to_origin": True,
+            },
+            origin=self.base_url,
+        ) as response:
+            result = json.loads(response.read().decode("utf-8"))
+
+        tours = result["vehicles"]
+        self.assertEqual(len(tours), 2)
+        self.assertEqual(
+            [[order["order_id"] for order in tour["orders"]] for tour in tours],
+            [["ORD-API-TOUR-EARLY"], ["ORD-API-TOUR-LATE"]],
+        )
+        requested_windows = [(time(10, 0), time(11, 0)), (time(12, 0), time(13, 0))]
+        destinations = ["Via Roma 4, Montoro", "Via Roma 5, Montoro"]
+        for tour, requested_window, destination in zip(tours, requested_windows, destinations):
+            estimated_arrival = datetime.fromisoformat(
+                tour["orders"][0]["estimated_arrival_at"]
+            )
+            self.assertEqual(estimated_arrival.date(), delivery_date)
+            self.assertGreaterEqual(estimated_arrival.time(), requested_window[0])
+            self.assertLessEqual(estimated_arrival.time(), requested_window[1])
+            self.assertEqual(tour["schedule_warnings"], [])
+            maps_query = parse_qs(urlsplit(tour["maps_urls"][0]).query)
+            self.assertEqual(maps_query["waypoints"], [destination])
+            calendar_details = parse_qs(urlsplit(tour["calendar_url"]).query)["details"][0]
+            self.assertIn(tour["orders"][0]["order_id"], calendar_details)
+        first_return = datetime.fromisoformat(tours[0]["estimated_return_at"])
+        next_available = datetime.fromisoformat(tours[0]["next_available_at"])
+        second_departure = datetime.fromisoformat(tours[1]["departure_at"])
+        self.assertEqual(next_available, first_return + timedelta(minutes=20))
+        self.assertGreaterEqual(second_departure, next_available)
+        self.assertTrue(all(tour["maps_urls"] and tour["calendar_url"] for tour in tours))
+        self.assertEqual(result["unassigned_orders"], [])
+
     def test_route_grouping_prioritizes_origin_city_unless_time_requires_other_city(self):
         untimed_orders = [
             {"order_id": "SOL-1", "delivery_city": "Solofra", "preferred_delivery_time": ""},
@@ -1149,7 +1504,8 @@ class GestionaleWebTests(unittest.TestCase):
 
     def test_route_respects_delivery_date_and_time_preferences_and_shows_recurrence(self):
         today = datetime.now(ROME).date()
-        delivery_date = today + timedelta(days=1)
+        days_to_monday = (0 - today.weekday()) % 7 or 7
+        delivery_date = today + timedelta(days=days_to_monday)
         self.site["delivery_zones"] = [
             {
                 "locations": [
@@ -1250,6 +1606,7 @@ class GestionaleWebTests(unittest.TestCase):
                     prepare_order(connection, order, self.site)
                     confirmation = confirm_order(connection, order.order_id, self.site)
                     if order.order_id == late_recurring_order.order_id:
+                        self.assertEqual(confirmation["delivery_date"], delivery_date.isoformat())
                         next_recurring_date = confirmation["next_recurring_delivery_date"]
         finally:
             connection.close()
