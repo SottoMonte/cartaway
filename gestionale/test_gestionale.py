@@ -127,14 +127,43 @@ class GestionaleTests(unittest.TestCase):
             "19/10/2026, ore 09:10",
         )
         unconfirmed_payment = _pdf_payment_summary({}, {})
-        self.assertEqual(unconfirmed_payment["method"], "Alla consegna")
+        self.assertEqual(unconfirmed_payment["method"], "Alla consegna (predefinita)")
         self.assertEqual(unconfirmed_payment["confirmed_total"], "Non registrato")
         self.assertEqual(unconfirmed_payment["paid_amount"], "Non registrato")
         self.assertEqual(unconfirmed_payment["remaining"], "Non registrato")
         self.assertEqual(unconfirmed_payment["state"], "Da pagare alla consegna")
 
+        request_disclaimer = _pdf_payment_summary(
+            {},
+            {
+                "payment_information": (
+                    "Nessun pagamento richiesto con questa richiesta; totale e modalità "
+                    "saranno confermati prima dell'ordine."
+                )
+            },
+        )
+        self.assertEqual(request_disclaimer["method"], "Alla consegna (predefinita)")
+        self.assertEqual(request_disclaimer["state"], "Da pagare alla consegna")
+        updated_request_disclaimer = _pdf_payment_summary(
+            {},
+            {
+                "payment_information": (
+                    "Nessun pagamento viene riscosso al momento dell'invio; l'attività "
+                    "comunicherà la modalità e il totale definitivi prima di accettare l'ordine."
+                )
+            },
+        )
+        self.assertEqual(
+            updated_request_disclaimer["method"],
+            "Alla consegna (predefinita)",
+        )
+        self.assertEqual(
+            updated_request_disclaimer["state"],
+            "Da pagare alla consegna",
+        )
+
         electronic_default = _pdf_payment_summary({}, {}, None, "bonifico")
-        self.assertEqual(electronic_default["method"], "Bonifico bancario")
+        self.assertEqual(electronic_default["method"], "Bonifico bancario (predefinita)")
         self.assertEqual(electronic_default["state"], "Non pagato")
         explicit_method = _pdf_payment_summary(
             {}, {"payment_information": "Pagamento alla consegna"}, None, "bonifico"

@@ -310,11 +310,34 @@ def _pdf_payment_summary(
     )
 
     method_text = str(request_details.get("payment_information") or "").strip()
-    method_key = gestionale.payment_method_key(method_text) or default_payment_method
-    method_label = method_text or gestionale.PAYMENT_METHODS.get(method_key, "Non indicata")
+    normalized_method_text = method_text.casefold()
+    method_key = gestionale.payment_method_key(method_text)
+    method_is_disclaimer = (
+        "nessun pagamento richiesto" in normalized_method_text
+        or "modalità" in normalized_method_text
+        or "modalita" in normalized_method_text
+    )
+    method_is_unspecified = not method_text or (
+        method_is_disclaimer
+        and any(
+            phrase in normalized_method_text
+            for phrase in ("confermat", "comunicat", "prima di accett")
+        )
+    )
+    if method_key:
+        method_label = gestionale.PAYMENT_METHODS[method_key]
+    elif method_is_unspecified:
+        method_key = default_payment_method
+        method_label = (
+            f"{gestionale.PAYMENT_METHODS.get(method_key, 'Non indicata')} (predefinita)"
+        )
+    else:
+        method_label = method_text
     is_paid_status = payment_status in {"paid", "pagato", "pagata", "già pagato"}
     unpaid_state = (
-        "Da pagare alla consegna" if method_key == "alla_consegna" else "Non pagato"
+        "Da pagare alla consegna"
+        if method_key == "alla_consegna"
+        else "Non pagato" if method_key else "Modalità da verificare"
     )
 
     if confirmed_total is None:

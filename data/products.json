@@ -2,7 +2,7 @@
   "products": [
     {
       "id": "rotoloni-asciugatutto-splash-2000",
-      "volume_liters": 18,
+      "volume_liters": 4,
       "stock_group": "splash-2000-rotoli",
       "profiles": ["meccanico"],
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 2 rotoli",
@@ -54,7 +54,7 @@
     },
     {
       "id": "rotoloni-asciugatutto-splash-2000-6",
-      "volume_liters": 48,
+      "volume_liters": 12,
       "stock_group": "splash-2000-rotoli",
       "profiles": ["meccanico"],
       "name": "Rotoloni MAXI Asciugatutto Splash 2000 · 6 rotoli",

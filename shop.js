@@ -3164,7 +3164,7 @@ function setupEvents() {
       billing_business_name: invoiceBusinessName || "Non richiesta",
       billing_vat_number: invoiceVatNumber || "Non richiesta",
       billing_recipient: invoiceRecipient || "Non richiesto",
-      payment_information: "Nessun pagamento richiesto con questa richiesta; totale e modalità saranno confermati prima dell'ordine.",
+      payment_information: "Nessun pagamento viene riscosso al momento dell'invio; l'attività comunicherà la modalità e il totale definitivi prima di accettare l'ordine.",
       recurring_order: recurringOrder ? "Sì" : "No",
       recurring_frequency: recurringOrder ? formatRecurringFrequency(Number(recurringFrequency)) : "Non applicabile",
       recurring_day: recurringOrder && recurringDay ? recurringDayLabel : "Non indicato",
