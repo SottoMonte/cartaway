@@ -72,6 +72,8 @@
 
       main { padding: 36px 0 56px; }
       .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+      .refresh-controls { display: grid; justify-items: end; gap: 4px; }
+      .refresh-status { color: var(--muted); font-size: 10px; }
       .eyebrow { color: var(--green); font-size: 10px; font-weight: 800; text-transform: uppercase; }
       h1, h2, h3, p { margin-top: 0; }
       h1 { margin-bottom: 5px; font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 500; line-height: 1.15; }
@@ -196,6 +198,7 @@
       .load-panel .section-head { margin-bottom: 10px; }
       .load-panel .section-head h3 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 500; }
       .load-panel .section-head p { margin-top: 4px; }
+      .settings-form { max-width: 900px; }
       .load-volume-input { width: 112px; min-height: 34px; padding: 5px 8px; border: 1px solid #cbd7cf; border-radius: 4px; }
       .load-volume-cell { display: flex; align-items: center; gap: 7px; }
       .load-vehicle-list { display: grid; gap: 10px; }
@@ -253,6 +256,7 @@
         .topbar-meta span:last-child { display: none; }
         main { padding-top: 25px; }
         .page-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+        .refresh-controls { justify-items: start; }
         h1 { font-size: 27px; }
         .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .summary-item { min-height: 72px; padding: 12px; }
@@ -290,7 +294,10 @@
       <main>
         <div class="page-heading">
           <div><span class="eyebrow">Operatività</span><h1>Ordini e consegne</h1></div>
-          <button class="button secondary" id="refresh-button" type="button">Aggiorna dati</button>
+          <div class="refresh-controls">
+            <button class="button secondary" id="refresh-button" type="button">Aggiorna dati</button>
+            <span class="refresh-status" id="refresh-status" role="status" aria-live="polite">Aggiornamento automatico ogni 30 secondi</span>
+          </div>
         </div>
 
         <section class="summary-strip" aria-label="Riepilogo gestionale">
@@ -304,6 +311,7 @@
           <button class="tab" id="tab-stock" type="button" role="tab" aria-selected="true" aria-controls="panel-stock" data-panel="panel-stock">Inventario</button>
           <button class="tab" id="tab-orders" type="button" role="tab" aria-selected="false" aria-controls="panel-orders" data-panel="panel-orders">Ordini</button>
           <button class="tab" id="tab-route" type="button" role="tab" aria-selected="false" aria-controls="panel-route" data-panel="panel-route">Consegne</button>
+          <button class="tab" id="tab-settings" type="button" role="tab" aria-selected="false" aria-controls="panel-settings" data-panel="panel-settings">Impostazioni</button>
         </nav>
 
         <section class="panel" id="panel-stock" role="tabpanel" aria-labelledby="tab-stock">
@@ -374,8 +382,9 @@
               </div>
               <div class="route-row schedule">
                 <label class="field" for="route-start"><span>Ora inizio</span><input id="route-start" name="start" type="time" value="09:00" required /></label>
-                <label class="field" for="route-end"><span>Ora fine</span><input id="route-end" name="end" type="time" value="13:00" required /></label>
+                <label class="field" for="route-end"><span>Ora fine</span><input id="route-end" name="end" type="time" value="18:00" required /></label>
               </div>
+              <p class="subtle" id="work-windows-summary">Finestre operative: mattina 09:00–13:00 e pomeriggio 15:00–18:00. Gli ordini fuori turno o non compatibili con la fascia richiesta saranno segnalati come non assegnati.</p>
               <div><button class="button" id="route-button" type="submit">Crea giri, link e PDF</button></div>
             </form>
             <div class="route-results" id="route-results" hidden>
@@ -388,6 +397,40 @@
           </div>
         </section>
 
+        <section class="panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+          <div class="section-head">
+            <div><h2>Impostazioni operative</h2><p>Questi valori vengono salvati nel database locale del gestionale e applicati alla pianificazione.</p></div>
+          </div>
+          <form class="route-form settings-form" id="delivery-settings-form">
+            <div>
+              <h3>Fasce di consegna</h3>
+              <p class="subtle">Gli ordini saranno assegnati solo entro queste fasce. La fascia pomeridiana deve iniziare dopo la mattina.</p>
+              <div class="route-row schedule">
+                <label class="field" for="setting-morning-start"><span>Mattina · inizio</span><input id="setting-morning-start" name="morning_start" type="time" required /></label>
+                <label class="field" for="setting-morning-end"><span>Mattina · fine</span><input id="setting-morning-end" name="morning_end" type="time" required /></label>
+                <label class="field" for="setting-afternoon-start"><span>Pomeriggio · inizio</span><input id="setting-afternoon-start" name="afternoon_start" type="time" required /></label>
+                <label class="field" for="setting-afternoon-end"><span>Pomeriggio · fine</span><input id="setting-afternoon-end" name="afternoon_end" type="time" required /></label>
+              </div>
+            </div>
+            <div>
+              <h3>Valori predefiniti del giro</h3>
+              <div class="route-row">
+                <label class="field" for="setting-origin"><span>Punto di partenza predefinito</span><input id="setting-origin" name="default_origin" type="text" maxlength="300" /></label>
+                <label class="field" for="setting-route-start"><span>Turno standard · inizio</span><input id="setting-route-start" name="default_route_start" type="time" required /></label>
+                <label class="field" for="setting-route-end"><span>Turno standard · fine</span><input id="setting-route-end" name="default_route_end" type="time" required /></label>
+              </div>
+              <div class="route-row schedule">
+                <label class="field" for="setting-stop-minutes"><span>Minuti medi per consegna</span><input id="setting-stop-minutes" name="stop_service_minutes" type="number" min="1" max="180" step="1" required /></label>
+                <label class="field" for="setting-average-speed"><span>Velocità media stimata (km/h)</span><input id="setting-average-speed" name="average_speed_kmh" type="number" min="1" max="130" step="0.5" required /></label>
+              </div>
+            </div>
+            <div class="load-config-actions">
+              <button class="button" id="save-delivery-settings-button" type="submit">Salva impostazioni</button>
+              <span class="subtle" id="delivery-settings-status" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </section>
+
         <div class="notice" id="notice" role="status" aria-live="polite" hidden>
           <span id="notice-message"></span>
           <button class="notice-dismiss" id="notice-dismiss" type="button" aria-label="Chiudi notifica" title="Chiudi notifica">×</button>
@@ -398,7 +441,7 @@
     </div>
 
     <script>
-      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], deliveryLoadConfig: { product_volumes: {}, vehicles: [] }, noticeTimer: null, mailSyncing: false, autoSyncTimer: null };
+      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], deliveryLoadConfig: { product_volumes: {}, vehicles: [] }, deliverySettings: null, noticeTimer: null, mailSyncing: false, autoSyncTimer: null, dataRefreshTimer: null, dataRefreshPromise: null };
       const notice = document.querySelector("#notice");
       const noticeMessage = document.querySelector("#notice-message");
 
@@ -960,6 +1003,50 @@
         renderDeliveryLoad();
       }
 
+      function readDeliverySettings() {
+        const form = document.querySelector("#delivery-settings-form");
+        return {
+          morning_start: form.elements.morning_start.value,
+          morning_end: form.elements.morning_end.value,
+          afternoon_start: form.elements.afternoon_start.value,
+          afternoon_end: form.elements.afternoon_end.value,
+          default_route_start: form.elements.default_route_start.value,
+          default_route_end: form.elements.default_route_end.value,
+          default_origin: form.elements.default_origin.value.trim(),
+          stop_service_minutes: Number(form.elements.stop_service_minutes.value),
+          average_speed_kmh: Number(form.elements.average_speed_kmh.value),
+        };
+      }
+
+      function applyDeliverySettings(settings) {
+        state.deliverySettings = settings;
+        const form = document.querySelector("#delivery-settings-form");
+        for (const [field, value] of Object.entries(settings)) {
+          const input = form.elements.namedItem(field);
+          if (input) input.value = value;
+        }
+        document.querySelector("#route-origin").value = settings.default_origin;
+        document.querySelector("#route-start").value = settings.default_route_start;
+        document.querySelector("#route-end").value = settings.default_route_end;
+        document.querySelector("#work-windows-summary").textContent =
+          `Finestre operative: mattina ${settings.morning_start}–${settings.morning_end} e pomeriggio ${settings.afternoon_start}–${settings.afternoon_end}. Gli ordini fuori turno o non compatibili con la fascia richiesta saranno segnalati come non assegnati.`;
+      }
+
+      async function saveDeliverySettings() {
+        const settings = await api("/api/delivery-settings", {
+          method: "POST",
+          body: JSON.stringify(readDeliverySettings()),
+        });
+        applyDeliverySettings(settings);
+        document.querySelector("#delivery-settings-status").textContent = "Impostazioni salvate.";
+      }
+
+      async function loadDeliverySettings() {
+        const settings = await api("/api/delivery-settings");
+        applyDeliverySettings(settings);
+        document.querySelector("#delivery-settings-status").textContent = "Impostazioni caricate.";
+      }
+
       function renderVehicleRoutes(result) {
         const container = document.querySelector("#vehicle-route-results");
         container.replaceChildren();
@@ -1125,7 +1212,23 @@
         renderDeliveryLoad();
       }
 
-      async function loadDashboard() {
+      async function refreshDashboardData() {
+        if (state.dataRefreshPromise) return state.dataRefreshPromise;
+        const hasPendingStockEdits = [...document.querySelectorAll("#stock-body .stock-edit input")]
+          .some((input) => input.value.trim() !== "");
+        const refreshPromise = Promise.all([
+          loadDashboard({ preserveStockEdits: hasPendingStockEdits }),
+          loadDeliveryOrders(),
+        ]);
+        state.dataRefreshPromise = refreshPromise;
+        try {
+          await refreshPromise;
+        } finally {
+          if (state.dataRefreshPromise === refreshPromise) state.dataRefreshPromise = null;
+        }
+      }
+
+      async function loadDashboard(options = {}) {
         const data = await api("/api/dashboard");
         state.stock = data.stock;
         state.orders = data.orders;
@@ -1135,7 +1238,7 @@
         document.querySelector("#brand-name").textContent = data.brand;
         document.querySelector("#route-origin").value ||= data.default_origin;
         renderSummary(data.summary);
-        renderStock();
+        if (!options.preserveStockEdits) renderStock();
         renderOrders();
         renderValidVouchers();
         if (state.ordersView === "history") await loadOrderHistory();
@@ -1177,7 +1280,7 @@
         status.textContent = "Controllo INBOX in corso…";
         try {
           const result = await api("/api/mail/check", { method: "POST", body: JSON.stringify({ limit: 50 }) });
-          await Promise.all([loadDashboard(), loadDeliveryOrders()]);
+          await refreshDashboardData();
           status.textContent = `Ultimo controllo: ${new Date().toLocaleTimeString("it-IT")}.`;
           if (result.processed) {
             showNotice(`${result.processed} nuovi ordini importati. Nessuna email inviata automaticamente.`);
@@ -1234,14 +1337,17 @@
       });
 
       document.querySelector("#refresh-button").addEventListener("click", async (event) => {
-        setButtonBusy(event.currentTarget, true);
+        const button = event.currentTarget;
+        setButtonBusy(button, true);
         try {
-          await loadDashboard();
+          await refreshDashboardData();
+          document.querySelector("#refresh-status").textContent =
+            `Ultimo aggiornamento: ${new Date().toLocaleTimeString("it-IT")}`;
           showNotice("Dati aggiornati.");
         } catch (error) {
           showNotice(error.message, "error");
         } finally {
-          setButtonBusy(event.currentTarget, false, "Aggiorna dati");
+          setButtonBusy(button, false, "Aggiorna dati");
         }
       });
 
@@ -1413,6 +1519,24 @@
         }
       });
 
+      document.querySelector("#delivery-settings-form").addEventListener("input", () => {
+        document.querySelector("#delivery-settings-status").textContent = "Modifiche non salvate.";
+      });
+
+      document.querySelector("#delivery-settings-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = document.querySelector("#save-delivery-settings-button");
+        setButtonBusy(button, true, "Salva impostazioni", "Salvataggio…");
+        try {
+          await saveDeliverySettings();
+          showNotice("Impostazioni operative salvate.");
+        } catch (error) {
+          showNotice(error.message, "error");
+        } finally {
+          setButtonBusy(button, false, "Salva impostazioni");
+        }
+      });
+
       document.querySelector("#route-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const button = document.querySelector("#route-button");
@@ -1451,7 +1575,20 @@
       loadDashboard().catch((error) => showNotice(error.message, "error"));
       loadDeliveryOrders().catch((error) => showNotice(error.message, "error"));
       loadDeliveryLoadConfig().catch((error) => showNotice(error.message, "error"));
+      loadDeliverySettings().catch((error) => showNotice(error.message, "error"));
       syncOrders();
+      state.dataRefreshTimer = window.setInterval(() => {
+        if (state.mailSyncing) return;
+        refreshDashboardData()
+          .then(() => {
+            document.querySelector("#refresh-status").textContent =
+              `Aggiornato automaticamente alle ${new Date().toLocaleTimeString("it-IT")}`;
+          })
+          .catch((error) => {
+            document.querySelector("#refresh-status").textContent =
+              `Errore aggiornamento automatico: ${error.message}`;
+          });
+      }, 30_000);
       state.autoSyncTimer = window.setInterval(() => syncOrders(), 60_000);
     </script>
   </body>

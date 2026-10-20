@@ -554,6 +554,18 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             name TEXT NOT NULL UNIQUE,
             capacity_liters REAL NOT NULL CHECK (capacity_liters > 0)
         );
+        CREATE TABLE IF NOT EXISTS delivery_settings (
+            settings_id INTEGER PRIMARY KEY CHECK (settings_id = 1),
+            morning_start TEXT NOT NULL DEFAULT '09:00',
+            morning_end TEXT NOT NULL DEFAULT '13:00',
+            afternoon_start TEXT NOT NULL DEFAULT '15:00',
+            afternoon_end TEXT NOT NULL DEFAULT '18:00',
+            default_route_start TEXT NOT NULL DEFAULT '09:00',
+            default_route_end TEXT NOT NULL DEFAULT '18:00',
+            default_origin TEXT NOT NULL DEFAULT '',
+            stop_service_minutes INTEGER NOT NULL DEFAULT 10,
+            average_speed_kmh REAL NOT NULL DEFAULT 30
+        );
         CREATE TABLE IF NOT EXISTS monthly_orders (
             identity_key TEXT NOT NULL,
             period TEXT NOT NULL,
@@ -622,6 +634,7 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON orders (voucher_code) WHERE voucher_code <> '';
         """
     )
+    connection.execute("INSERT OR IGNORE INTO delivery_settings (settings_id) VALUES (1)")
     existing_product_columns = {
         row[1] for row in connection.execute("PRAGMA table_info(products)").fetchall()
     }
@@ -742,6 +755,116 @@ def save_delivery_load_config(
             validated_vehicles,
         )
     return get_delivery_load_config(connection)
+
+
+def get_delivery_settings(
+    connection: sqlite3.Connection,
+    default_origin: str = "",
+) -> Dict[str, Any]:
+    row = connection.execute(
+        "SELECT * FROM delivery_settings WHERE settings_id = 1"
+    ).fetchone()
+    if row is None:
+        raise AppError("Configurazione delle consegne non disponibile.")
+    return {
+        "morning_start": str(row["morning_start"]),
+        "morning_end": str(row["morning_end"]),
+        "afternoon_start": str(row["afternoon_start"]),
+        "afternoon_end": str(row["afternoon_end"]),
+        "default_route_start": str(row["default_route_start"]),
+        "default_route_end": str(row["default_route_end"]),
+        "default_origin": str(row["default_origin"] or default_origin).strip(),
+        "stop_service_minutes": int(row["stop_service_minutes"]),
+        "average_speed_kmh": float(row["average_speed_kmh"]),
+    }
+
+
+def save_delivery_settings(
+    connection: sqlite3.Connection,
+    settings: Dict[str, Any],
+) -> Dict[str, Any]:
+    if not isinstance(settings, dict):
+        raise AppError("Impostazioni delle consegne non valide.")
+
+    time_fields = (
+        "morning_start",
+        "morning_end",
+        "afternoon_start",
+        "afternoon_end",
+        "default_route_start",
+        "default_route_end",
+    )
+    normalized_times = {}
+    for field in time_fields:
+        value = settings.get(field)
+        if not isinstance(value, str):
+            raise AppError("Inserire tutti gli orari nel formato HH:MM.")
+        try:
+            parsed = datetime.strptime(value, "%H:%M").time()
+        except ValueError as exc:
+            raise AppError("Inserire tutti gli orari nel formato HH:MM.") from exc
+        if parsed.strftime("%H:%M") != value:
+            raise AppError("Inserire tutti gli orari nel formato HH:MM.")
+        normalized_times[field] = value
+
+    morning_start = datetime.strptime(normalized_times["morning_start"], "%H:%M").time()
+    morning_end = datetime.strptime(normalized_times["morning_end"], "%H:%M").time()
+    afternoon_start = datetime.strptime(normalized_times["afternoon_start"], "%H:%M").time()
+    afternoon_end = datetime.strptime(normalized_times["afternoon_end"], "%H:%M").time()
+    route_start = datetime.strptime(normalized_times["default_route_start"], "%H:%M").time()
+    route_end = datetime.strptime(normalized_times["default_route_end"], "%H:%M").time()
+    if not morning_start < morning_end <= afternoon_start < afternoon_end:
+        raise AppError(
+            "Le fasce devono essere in ordine: mattina inizio, mattina fine, "
+            "pomeriggio inizio, pomeriggio fine."
+        )
+    if route_start >= route_end:
+        raise AppError("L'orario standard di fine deve essere successivo all'inizio.")
+
+    default_origin_value = settings.get("default_origin", "")
+    if not isinstance(default_origin_value, str):
+        raise AppError("Il punto di partenza predefinito deve essere un testo.")
+    default_origin = default_origin_value.strip()
+    if len(default_origin) > 300:
+        raise AppError("Il punto di partenza predefinito non può superare 300 caratteri.")
+
+    stop_service_minutes = settings.get("stop_service_minutes")
+    if (
+        isinstance(stop_service_minutes, bool)
+        or not isinstance(stop_service_minutes, int)
+        or not 1 <= stop_service_minutes <= 180
+    ):
+        raise AppError("La durata di ogni consegna deve essere un intero tra 1 e 180 minuti.")
+
+    average_speed_value = settings.get("average_speed_kmh")
+    if isinstance(average_speed_value, bool) or not isinstance(average_speed_value, (int, float)):
+        raise AppError("La velocità media deve essere un numero tra 1 e 130 km/h.")
+    average_speed_kmh = float(average_speed_value)
+    if not math.isfinite(average_speed_kmh) or not 1 <= average_speed_kmh <= 130:
+        raise AppError("La velocità media deve essere un numero tra 1 e 130 km/h.")
+
+    with connection:
+        connection.execute(
+            """
+            UPDATE delivery_settings
+            SET morning_start = ?, morning_end = ?, afternoon_start = ?, afternoon_end = ?,
+                default_route_start = ?, default_route_end = ?, default_origin = ?,
+                stop_service_minutes = ?, average_speed_kmh = ?
+            WHERE settings_id = 1
+            """,
+            (
+                normalized_times["morning_start"],
+                normalized_times["morning_end"],
+                normalized_times["afternoon_start"],
+                normalized_times["afternoon_end"],
+                normalized_times["default_route_start"],
+                normalized_times["default_route_end"],
+                default_origin,
+                stop_service_minutes,
+                average_speed_kmh,
+            ),
+        )
+    return get_delivery_settings(connection)
 
 
 def open_database(path: Path) -> sqlite3.Connection:

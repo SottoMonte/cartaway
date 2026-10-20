@@ -31,6 +31,7 @@ from gestionale.gestionale import (
     confirm_order,
         disable_recurring_schedule,
         get_delivery_load_config,
+    get_delivery_settings,
     initialize_database,
     list_stock,
     list_mail_folders,
@@ -40,12 +41,14 @@ from gestionale.gestionale import (
     prepare_order,
     set_stock,
     save_delivery_load_config,
+    save_delivery_settings,
     sync_catalog,
     OrderNotReady,
     voucher_validation_status,
 )
 from gestionale.gestionale_web import (
     _allocate_vehicle_loads,
+    _delivery_window_minutes,
     _group_route_orders_by_city,
     _plan_single_vehicle_tours,
     _pdf_datetime,
@@ -383,6 +386,7 @@ class GestionaleTests(unittest.TestCase):
         }
         self.assertIn("delivery_load_volumes", tables)
         self.assertIn("delivery_vehicles", tables)
+        self.assertIn("delivery_settings", tables)
         self.assertIn("shared_stock", tables)
 
     def test_delivery_load_config_persists_volumes_and_vehicle_capacities(self):
@@ -410,6 +414,34 @@ class GestionaleTests(unittest.TestCase):
                 ],
             )
         self.assertEqual(get_delivery_load_config(self.connection), saved)
+
+    def test_delivery_settings_persist_and_validate_operating_values(self):
+        defaults = get_delivery_settings(self.connection, "Deposito Cartaway")
+        self.assertEqual(defaults["morning_start"], "09:00")
+        self.assertEqual(defaults["morning_end"], "13:00")
+        self.assertEqual(defaults["afternoon_start"], "15:00")
+        self.assertEqual(defaults["afternoon_end"], "18:00")
+        self.assertEqual(defaults["default_origin"], "Deposito Cartaway")
+
+        settings = {
+            "morning_start": "08:00",
+            "morning_end": "11:00",
+            "afternoon_start": "13:00",
+            "afternoon_end": "16:00",
+            "default_route_start": "08:00",
+            "default_route_end": "17:00",
+            "default_origin": "Via Roma 1, Montoro",
+            "stop_service_minutes": 35,
+            "average_speed_kmh": 45,
+        }
+        saved = save_delivery_settings(self.connection, settings)
+
+        self.assertEqual(saved, settings)
+        self.assertEqual(get_delivery_settings(self.connection), settings)
+        invalid_settings = {**settings, "afternoon_start": "10:30"}
+        with self.assertRaisesRegex(AppError, "in ordine"):
+            save_delivery_settings(self.connection, invalid_settings)
+        self.assertEqual(get_delivery_settings(self.connection), settings)
 
     def test_stock_is_shared_across_product_pack_sizes(self):
         product_variants = [
@@ -1018,7 +1050,7 @@ class GestionaleTests(unittest.TestCase):
             "delivery_city": "Fisciano",
             "delivery_address": "Via Roma 1",
             "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
-            "preferred_delivery_time": "Dalle 18:22 alle 18:22",
+            "preferred_delivery_time": "Dalle 17:30 alle 17:40",
             "delivery_notes": "",
         }
 
@@ -1034,15 +1066,130 @@ class GestionaleTests(unittest.TestCase):
             True,
         )
 
-        tour = result["tours"][0]
-        self.assertEqual(tour["last_arrival_at"], "2026-10-19T18:22+02:00")
-        self.assertEqual(tour["last_delivery_completed_at"], "2026-10-19T18:32+02:00")
-        self.assertEqual(tour["estimated_return_at"], "2026-10-19T18:57+02:00")
-        self.assertEqual(tour["duration_minutes"], 60)
-        self.assertTrue(any(
-            "Rientro stimato al deposito 18:57 oltre la fine del turno (18:00)" in warning
-            for warning in tour["schedule_warnings"]
-        ))
+        self.assertEqual(result["tours"], [])
+        self.assertEqual(
+            result["unassigned_orders"][0]["order"]["order_id"],
+            "ORD-RETURN-AFTER-SHIFT",
+        )
+        self.assertIn("Rientro stimato al deposito", result["unassigned_orders"][0]["reason"])
+
+    def test_afternoon_order_is_scheduled_inside_1500_to_1800(self):
+        order = {
+            "order_id": "ORD-AFTERNOON-WINDOW",
+            "customer_name": "Cliente pomeriggio",
+            "destination": "Via Roma 1, Comune senza coordinate",
+            "delivery_city": "Comune senza coordinate",
+            "delivery_address": "Via Roma 1",
+            "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+            "preferred_delivery_time": "Pomeriggio",
+            "delivery_notes": "",
+        }
+
+        result = _plan_single_vehicle_tours(
+            [order],
+            {"name": "Furgone 1", "capacity_liters": 5},
+            {"roll": 3},
+            "Piazza Roma, Comune senza coordinate",
+            {"delivery_zones": []},
+            date(2026, 10, 19),
+            time(9, 0),
+            time(18, 0),
+            False,
+        )
+
+        self.assertEqual(result["unassigned_orders"], [])
+        arrival = datetime.fromisoformat(result["tours"][0]["orders"][0]["estimated_arrival_at"])
+        self.assertGreaterEqual(arrival.time(), time(15, 0))
+        self.assertLessEqual(arrival.time(), time(18, 0))
+
+    def test_afternoon_order_is_unassigned_when_shift_ends_at_noon(self):
+        order = {
+            "order_id": "ORD-AFTERNOON-OUTSIDE-SHIFT",
+            "customer_name": "Cliente pomeriggio",
+            "destination": "Via Roma 1, Comune senza coordinate",
+            "delivery_city": "Comune senza coordinate",
+            "delivery_address": "Via Roma 1",
+            "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+            "preferred_delivery_time": "Pomeriggio",
+            "delivery_notes": "",
+        }
+
+        result = _plan_single_vehicle_tours(
+            [order],
+            {"name": "Furgone 1", "capacity_liters": 5},
+            {"roll": 3},
+            "Piazza Roma, Comune senza coordinate",
+            {"delivery_zones": []},
+            date(2026, 10, 19),
+            time(9, 0),
+            time(12, 0),
+            False,
+        )
+
+        self.assertEqual(result["tours"], [])
+        self.assertEqual(
+            result["unassigned_orders"][0]["order"]["order_id"],
+            "ORD-AFTERNOON-OUTSIDE-SHIFT",
+        )
+        self.assertIn("Nessuna fascia richiesta compatibile", result["unassigned_orders"][0]["reason"])
+
+    def test_unqualified_order_respects_the_1300_to_1500_break(self):
+        order = {
+            "order_id": "ORD-AFTER-LUNCH",
+            "customer_name": "Cliente dopo pranzo",
+            "destination": "Via Roma 1, Comune senza coordinate",
+            "delivery_city": "Comune senza coordinate",
+            "delivery_address": "Via Roma 1",
+            "availability": [{"product_id": "roll", "name": "Rotoli", "requested": 1}],
+            "preferred_delivery_time": "",
+            "delivery_notes": "",
+        }
+
+        result = _plan_single_vehicle_tours(
+            [order],
+            {"name": "Furgone 1", "capacity_liters": 5},
+            {"roll": 3},
+            "Piazza Roma, Comune senza coordinate",
+            {"delivery_zones": []},
+            date(2026, 10, 19),
+            time(14, 0),
+            time(18, 0),
+            False,
+        )
+
+        arrival = datetime.fromisoformat(result["tours"][0]["orders"][0]["estimated_arrival_at"])
+        self.assertGreaterEqual(arrival.time(), time(15, 0))
+        self.assertLessEqual(arrival.time(), time(18, 0))
+
+    def test_after_noon_note_is_a_lower_bound_not_an_exact_appointment(self):
+        windows = _delivery_window_minutes(
+            {
+                "preferred_delivery_time": "",
+                "delivery_notes": "Dopo le 12:00",
+            },
+            14 * 60,
+            18 * 60,
+        )
+
+        self.assertEqual(windows, [(15 * 60, 18 * 60)])
+        within_windows = _delivery_window_minutes(
+            {
+                "preferred_delivery_time": "",
+                "delivery_notes": "Entro le 12:00",
+            },
+            9 * 60,
+            18 * 60,
+        )
+        self.assertEqual(within_windows, [(9 * 60, 12 * 60)])
+        malformed_specific_window = _delivery_window_minutes(
+            {
+                "preferred_delivery_time": "Una fascia oraria specifica: da definire",
+                "delivery_notes": "",
+            },
+            9 * 60,
+            18 * 60,
+        )
+        self.assertEqual(malformed_specific_window, [])
 
     def test_tour_sequence_warns_before_return_or_reload_is_complete(self):
         overlap_warning = _vehicle_tour_sequence_warning(18 * 60 + 20, 18 * 60 + 10, 1, 2)
@@ -1051,7 +1198,7 @@ class GestionaleTests(unittest.TestCase):
         self.assertIn("Sovrapposizione tra giri", overlap_warning)
         self.assertIn("prima del termine della ricarica", reload_warning)
 
-    def test_single_vehicle_warns_when_estimated_arrival_misses_delivery_window(self):
+    def test_single_vehicle_leaves_order_unassigned_when_arrival_misses_delivery_window(self):
         order = {
             "order_id": "ORD-TOUR-MISSED-WINDOW",
             "customer_name": "Cliente con finestra breve",
@@ -1075,11 +1222,12 @@ class GestionaleTests(unittest.TestCase):
             True,
         )
 
-        tour = result["tours"][0]
-        estimated_arrival = datetime.fromisoformat(tour["orders"][0]["estimated_arrival_at"])
-        self.assertGreater(estimated_arrival.time(), time(9, 5))
-        self.assertTrue(any("oltre la finestra richiesta" in warning for warning in tour["schedule_warnings"]))
-        self.assertEqual(result["unassigned_orders"], [])
+        self.assertEqual(result["tours"], [])
+        self.assertEqual(
+            result["unassigned_orders"][0]["order"]["order_id"],
+            "ORD-TOUR-MISSED-WINDOW",
+        )
+        self.assertIn("oltre tutte le fasce", result["unassigned_orders"][0]["reason"])
 
     def test_shortage_requires_a_customer_response_and_does_not_confirm_order(self):
         set_stock(self.connection, "carta-igienica", 1)
@@ -1805,6 +1953,186 @@ class GestionaleWebTests(unittest.TestCase):
         self.assertIn("ORD-VEHICLE-LOAD", parse_qs(urlsplit(vehicle["calendar_url"]).query)["details"][0])
         maps_query = parse_qs(urlsplit(vehicle["maps_urls"][0]).query)
         self.assertEqual(maps_query["destination"], ["Via Roma 4, Montoro"])
+
+    def test_multi_vehicle_route_leaves_afternoon_order_unassigned_before_noon(self):
+        order_id = "ORD-AFTERNOON-BEFORE-NOON"
+        delivery_date = datetime.now(ROME).date()
+        connection = open_database(self.database)
+        try:
+            set_stock(connection, "carta-igienica", 5)
+            order = ParsedOrder(
+                order_id=order_id,
+                items=[OrderItem("carta-igienica", "Carta igienica lavanda", 1)],
+                customer_name="Cliente pomeriggio",
+                customer_email="afternoon@example.org",
+                customer_phone="+39 333 1234567",
+                delivery_address="Via Roma 4",
+                delivery_city="Montoro",
+                recurring=False,
+                voucher_candidate="",
+                voucher_value="",
+                products_subtotal="€ 3,00",
+                recurring_discount="Nessuno",
+                order_datetime=datetime.now(ROME),
+                message_id=f"<{order_id.lower()}@example.org>",
+                preferred_delivery_date=delivery_date.isoformat(),
+                preferred_delivery_time="Pomeriggio",
+            )
+            with patch("gestionale.gestionale.send_email"):
+                prepare_order(connection, order, self.site)
+                confirm_order(connection, order_id, self.site)
+        finally:
+            connection.close()
+
+        with self._post(
+            "/api/load-config",
+            {
+                "product_volumes": {"carta-igienica": 2.5},
+                "vehicles": [
+                    {"name": "Furgone 1", "capacity_liters": 5},
+                    {"name": "Furgone 2", "capacity_liters": 5},
+                ],
+            },
+            origin=self.base_url,
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        with self._post(
+            "/api/vehicle-routes",
+            {
+                "origin": "Piazza Roma, Montoro",
+                "date": delivery_date.isoformat(),
+                "start": "09:00",
+                "end": "12:00",
+                "return_to_origin": False,
+            },
+            origin=self.base_url,
+        ) as response:
+            result = json.loads(response.read().decode("utf-8"))
+
+        self.assertEqual(
+            [item["order"]["order_id"] for item in result["unassigned_orders"]],
+            [order_id],
+        )
+        self.assertTrue(all(not vehicle["orders"] for vehicle in result["vehicles"]))
+        self.assertEqual(result["products"], [])
+
+    def test_delivery_settings_customize_windows_and_route_defaults(self):
+        self.site["delivery_zones"] = [{
+            "locations": [
+                {"name": "Deposito", "lat": 0, "lon": 0},
+                {"name": "Montoro", "lat": 1, "lon": 0},
+            ]
+        }]
+        order_id = "ORD-CONFIGURABLE-DELIVERY-WINDOW"
+        delivery_date = datetime.now(ROME).date()
+        connection = open_database(self.database)
+        try:
+            set_stock(connection, "carta-igienica", 5)
+            order = ParsedOrder(
+                order_id=order_id,
+                items=[OrderItem("carta-igienica", "Carta igienica lavanda", 1)],
+                customer_name="Cliente con impostazioni",
+                customer_email="settings@example.org",
+                customer_phone="+39 333 1234567",
+                delivery_address="Via Roma 4",
+                delivery_city="Montoro",
+                recurring=False,
+                voucher_candidate="",
+                voucher_value="",
+                products_subtotal="€ 3,00",
+                recurring_discount="Nessuno",
+                order_datetime=datetime.now(ROME),
+                message_id=f"<{order_id.lower()}@example.org>",
+                preferred_delivery_date=delivery_date.isoformat(),
+            )
+            with patch("gestionale.gestionale.send_email"):
+                prepare_order(connection, order, self.site)
+                confirm_order(connection, order_id, self.site)
+        finally:
+            connection.close()
+
+        settings = {
+            "morning_start": "08:00",
+            "morning_end": "11:00",
+            "afternoon_start": "13:00",
+            "afternoon_end": "16:00",
+            "default_route_start": "08:00",
+            "default_route_end": "17:00",
+            "default_origin": "Deposito",
+            "stop_service_minutes": 35,
+            "average_speed_kmh": 130,
+        }
+        with self._post(
+            "/api/delivery-settings",
+            settings,
+            origin=self.base_url,
+        ) as response:
+            self.assertEqual(json.load(response), settings)
+
+        with urlopen(f"{self.base_url}/api/delivery-settings", timeout=3) as response:
+            self.assertEqual(json.load(response), settings)
+
+        with self._post(
+            "/api/load-config",
+            {
+                "product_volumes": {"carta-igienica": 2.5},
+                "vehicles": [{"name": "Furgone impostazioni", "capacity_liters": 5}],
+            },
+            origin=self.base_url,
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        with self._post(
+            "/api/vehicle-routes",
+            {
+                "date": delivery_date.isoformat(),
+                "end": "12:00",
+                "return_to_origin": False,
+            },
+            origin=self.base_url,
+        ) as response:
+            result = json.loads(response.read().decode("utf-8"))
+
+        vehicle = result["vehicles"][0]
+        self.assertEqual([order["order_id"] for order in vehicle["orders"]], [order_id])
+        arrival = datetime.fromisoformat(vehicle["orders"][0]["estimated_arrival_at"])
+        completed = datetime.fromisoformat(vehicle["last_delivery_completed_at"])
+        departure = datetime.fromisoformat(vehicle["departure_at"])
+        self.assertEqual(departure.time(), time(8, 0))
+        self.assertLess(arrival.time(), time(11, 0))
+        self.assertEqual(completed - arrival, timedelta(minutes=35))
+        self.assertIn("130 km/h", vehicle["estimate_note"])
+
+        with self._post(
+            "/api/load-config",
+            {
+                "product_volumes": {"carta-igienica": 2.5},
+                "vehicles": [
+                    {"name": "Furgone 1", "capacity_liters": 5},
+                    {"name": "Furgone 2", "capacity_liters": 5},
+                ],
+            },
+            origin=self.base_url,
+        ) as response:
+            self.assertEqual(response.status, 200)
+        with self._post(
+            "/api/vehicle-routes",
+            {
+                "date": delivery_date.isoformat(),
+                "end": "12:00",
+                "return_to_origin": False,
+            },
+            origin=self.base_url,
+        ) as response:
+            multi_vehicle_result = json.loads(response.read().decode("utf-8"))
+
+        planned_vehicles = [
+            vehicle for vehicle in multi_vehicle_result["vehicles"] if vehicle["orders"]
+        ]
+        self.assertEqual(len(planned_vehicles), 1)
+        self.assertEqual(planned_vehicles[0]["orders"][0]["order_id"], order_id)
+        self.assertIn("130 km/h", planned_vehicles[0]["estimate_note"])
 
     def test_delivery_preview_shares_stock_between_package_variants(self):
         product_variants = [
@@ -2675,6 +3003,17 @@ class GestionaleWebTests(unittest.TestCase):
         self.assertTrue(any("ORD-ROUTE-LATE" in warning for warning in conflicting_schedule["schedule_warnings"]))
         self.assertTrue(any("15:00–16:00" in warning for warning in conflicting_schedule["schedule_warnings"]))
         self.assertTrue(any("ORD-ROUTE-AFTERNOON" in warning for warning in conflicting_schedule["schedule_warnings"]))
+        self.assertEqual(
+            {
+                item["order"]["order_id"]
+                for item in conflicting_schedule["unassigned_orders"]
+            },
+            {"ORD-ROUTE-LATE", "ORD-ROUTE-AFTERNOON"},
+        )
+        self.assertFalse(
+            {"ORD-ROUTE-LATE", "ORD-ROUTE-AFTERNOON"}
+            & {order["order_id"] for order in conflicting_schedule["orders"]}
+        )
 
 
 if __name__ == "__main__":

@@ -39,6 +39,30 @@ TOUR_FALLBACK_LEG_MINUTES = 25
 TOUR_STOP_SERVICE_MINUTES = 10
 TOUR_RELOAD_MINUTES = 20
 TOUR_MAX_STOP_WAIT_MINUTES = 120
+DELIVERY_WORK_WINDOWS = ((9 * 60, 13 * 60), (15 * 60, 18 * 60))
+
+
+def _delivery_work_windows(settings: Optional[Dict[str, Any]] = None) -> Tuple[Tuple[int, int], ...]:
+    if settings is None:
+        return DELIVERY_WORK_WINDOWS
+    return tuple(
+        (
+            time.fromisoformat(str(settings[f"{period}_start"])).hour * 60
+            + time.fromisoformat(str(settings[f"{period}_start"])).minute,
+            time.fromisoformat(str(settings[f"{period}_end"])).hour * 60
+            + time.fromisoformat(str(settings[f"{period}_end"])).minute,
+        )
+        for period in ("morning", "afternoon")
+    )
+
+
+def _format_delivery_work_windows(
+    work_windows: Sequence[Tuple[int, int]],
+) -> str:
+    return ", ".join(
+        f"{_format_tour_minute(start)}–{_format_tour_minute(end)}"
+        for start, end in work_windows
+    )
 
 
 def _pdf_value(value: Any, fallback: str = "—") -> str:
@@ -905,17 +929,20 @@ def _requested_delivery_times(value: str) -> List[time]:
     ]
 
 
-def _delivery_time_sort_key(order: Dict[str, Any]) -> Tuple[int, int]:
+def _delivery_time_sort_key(
+    order: Dict[str, Any],
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
+) -> Tuple[int, int]:
     preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
     requested_times = _requested_order_times(order)
+    afternoon_start = work_windows[1][0]
     if requested_times:
-        requested_start = requested_times[0]
-        minutes = requested_start.hour * 60 + requested_start.minute
-        return (0 if requested_start < time(12, 0) else 2, minutes)
+        minutes = requested_times[0].hour * 60 + requested_times[0].minute
+        return (0 if minutes < afternoon_start else 2, minutes)
     if "mattina" in preference:
-        return (1, 9 * 60)
+        return (1, work_windows[0][0])
     if "pomeriggio" in preference:
-        return (2, 12 * 60)
+        return (2, afternoon_start)
     return (1, 0)
 
 
@@ -1089,24 +1116,32 @@ def _allocate_vehicle_loads(
 
 
 def _requested_order_times(order: Dict[str, Any]) -> List[time]:
-    for value in (order.get("preferred_delivery_time"), order.get("delivery_notes")):
-        requested_times = _requested_delivery_times(str(value or ""))
-        if requested_times:
-            return requested_times
-    return []
+    requested_times = _requested_delivery_times(str(order.get("preferred_delivery_time") or ""))
+    if requested_times:
+        return requested_times
+    notes = str(order.get("delivery_notes") or "").casefold()
+    if any(
+        phrase in notes
+        for phrase in ("dopo ", "after ", "entro ", "prima ", "before ")
+    ):
+        return []
+    return _requested_delivery_times(notes)
 
 
-def _route_time_constraint(order: Dict[str, Any]) -> Optional[Tuple[int, int]]:
+def _route_time_constraint(
+    order: Dict[str, Any],
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
+) -> Optional[Tuple[int, int]]:
     requested_times = _requested_order_times(order)
     if requested_times:
         requested_start = requested_times[0]
         minutes = requested_start.hour * 60 + requested_start.minute
-        return (0 if requested_start < time(12, 0) else 2, minutes)
+        return (0 if minutes < work_windows[1][0] else 2, minutes)
     preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
     if "mattina" in preference:
-        return (1, 9 * 60)
+        return (1, work_windows[0][0])
     if "pomeriggio" in preference:
-        return (2, 12 * 60)
+        return (2, work_windows[1][0])
     return None
 
 
@@ -1272,14 +1307,15 @@ def _minimum_distance_city_order(
 def _fallback_city_order(
     orders: List[Dict[str, Any]],
     origin: str,
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
 ) -> List[Dict[str, Any]]:
-    time_ordered = sorted(orders, key=_delivery_time_sort_key)
+    time_ordered = sorted(orders, key=lambda order: _delivery_time_sort_key(order, work_windows))
     city_rank: Dict[Tuple[str, str], int] = {}
     city_time_priority: Dict[Tuple[str, str], Tuple[int, int]] = {}
     for order in time_ordered:
         city_key = _delivery_city_key(order)
         city_rank.setdefault(city_key, len(city_rank))
-        order_priority = _delivery_time_sort_key(order)
+        order_priority = _delivery_time_sort_key(order, work_windows)
         if city_key not in city_time_priority or order_priority < city_time_priority[city_key]:
             city_time_priority[city_key] = order_priority
     origin_city = _origin_city_key(origin, time_ordered)
@@ -1295,7 +1331,10 @@ def _fallback_city_order(
         city_rank = {city_key: rank for rank, city_key in enumerate(city_order)}
     return sorted(
         time_ordered,
-        key=lambda order: (city_rank[_delivery_city_key(order)], _delivery_time_sort_key(order)),
+        key=lambda order: (
+            city_rank[_delivery_city_key(order)],
+            _delivery_time_sort_key(order, work_windows),
+        ),
     )
 
 
@@ -1304,11 +1343,12 @@ def _group_route_orders_by_city(
     origin: str = "",
     site: Optional[Dict[str, Any]] = None,
     return_to_origin: bool = False,
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
 ) -> List[Dict[str, Any]]:
     if not orders:
         return []
     if site is None:
-        return _fallback_city_order(orders, origin)
+        return _fallback_city_order(orders, origin, work_windows)
 
     grouped_orders: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
     for order in orders:
@@ -1319,20 +1359,20 @@ def _group_route_orders_by_city(
         for city_key in grouped_orders
     }
     if not location_coordinates or any(point is None for point in city_coordinates.values()):
-        return _fallback_city_order(orders, origin)
+        return _fallback_city_order(orders, origin, work_windows)
     origin_coordinate = _matching_location_coordinate(origin, location_coordinates)
     origin_city = _origin_city_key(origin, orders)
     if origin_coordinate is None and origin_city is not None:
         origin_coordinate = city_coordinates.get(origin_city)
     if origin_coordinate is None:
-        return _fallback_city_order(orders, origin)
+        return _fallback_city_order(orders, origin, work_windows)
 
     city_priorities: Dict[Tuple[str, str], Tuple[int, int]] = {}
     for city_key, city_orders in grouped_orders.items():
         constraints = [
             priority
             for order in city_orders
-            if (priority := _route_time_constraint(order)) is not None
+            if (priority := _route_time_constraint(order, work_windows)) is not None
         ]
         city_priorities[city_key] = min(constraints) if constraints else (1, 0)
     if origin_city in city_priorities and city_priorities[origin_city] == (1, 0):
@@ -1348,7 +1388,10 @@ def _group_route_orders_by_city(
     return [
         order
         for city_key in route_city_order
-        for order in sorted(grouped_orders[city_key], key=_delivery_time_sort_key)
+        for order in sorted(
+            grouped_orders[city_key],
+            key=lambda order: _delivery_time_sort_key(order, work_windows),
+        )
     ]
 
 
@@ -1356,33 +1399,28 @@ def _route_schedule_warning(
     order: Dict[str, Any],
     route_start: time,
     route_end: time,
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
 ) -> str:
     preference = str(order.get("preferred_delivery_time") or "").strip()
-    normalized_preference = preference.casefold()
     requested_times = _requested_order_times(order)
-    if not requested_times:
-        if "mattina" in normalized_preference:
-            conflict = route_start >= time(12, 0)
-            requested_label = "Mattina"
-        elif "pomeriggio" in normalized_preference:
-            conflict = route_end <= time(12, 0)
-            requested_label = "Pomeriggio"
-        else:
-            return ""
-    else:
-        requested_start = requested_times[0]
-        requested_end = requested_times[-1]
-        if requested_end < requested_start:
-            conflict = True
-        elif requested_start == requested_end:
-            conflict = not route_start <= requested_start <= route_end
-        else:
-            conflict = requested_end <= route_start or requested_start >= route_end
-        requested_label = requested_start.strftime("%H:%M")
-        if requested_end != requested_start:
-            requested_label += f"–{requested_end.strftime('%H:%M')}"
-    if not conflict:
+    windows = _delivery_window_minutes(
+        order,
+        route_start.hour * 60 + route_start.minute,
+        route_end.hour * 60 + route_end.minute,
+        work_windows,
+    )
+    if windows:
         return ""
+    if requested_times:
+        requested_label = requested_times[0].strftime("%H:%M")
+        if len(requested_times) > 1:
+            requested_label += f"–{requested_times[-1].strftime('%H:%M')}"
+    elif "pomeriggio" in preference.casefold():
+        requested_label = f"Pomeriggio ({_format_tour_minute(work_windows[1][0])}–{_format_tour_minute(work_windows[1][1])})"
+    elif "mattina" in preference.casefold():
+        requested_label = f"Mattina ({_format_tour_minute(work_windows[0][0])}–{_format_tour_minute(work_windows[0][1])})"
+    else:
+        requested_label = f"orario di lavoro ({_format_delivery_work_windows(work_windows)})"
     return (
         f"#{order['order_id']}: preferenza richiesta {requested_label} non compatibile "
         f"con il giro {route_start.strftime('%H:%M')}–{route_end.strftime('%H:%M')}."
@@ -1393,34 +1431,69 @@ def _delivery_window_minutes(
     order: Dict[str, Any],
     shift_start_minute: int,
     shift_end_minute: int,
-) -> Optional[Tuple[int, int]]:
-    requested_times = _requested_order_times(order)
-    if requested_times:
-        start = requested_times[0].hour * 60 + requested_times[0].minute
-        end = requested_times[-1].hour * 60 + requested_times[-1].minute
-        return start, end
-
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
+) -> List[Tuple[int, int]]:
     preference = str(order.get("preferred_delivery_time") or "").strip().casefold()
+    preferred_times = _requested_delivery_times(preference)
+    note = str(order.get("delivery_notes") or "").strip().casefold()
+    note_times = _requested_delivery_times(note)
+    if not preferred_times and any(
+        phrase in preference
+        for phrase in ("orario specifico", "fascia oraria specifica", "specific time")
+    ):
+        return []
+
+    lower_bound = 0
+    upper_bound = 24 * 60
+    if preferred_times:
+        lower_bound = max(lower_bound, preferred_times[0].hour * 60 + preferred_times[0].minute)
+        upper_bound = min(upper_bound, preferred_times[-1].hour * 60 + preferred_times[-1].minute)
+    if note_times:
+        note_minute = note_times[0].hour * 60 + note_times[0].minute
+        if any(phrase in note for phrase in ("dopo ", "after ")):
+            lower_bound = max(lower_bound, note_minute)
+        elif any(phrase in note for phrase in ("entro ", "prima ", "before ")):
+            upper_bound = min(upper_bound, note_minute)
+        else:
+            lower_bound = max(lower_bound, note_minute)
+            upper_bound = min(
+                upper_bound,
+                note_times[-1].hour * 60 + note_times[-1].minute,
+            )
+
     if "mattina" in preference:
-        return max(shift_start_minute, 9 * 60), min(shift_end_minute, 12 * 60)
-    if "pomeriggio" in preference:
-        return max(shift_start_minute, 12 * 60), min(shift_end_minute, 17 * 60)
-    return None
+        selected_work_windows = (work_windows[0],)
+    elif "pomeriggio" in preference:
+        selected_work_windows = (work_windows[1],)
+    else:
+        selected_work_windows = work_windows
+
+    windows = []
+    for work_start, work_end in selected_work_windows:
+        window_start = max(work_start, shift_start_minute, lower_bound)
+        window_end = min(work_end, shift_end_minute, upper_bound)
+        if window_start <= window_end:
+            windows.append((window_start, window_end))
+    return windows
 
 
-def _tour_order_sort_key(order: Dict[str, Any]) -> Tuple[int, int, str]:
-    return (*_delivery_time_sort_key(order), str(order.get("order_id") or ""))
+def _tour_order_sort_key(
+    order: Dict[str, Any],
+    work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
+) -> Tuple[int, int, str]:
+    return (*_delivery_time_sort_key(order, work_windows), str(order.get("order_id") or ""))
 
 
 def _estimated_leg_minutes(
     origin: Optional[Tuple[float, float]],
     destination: Optional[Tuple[float, float]],
+    average_speed_kmh: float = TOUR_AVERAGE_SPEED_KMH,
 ) -> Tuple[int, bool]:
     if origin is None or destination is None:
         return TOUR_FALLBACK_LEG_MINUTES, False
     distance_km = _distance_km(origin, destination)
     driving_minutes = math.ceil(
-        distance_km * TOUR_ROAD_DISTANCE_FACTOR * 60 / TOUR_AVERAGE_SPEED_KMH
+        distance_km * TOUR_ROAD_DISTANCE_FACTOR * 60 / average_speed_kmh
     )
     return max(TOUR_MINIMUM_LEG_MINUTES, driving_minutes), True
 
@@ -1445,12 +1518,30 @@ def _estimate_vehicle_tour_schedule(
     shift_end: time,
     available_from_minute: int,
     return_to_origin: bool,
+    settings: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    work_windows = _delivery_work_windows(settings)
+    average_speed_kmh = (
+        float(settings["average_speed_kmh"])
+        if settings is not None
+        else TOUR_AVERAGE_SPEED_KMH
+    )
+    stop_service_minutes = (
+        int(settings["stop_service_minutes"])
+        if settings is not None
+        else TOUR_STOP_SERVICE_MINUTES
+    )
     shift_start_minute = shift_start.hour * 60 + shift_start.minute
     shift_end_minute = shift_end.hour * 60 + shift_end.minute
     coordinates = _delivery_location_coordinates(site)
     origin_point = _matching_location_coordinate(origin, coordinates)
-    route_orders = _group_route_orders_by_city(list(orders), origin, site, return_to_origin)
+    route_orders = _group_route_orders_by_city(
+        list(orders),
+        origin,
+        site,
+        return_to_origin,
+        work_windows,
+    )
     departure_minute = max(shift_start_minute, available_from_minute)
     estimated_legs = 0
     missing_coordinate_legs = 0
@@ -1460,14 +1551,29 @@ def _estimate_vehicle_tour_schedule(
         if route_orders
         else None
     )
-    first_leg, has_first_coordinates = _estimated_leg_minutes(origin_point, first_destination)
+    first_leg, has_first_coordinates = _estimated_leg_minutes(
+        origin_point,
+        first_destination,
+        average_speed_kmh,
+    )
     if route_orders and not has_first_coordinates:
         missing_coordinate_legs += 1
     else:
         estimated_legs += 1
     if route_orders:
-        first_window = _delivery_window_minutes(
-            route_orders[0], shift_start_minute, shift_end_minute
+        first_windows = _delivery_window_minutes(
+            route_orders[0],
+            shift_start_minute,
+            shift_end_minute,
+            work_windows,
+        )
+        first_window = next(
+            (
+                window
+                for window in first_windows
+                if window[1] >= departure_minute + first_leg
+            ),
+            None,
         )
         if first_window is not None:
             departure_minute = max(
@@ -1480,35 +1586,78 @@ def _estimate_vehicle_tour_schedule(
     scheduled_orders = []
     order_time_warnings = []
     schedule_warnings = []
+    infeasible_by_order: Dict[str, Dict[str, str]] = {}
     longest_wait_minutes = 0
+
+    def mark_infeasible(order: Dict[str, Any], reason: str) -> None:
+        order_id = str(order.get("order_id") or "")
+        existing = infeasible_by_order.get(order_id)
+        if existing is None:
+            infeasible_by_order[order_id] = {"order_id": order_id, "reason": reason}
+        elif reason not in existing["reason"]:
+            existing["reason"] += " " + reason
+        warning = f"#{order_id}: {reason}"
+        order_time_warnings.append(warning)
+        schedule_warnings.append(warning)
 
     for order in route_orders:
         destination_point = _matching_location_coordinate(
             str(order.get("delivery_city") or ""),
             coordinates,
         )
-        leg_minutes, has_coordinates = _estimated_leg_minutes(previous_point, destination_point)
+        leg_minutes, has_coordinates = _estimated_leg_minutes(
+            previous_point,
+            destination_point,
+            average_speed_kmh,
+        )
         if has_coordinates:
             estimated_legs += 1
         else:
             missing_coordinate_legs += 1
         arrival_minute = current_minute + leg_minutes
-        window = _delivery_window_minutes(order, shift_start_minute, shift_end_minute)
-        if window is not None:
+        windows = _delivery_window_minutes(
+            order,
+            shift_start_minute,
+            shift_end_minute,
+            work_windows,
+        )
+        window = next((candidate for candidate in windows if candidate[1] >= arrival_minute), None)
+        if not windows:
+            mark_infeasible(
+                order,
+                "Nessuna fascia richiesta compatibile con il turno e con gli orari operativi "
+                f"({_format_delivery_work_windows(work_windows)}).",
+            )
+        elif window is None:
+            mark_infeasible(
+                order,
+                f"Arrivo stimato {_format_tour_minute(arrival_minute)} oltre tutte le fasce "
+                "richieste e operative.",
+            )
+        else:
             window_start, window_end = window
             if arrival_minute < window_start:
                 longest_wait_minutes = max(longest_wait_minutes, window_start - arrival_minute)
                 arrival_minute = window_start
-            if arrival_minute > window_end:
-                warning = (
-                    f"#{order['order_id']}: arrivo stimato {_format_tour_minute(arrival_minute)} "
-                    f"oltre la finestra richiesta {_format_tour_minute(window_start)}–"
-                    f"{_format_tour_minute(window_end)}."
-                )
-                order_time_warnings.append(warning)
-                schedule_warnings.append(warning)
+        if arrival_minute > shift_end_minute:
+            mark_infeasible(
+                order,
+                f"Arrivo stimato {_format_tour_minute(arrival_minute)} oltre la fine del turno "
+                f"({_format_tour_minute(shift_end_minute)}).",
+            )
+        if arrival_minute + stop_service_minutes > shift_end_minute:
+            mark_infeasible(
+                order,
+                f"La consegna terminerebbe {_format_tour_minute(arrival_minute + stop_service_minutes)} "
+                f"oltre la fine del turno ({_format_tour_minute(shift_end_minute)}).",
+            )
 
-        existing_warning = _route_schedule_warning(order, shift_start, shift_end)
+        existing_warning = _route_schedule_warning(
+            order,
+            shift_start,
+            shift_end,
+            work_windows,
+        )
         if existing_warning:
             schedule_warnings.append(existing_warning)
         if arrival_minute > shift_end_minute:
@@ -1520,12 +1669,16 @@ def _estimate_vehicle_tour_schedule(
         scheduled_order = dict(order)
         scheduled_order["estimated_arrival_at"] = _format_tour_instant(event_date, arrival_minute)
         scheduled_orders.append(scheduled_order)
-        current_minute = arrival_minute + TOUR_STOP_SERVICE_MINUTES
+        current_minute = arrival_minute + stop_service_minutes
         previous_point = destination_point
 
     last_delivery_completed_minute = current_minute
     if return_to_origin and route_orders:
-        return_minutes, has_return_coordinates = _estimated_leg_minutes(previous_point, origin_point)
+        return_minutes, has_return_coordinates = _estimated_leg_minutes(
+            previous_point,
+            origin_point,
+            average_speed_kmh,
+        )
         if has_return_coordinates:
             estimated_legs += 1
         else:
@@ -1538,20 +1691,26 @@ def _estimate_vehicle_tour_schedule(
             f"oltre la fine del turno ({_format_tour_minute(shift_end_minute)})."
         )
     if return_to_origin and current_minute > shift_end_minute:
-        schedule_warnings.append(
+        warning = (
             f"Rientro stimato al deposito {_format_tour_minute(current_minute)} oltre la fine del turno "
             f"({_format_tour_minute(shift_end_minute)})."
         )
+        schedule_warnings.append(warning)
+        if route_orders:
+            mark_infeasible(route_orders[-1], warning)
     if departure_minute > shift_end_minute:
-        schedule_warnings.append(
+        warning = (
             f"Partenza stimata {_format_tour_minute(departure_minute)} oltre la fine del turno "
             f"({_format_tour_minute(shift_end_minute)})."
         )
+        schedule_warnings.append(warning)
+        if route_orders:
+            mark_infeasible(route_orders[0], warning)
 
     estimate_note = (
         "Stima indicativa: coordinate dei comuni, distanza stradale stimata al fattore "
-        f"{TOUR_ROAD_DISTANCE_FACTOR:g} e velocità media {TOUR_AVERAGE_SPEED_KMH} km/h; "
-        f"{TOUR_STOP_SERVICE_MINUTES} min per consegna e {TOUR_RELOAD_MINUTES} min per ricaricare. "
+        f"{TOUR_ROAD_DISTANCE_FACTOR:g} e velocità media {average_speed_kmh:g} km/h; "
+        f"{stop_service_minutes} min per consegna e {TOUR_RELOAD_MINUTES} min per ricaricare. "
         "Verifica traffico e tempi reali in Google Maps."
     )
     if missing_coordinate_legs:
@@ -1567,6 +1726,7 @@ def _estimate_vehicle_tour_schedule(
         "finish_minute": current_minute,
         "return_to_origin": return_to_origin,
         "order_time_warnings": order_time_warnings,
+        "infeasible_orders": list(infeasible_by_order.values()),
         "schedule_warnings": list(dict.fromkeys(schedule_warnings)),
         "longest_wait_minutes": longest_wait_minutes,
         "estimate_note": estimate_note,
@@ -1632,13 +1792,14 @@ def _plan_single_vehicle_tours(
     shift_start: time,
     shift_end: time,
     return_to_origin: bool,
+    settings: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    work_windows = _delivery_work_windows(settings)
     capacity_liters = float(vehicle["capacity_liters"])
     shift_start_minute = shift_start.hour * 60 + shift_start.minute
     shift_end_minute = shift_end.hour * 60 + shift_end.minute
     prepared_orders = []
     unassigned_orders = []
-    summary = _allocate_vehicle_loads(orders, [vehicle], product_volumes)
 
     for order in orders:
         single_order = _allocate_vehicle_loads([order], [vehicle], product_volumes)
@@ -1647,7 +1808,7 @@ def _plan_single_vehicle_tours(
         elif single_order["vehicles"][0]["orders"]:
             prepared_orders.append(single_order["vehicles"][0]["orders"][0])
 
-    prepared_orders.sort(key=_tour_order_sort_key)
+    prepared_orders.sort(key=lambda order: _tour_order_sort_key(order, work_windows))
 
     tour_specs = []
     current_orders = []
@@ -1661,6 +1822,7 @@ def _plan_single_vehicle_tours(
             origin,
             site,
             tour_return_to_origin,
+            work_windows,
         )
         schedule = _estimate_vehicle_tour_schedule(
             route,
@@ -1671,11 +1833,12 @@ def _plan_single_vehicle_tours(
             shift_end,
             available_from_minute,
             tour_return_to_origin,
+            settings,
         )
         tour_specs.append((tour_orders, schedule))
         available_from_minute = schedule["finish_minute"] + TOUR_RELOAD_MINUTES
 
-    for order in prepared_orders:
+    for order_index, order in enumerate(prepared_orders):
         order_volume = float(order["load_volume_liters"])
         if current_orders and current_volume + order_volume > capacity_liters + 1e-9:
             close_tour(current_orders, True)
@@ -1683,7 +1846,13 @@ def _plan_single_vehicle_tours(
             current_volume = 0.0
 
         if current_orders:
-            current_route = _group_route_orders_by_city(current_orders, origin, site, True)
+            current_route = _group_route_orders_by_city(
+                current_orders,
+                origin,
+                site,
+                True,
+                work_windows,
+            )
             current_schedule = _estimate_vehicle_tour_schedule(
                 current_route,
                 origin,
@@ -1693,9 +1862,16 @@ def _plan_single_vehicle_tours(
                 shift_end,
                 available_from_minute,
                 True,
+                settings,
             )
             candidate_orders = [*current_orders, order]
-            candidate_route = _group_route_orders_by_city(candidate_orders, origin, site, True)
+            candidate_route = _group_route_orders_by_city(
+                candidate_orders,
+                origin,
+                site,
+                True,
+                work_windows,
+            )
             candidate_schedule = _estimate_vehicle_tour_schedule(
                 candidate_route,
                 origin,
@@ -1704,11 +1880,16 @@ def _plan_single_vehicle_tours(
                 shift_start,
                 shift_end,
                 available_from_minute,
-                True,
+                return_to_origin if order_index == len(prepared_orders) - 1 else True,
+                settings,
             )
-            new_order_warnings = set(candidate_schedule["order_time_warnings"]) - set(
-                current_schedule["order_time_warnings"]
-            )
+            current_infeasible_ids = {
+                item["order_id"] for item in current_schedule["infeasible_orders"]
+            }
+            candidate_infeasible_ids = {
+                item["order_id"] for item in candidate_schedule["infeasible_orders"]
+            }
+            new_infeasible_orders = candidate_infeasible_ids - current_infeasible_ids
             new_shift_conflict = (
                 candidate_schedule["finish_minute"] > shift_end_minute
                 and current_schedule["finish_minute"] <= shift_end_minute
@@ -1716,10 +1897,40 @@ def _plan_single_vehicle_tours(
             new_excessive_wait = (
                 candidate_schedule["longest_wait_minutes"] > TOUR_MAX_STOP_WAIT_MINUTES
             )
-            if new_order_warnings or new_shift_conflict or new_excessive_wait:
+            if new_infeasible_orders or new_shift_conflict or new_excessive_wait:
                 close_tour(current_orders, True)
                 current_orders = []
                 current_volume = 0.0
+
+        single_order_return = (
+            return_to_origin if order_index == len(prepared_orders) - 1 else True
+        )
+        single_schedule = _estimate_vehicle_tour_schedule(
+            [order],
+            origin,
+            site,
+            event_date,
+            shift_start,
+            shift_end,
+            available_from_minute,
+            single_order_return,
+            settings,
+        )
+        single_issue = next(
+            (
+                item["reason"]
+                for item in single_schedule["infeasible_orders"]
+                if item["order_id"] == order["order_id"]
+            ),
+            None,
+        )
+        if single_issue:
+            unassigned_orders.append({
+                "order": order,
+                "required_volume_liters": order_volume,
+                "reason": single_issue,
+            })
+            continue
 
         current_orders.append(order)
         current_volume += order_volume
@@ -1795,8 +2006,18 @@ def _plan_single_vehicle_tours(
             )
         tours.append(tour)
 
+    assigned_orders = [
+        order
+        for tour in tours
+        for order in tour["orders"]
+    ]
+    assigned_summary = _allocate_vehicle_loads(
+        assigned_orders,
+        [vehicle],
+        product_volumes,
+    )
     return {
-        "products": summary["products"],
+        "products": assigned_summary["products"],
         "tours": tours,
         "unassigned_orders": unassigned_orders,
     }
@@ -2040,6 +2261,22 @@ def create_server(
                 finally:
                     connection.close()
                 return
+            if path == "/api/delivery-settings":
+                if not self._origin_is_local():
+                    self._send_json(403, {"error": "Origine non autorizzata."})
+                    return
+                connection = gestionale.open_database(database)
+                try:
+                    settings = gestionale.get_delivery_settings(
+                        connection,
+                        str(site.get("address") or ""),
+                    )
+                    self._send_json(200, settings)
+                except (OSError, sqlite3.Error, gestionale.AppError) as exc:
+                    self._send_json(500, {"error": f"Impossibile leggere le impostazioni consegne: {exc}"})
+                finally:
+                    connection.close()
+                return
             if path == "/api/orders/history":
                 if not self._origin_is_local():
                     self._send_json(403, {"error": "Origine non autorizzata."})
@@ -2085,6 +2322,8 @@ def create_server(
                     result = self._plan_route(payload)
                 elif path == "/api/load-config":
                     result = self._save_delivery_load_config(payload)
+                elif path == "/api/delivery-settings":
+                    result = self._save_delivery_settings(payload)
                 elif path == "/api/vehicle-routes":
                     result = self._plan_vehicle_routes(payload)
                 else:
@@ -2192,6 +2431,16 @@ def create_server(
             connection = gestionale.open_database(database)
             try:
                 return gestionale.save_delivery_load_config(connection, product_volumes, vehicles)
+            finally:
+                connection.close()
+
+        def _save_delivery_settings(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+            connection = gestionale.open_database(database)
+            try:
+                settings = gestionale.save_delivery_settings(connection, payload)
+                if not settings["default_origin"]:
+                    settings["default_origin"] = str(site.get("address") or "")
+                return settings
             finally:
                 connection.close()
 
@@ -2324,18 +2573,33 @@ def create_server(
                 connection.close()
 
         def _plan_vehicle_routes(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-            origin = str(payload.get("origin", "")).strip()
-            if not origin:
-                raise WebRequestError("Inserire il punto di partenza.")
             try:
                 event_date = date.fromisoformat(str(payload.get("date", "")))
             except ValueError as exc:
                 raise WebRequestError("La data deve essere nel formato AAAA-MM-GG.") from exc
 
-            start_time = gestionale._parse_time(str(payload.get("start", "")), "Ora inizio")
-            end_time = gestionale._parse_time(str(payload.get("end", "")), "Ora fine")
+            connection = gestionale.open_database(database)
+            try:
+                settings = gestionale.get_delivery_settings(
+                    connection,
+                    str(site.get("address") or ""),
+                )
+            finally:
+                connection.close()
+            origin = str(payload.get("origin") or settings["default_origin"]).strip()
+            if not origin:
+                raise WebRequestError("Inserire il punto di partenza.")
+            start_time = gestionale._parse_time(
+                str(payload.get("start") or settings["default_route_start"]),
+                "Ora inizio",
+            )
+            end_time = gestionale._parse_time(
+                str(payload.get("end") or settings["default_route_end"]),
+                "Ora fine",
+            )
             if end_time <= start_time:
                 raise WebRequestError("L'orario di fine deve essere successivo all'orario di inizio.")
+            work_windows = _delivery_work_windows(settings)
             delivery_data = self._delivery_orders(event_date)
             orders = delivery_data["orders"]
             route_orders = [
@@ -2374,6 +2638,7 @@ def create_server(
                     start_time,
                     end_time,
                     payload.get("return_to_origin") is True,
+                    settings,
                 )
                 result = {
                     "date": event_date.isoformat(),
@@ -2399,13 +2664,18 @@ def create_server(
             )
             return_to_origin = payload.get("return_to_origin") is True
             planned_vehicles = []
+            time_unassigned_orders = []
+            planned_orders = []
             for vehicle in allocation["vehicles"]:
-                if vehicle["orders"]:
+                assigned_orders = list(vehicle["orders"])
+                schedule = None
+                while assigned_orders:
                     route_orders = _group_route_orders_by_city(
-                        vehicle["orders"],
+                        assigned_orders,
                         origin,
                         site,
                         return_to_origin,
+                        work_windows,
                     )
                     schedule = _estimate_vehicle_tour_schedule(
                         route_orders,
@@ -2416,11 +2686,64 @@ def create_server(
                         end_time,
                         start_time.hour * 60 + start_time.minute,
                         return_to_origin,
+                        settings,
+                    )
+                    infeasible_reasons = {
+                        item["order_id"]: item["reason"]
+                        for item in schedule["infeasible_orders"]
+                    }
+                    if not infeasible_reasons:
+                        break
+                    rejected_orders = [
+                        order for order in assigned_orders
+                        if order["order_id"] in infeasible_reasons
+                    ]
+                    if not rejected_orders:
+                        rejected_orders = [assigned_orders[-1]]
+                    for order in rejected_orders:
+                        time_unassigned_orders.append({
+                            "order": order,
+                            "required_volume_liters": order.get("load_volume_liters"),
+                            "reason": infeasible_reasons.get(
+                                order["order_id"],
+                                "Ordine non compatibile con la fine del turno.",
+                            ),
+                        })
+                    rejected_ids = {order["order_id"] for order in rejected_orders}
+                    assigned_orders = [
+                        order for order in assigned_orders
+                        if order["order_id"] not in rejected_ids
+                    ]
+
+                refreshed_vehicle = _allocate_vehicle_loads(
+                    assigned_orders,
+                    [vehicle],
+                    config["product_volumes"],
+                )["vehicles"][0]
+                vehicle.update(refreshed_vehicle)
+                vehicle["display_name"] = f"{vehicle['name']} · Giro 1/1"
+                vehicle["tour_number"] = 1
+                vehicle["tour_count"] = 1
+                if assigned_orders:
+                    route_orders = _group_route_orders_by_city(
+                        assigned_orders,
+                        origin,
+                        site,
+                        return_to_origin,
+                        work_windows,
+                    )
+                    schedule = _estimate_vehicle_tour_schedule(
+                        route_orders,
+                        origin,
+                        site,
+                        event_date,
+                        start_time,
+                        end_time,
+                        start_time.hour * 60 + start_time.minute,
+                        return_to_origin,
+                        settings,
                     )
                     _attach_tour_schedule(vehicle, schedule, event_date)
-                    vehicle["display_name"] = f"{vehicle['name']} · Giro 1/1"
-                    vehicle["tour_number"] = 1
-                    vehicle["tour_count"] = 1
                     vehicle_orders = vehicle["orders"]
                     destinations = [order["destination"] for order in vehicle_orders]
                     vehicle["maps_urls"] = gestionale.build_maps_urls(
@@ -2459,16 +2782,25 @@ def create_server(
                             origin,
                             details,
                         )
+                    planned_orders.extend(vehicle_orders)
                 else:
                     vehicle["maps_urls"] = []
                     vehicle["schedule_warnings"] = []
                 planned_vehicles.append(vehicle)
 
+            planned_summary = _allocate_vehicle_loads(
+                planned_orders,
+                config["vehicles"],
+                config["product_volumes"],
+            )
             result = {
                 "date": event_date.isoformat(),
-                "products": allocation["products"],
+                "products": planned_summary["products"],
                 "vehicles": planned_vehicles,
-                "unassigned_orders": allocation["unassigned_orders"],
+                "unassigned_orders": [
+                    *allocation["unassigned_orders"],
+                    *time_unassigned_orders,
+                ],
                 "excluded_orders": excluded_orders,
             }
             _attach_delivery_plan_metadata(result)
@@ -2482,14 +2814,22 @@ def create_server(
             return result
 
         def _plan_route(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-            origin = str(payload.get("origin", "")).strip()
-            if not origin:
-                raise WebRequestError("Inserire il punto di partenza.")
             event_date_value = str(payload.get("date", ""))
             try:
                 event_date = date.fromisoformat(event_date_value)
             except ValueError as exc:
                 raise WebRequestError("La data deve essere nel formato AAAA-MM-GG.") from exc
+            connection = gestionale.open_database(database)
+            try:
+                settings = gestionale.get_delivery_settings(
+                    connection,
+                    str(site.get("address") or ""),
+                )
+            finally:
+                connection.close()
+            origin = str(payload.get("origin") or settings["default_origin"]).strip()
+            if not origin:
+                raise WebRequestError("Inserire il punto di partenza.")
             delivery_data = self._delivery_orders(event_date)
             orders = delivery_data["orders"]
             route_orders = [
@@ -2516,25 +2856,44 @@ def create_server(
                     f"Nessun ordine confermato con indirizzo per il {event_date.strftime('%d/%m/%Y')}.",
                     409,
                 )
+            start_time = gestionale._parse_time(
+                str(payload.get("start") or settings["default_route_start"]),
+                "Ora inizio",
+            )
+            end_time = gestionale._parse_time(
+                str(payload.get("end") or settings["default_route_end"]),
+                "Ora fine",
+            )
+            if end_time <= start_time:
+                raise WebRequestError("L'orario di fine deve essere successivo all'orario di inizio.")
+            work_windows = _delivery_work_windows(settings)
             return_to_origin = payload.get("return_to_origin") is True
+            schedule_warnings = []
+            time_unassigned_orders = []
+            compatible_orders = []
+            for order in route_orders:
+                warning = _route_schedule_warning(order, start_time, end_time, work_windows)
+                if warning:
+                    schedule_warnings.append(warning)
+                    time_unassigned_orders.append({"order": order, "reason": warning})
+                else:
+                    compatible_orders.append(order)
             route_orders = _group_route_orders_by_city(
-                route_orders,
+                compatible_orders,
                 origin,
                 site,
                 return_to_origin,
+                work_windows,
             )
             destinations = [order["destination"] for order in route_orders]
-            start_time = gestionale._parse_time(str(payload.get("start", "")), "Ora inizio")
-            end_time = gestionale._parse_time(str(payload.get("end", "")), "Ora fine")
-            schedule_warnings = [
-                warning
-                for order in route_orders
-                if (warning := _route_schedule_warning(order, start_time, end_time))
-            ]
-            maps_urls = gestionale.build_maps_urls(
-                origin,
-                destinations,
-                return_to_origin=return_to_origin,
+            maps_urls = (
+                gestionale.build_maps_urls(
+                    origin,
+                    destinations,
+                    return_to_origin=return_to_origin,
+                )
+                if route_orders
+                else []
             )
             order_details = []
             for order in route_orders:
@@ -2559,27 +2918,37 @@ def create_server(
                     detail += f" - Richiesta ricorrente: {recurrence} (nessun rinnovo automatico)"
                 order_details.append(detail)
             details = (
-                "Ordini confermati; precedenza alla partenza quando gli orari lo consentono. "
-                "Percorso stimato sui centri comunali, con appuntamenti in ordine temporale e "
-                "deviazioni delle altre tappe ridotte.\n\n"
-                + "\n".join(order_details)
+                (
+                    "Ordini confermati; precedenza alla partenza quando gli orari lo consentono. "
+                    "Percorso stimato sui centri comunali, con appuntamenti in ordine temporale e "
+                    "deviazioni delle altre tappe ridotte.\n\n"
+                    + "\n".join(order_details)
+                )
+                if route_orders
+                else "Nessun ordine pianificabile nella fascia oraria selezionata."
             )
             if schedule_warnings:
                 details += "\n\nAvvisi sugli orari:\n" + "\n".join(schedule_warnings)
-            details += "\n\n" + "\n".join(maps_urls)
-            calendar_url = gestionale.build_calendar_url(
-                f"Giro consegne {site.get('brand') or 'Cartaway'} - {event_date.isoformat()}",
-                event_date,
-                start_time,
-                end_time,
-                origin,
-                details,
+            if maps_urls:
+                details += "\n\n" + "\n".join(maps_urls)
+            calendar_url = (
+                gestionale.build_calendar_url(
+                    f"Giro consegne {site.get('brand') or 'Cartaway'} - {event_date.isoformat()}",
+                    event_date,
+                    start_time,
+                    end_time,
+                    origin,
+                    details,
+                )
+                if route_orders
+                else ""
             )
             return {
                 "maps_urls": maps_urls,
                 "calendar_url": calendar_url,
                 "orders": route_orders,
                 "schedule_warnings": schedule_warnings,
+                "unassigned_orders": time_unassigned_orders,
                 "excluded_without_address": sum(order["address_missing"] for order in orders),
                 "excluded_unavailable": sum(not order["deliverable"] for order in orders),
                 "excluded_orders": excluded_orders,
