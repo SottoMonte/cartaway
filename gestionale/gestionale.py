@@ -1274,6 +1274,30 @@ def current_order_availability(
     return stock, _availability_status(stock)
 
 
+def _delivery_contact_issues(order_row: Dict[str, Any]) -> List[str]:
+    issues = []
+    address = str(order_row.get("delivery_address") or "").strip()
+    city = str(order_row.get("delivery_city") or "").strip()
+    if (
+        len(address) < 5
+        or not re.search(r"[^\W\d_]", address, re.UNICODE)
+        or not re.search(r"\d", address)
+        and not re.search(r"\b(?:s\.?\s*n\.?\s*c\.?|senza numero civico|km\s*\d+)\b", address, re.I)
+    ):
+        issues.append("indirizzo incompleto: indicare la via e il numero civico (o SNC)")
+    if len(city) < 2 or not re.search(r"[^\W\d_]", city, re.UNICODE):
+        issues.append("città mancante o non valida")
+
+    phone = str(order_row.get("customer_phone") or "").strip()
+    digits = re.sub(r"\D", "", phone)
+    if (
+        not re.fullmatch(r"\+?[\d\s()./-]+", phone)
+        or not 7 <= len(digits) <= 15
+    ):
+        issues.append("numero di telefono non valido")
+    return issues
+
+
 def _voucher_days(site: Dict[str, Any], recurring: bool) -> Optional[int]:
     if recurring:
         value = site.get("recurring_order", {}).get("tech_voucher_validity_days")
@@ -2046,6 +2070,14 @@ def confirm_order(
         if order_row["confirmation_status"] == "sending":
             connection.commit()
             raise OrderNotReady("Email di conferma già in invio per questo ordine.")
+
+        contact_issues = _delivery_contact_issues(order_row)
+        if contact_issues:
+            raise OrderNotReady(
+                "Ordine non confermato. Correggere i dati di consegna: "
+                + "; ".join(contact_issues)
+                + "."
+            )
 
         stock, status = current_order_availability(connection, order_row)
         order_datetime = datetime.fromisoformat(order_row["ordered_at"])

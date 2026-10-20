@@ -1287,6 +1287,39 @@ class GestionaleTests(unittest.TestCase):
         ).fetchone()
         self.assertEqual(tuple(row), ("confirmed", "inviata", 1))
 
+    def test_confirm_order_rejects_invalid_delivery_address(self):
+        set_stock(self.connection, "carta-igienica", 10)
+        order = self._order("ORD-INVALID-ADDRESS", "cliente@example.org", "+39 333 1234567")
+        order.delivery_address = "Via Roma"
+        prepare_order(self.connection, order, self.site)
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            with self.assertRaisesRegex(OrderNotReady, "numero civico"):
+                confirm_order(self.connection, order.order_id, self.site)
+
+        send_email.assert_not_called()
+        row = self.connection.execute(
+            "SELECT confirmation_status, email_status FROM orders WHERE order_id = ?",
+            (order.order_id,),
+        ).fetchone()
+        self.assertEqual(tuple(row), ("pending", "da_inviare"))
+
+    def test_confirm_order_rejects_invalid_customer_phone(self):
+        set_stock(self.connection, "carta-igienica", 10)
+        order = self._order("ORD-INVALID-PHONE", "cliente@example.org", "telefono non valido")
+        prepare_order(self.connection, order, self.site)
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            with self.assertRaisesRegex(OrderNotReady, "telefono non valido"):
+                confirm_order(self.connection, order.order_id, self.site)
+
+        send_email.assert_not_called()
+        row = self.connection.execute(
+            "SELECT confirmation_status, email_status FROM orders WHERE order_id = ?",
+            (order.order_id,),
+        ).fetchone()
+        self.assertEqual(tuple(row), ("pending", "da_inviare"))
+
     def test_reject_order_sends_one_standard_email_and_blocks_confirmation(self):
         order = self._order("ORD-REJECT-1", "cliente@example.org", "+39 333 1234567")
         prepare_order(self.connection, order, self.site)
