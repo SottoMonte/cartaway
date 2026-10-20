@@ -83,6 +83,7 @@ def _format_pdf_currency(value: Any) -> str:
 def _pdf_product_amounts(
     order: Dict[str, Any],
     catalog_products: Dict[str, Dict[str, Any]],
+    prefer_catalog_prices: bool = False,
 ) -> Tuple[List[Dict[str, str]], Optional[Decimal], bool]:
     request_details = order.get("request_details") or {}
     product_lines = request_details.get("product_lines")
@@ -105,17 +106,23 @@ def _pdf_product_amounts(
         catalog_product = catalog_products.get(product_id, {})
         quantity_value = item.get("requested", item.get("quantity", line.get("quantity")))
         quantity = gestionale._parse_money(str(quantity_value or ""))
-        unit_price_value = line.get("unit_price")
+        unit_price_value = (
+            catalog_product.get("price")
+            if prefer_catalog_prices
+            else line.get("unit_price")
+        )
         unit_price = (
             gestionale._parse_money(str(unit_price_value))
             if unit_price_value not in (None, "")
             else None
         )
-        if unit_price is None and catalog_product.get("price") is not None:
+        if not prefer_catalog_prices and unit_price is None and catalog_product.get("price") is not None:
             unit_price = gestionale._parse_money(str(catalog_product["price"]))
             unit_price_value = _format_pdf_currency(unit_price) if unit_price is not None else None
+        if prefer_catalog_prices and unit_price is not None:
+            unit_price_value = _format_pdf_currency(unit_price)
 
-        line_total_value = line.get("line_total")
+        line_total_value = None if prefer_catalog_prices else line.get("line_total")
         line_total = (
             gestionale._parse_money(str(line_total_value))
             if line_total_value not in (None, "")
@@ -146,15 +153,27 @@ def _pdf_product_amounts(
     return rows, None, missing_line_amount or bool(rows)
 
 
-def _pdf_discount_amount(value: Any, subtotal: Optional[Decimal], recurring: bool) -> Optional[Decimal]:
+def _pdf_discount_amount(
+    value: Any,
+    subtotal: Optional[Decimal],
+    recurring: bool,
+    requested_total: Optional[Decimal] = None,
+    shipping_amount: Optional[Decimal] = None,
+) -> Optional[Decimal]:
     normalized = str(value or "").strip()
     if not normalized:
-        return Decimal("0") if not recurring else None
-    if normalized.casefold() in {"nessuno", "nessuna", "nessun"}:
+        amount = Decimal("0") if not recurring else None
+    elif normalized.casefold() in {"nessuno", "nessuna", "nessun"}:
         return Decimal("0")
-    amount = gestionale._parse_money(normalized)
+    else:
+        amount = gestionale._parse_money(normalized)
     if amount is None:
-        return None
+        if not recurring or subtotal is None or requested_total is None or shipping_amount is None:
+            return None
+        recovered = (subtotal + shipping_amount - requested_total).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        return recovered if Decimal("0") <= recovered <= subtotal else None
     amount = abs(amount)
     if "%" in normalized:
         if subtotal is None:
@@ -168,6 +187,72 @@ def _pdf_shipping_amount(value: Any) -> Optional[Decimal]:
     if normalized in {"gratuito", "gratuita", "gratis", "free"}:
         return Decimal("0")
     return gestionale._parse_money(str(value or ""))
+
+
+def _pdf_recover_net_recurring_prices(
+    order: Dict[str, Any],
+    catalog_products: Dict[str, Dict[str, Any]],
+    net_subtotal: Optional[Decimal],
+    discount_percent: Any,
+) -> Optional[Tuple[List[Dict[str, str]], Decimal, Decimal]]:
+    if not order.get("recurring_order") or str(order.get("recurring_discount") or "").strip():
+        return None
+    if net_subtotal is None:
+        return None
+
+    discount_rate = gestionale._parse_money(str(discount_percent or ""))
+    if discount_rate is None or discount_rate < 0 or discount_rate >= 100:
+        return None
+    request_details = order.get("request_details")
+    if not isinstance(request_details, dict):
+        return None
+    requested_total = gestionale._parse_money(str(request_details.get("cost_total") or ""))
+    shipping_amount = _pdf_shipping_amount(request_details.get("cost_shipping"))
+    if requested_total is None or shipping_amount is None:
+        return None
+    if abs(net_subtotal + shipping_amount - requested_total) > Decimal("0.01"):
+        return None
+
+    gross_rows, gross_subtotal, missing_catalog_prices = _pdf_product_amounts(
+        order,
+        catalog_products,
+        prefer_catalog_prices=True,
+    )
+    if gross_subtotal is None or missing_catalog_prices:
+        return None
+
+    net_subtotal_cents = 0
+    for row in gross_rows:
+        quantity = gestionale._parse_money(str(row.get("quantity") or ""))
+        unit_price = gestionale._parse_money(str(row.get("unit_price") or ""))
+        if (
+            quantity is None
+            or quantity <= 0
+            or quantity != quantity.to_integral_value()
+            or unit_price is None
+        ):
+            return None
+        unit_price_cents = int((unit_price * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+        net_unit_price_cents = int(
+            (
+                Decimal(unit_price_cents)
+                * (Decimal("100") - discount_rate)
+                / Decimal("100")
+            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        )
+        net_subtotal_cents += net_unit_price_cents * int(quantity)
+
+    expected_net_subtotal = Decimal(net_subtotal_cents) / Decimal("100")
+    if abs(expected_net_subtotal - net_subtotal) > Decimal("0.01"):
+        return None
+    if abs(expected_net_subtotal + shipping_amount - requested_total) > Decimal("0.01"):
+        return None
+    discount_amount = (gross_subtotal - expected_net_subtotal).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    if discount_amount < 0:
+        return None
+    return gross_rows, gross_subtotal, discount_amount
 
 
 def _pdf_payment_summary(
@@ -216,6 +301,8 @@ def _pdf_payment_summary(
     else:
         confirmed_label = _format_pdf_currency(confirmed_total)
         zero_amount = confirmed_total - confirmed_total
+        if payment_status in {"paid", "pagato", "pagata", "già pagato"}:
+            paid_amount = confirmed_total
         remaining = confirmed_total - paid_amount if paid_amount is not None else confirmed_total
         remaining = max(remaining, zero_amount)
         payment_method = str(request_details.get("payment_information") or "").strip().casefold()
@@ -233,6 +320,11 @@ def _pdf_payment_summary(
         ):
             state = "Da incassare"
             remaining_label = _format_pdf_currency(remaining)
+            if paid_amount is None:
+                paid_amount = zero_amount
+        elif paid_amount == 0:
+            state = "Da incassare"
+            remaining_label = _format_pdf_currency(remaining)
         else:
             state = "Non registrato"
             remaining_label = "Non registrato"
@@ -240,9 +332,112 @@ def _pdf_payment_summary(
     return {
         "method": _pdf_money(request_details.get("payment_information"), "Non indicata"),
         "confirmed_total": confirmed_label,
+        "paid_amount": _format_pdf_currency(paid_amount) if paid_amount is not None else "Non registrato",
         "remaining": remaining_label,
         "state": state,
     }
+
+
+def _pdf_currency_label(value: Any, fallback: str = "Non registrato") -> str:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return fallback
+    if not any(character.isalpha() for character in normalized):
+        amount = gestionale._parse_money(normalized)
+        if amount is not None:
+            return _format_pdf_currency(amount)
+    return normalized
+
+
+def _pdf_cost_summary_rows(
+    order: Dict[str, Any],
+    request_details: Dict[str, Any],
+    products_subtotal: str,
+    discount_label: str,
+    calculated_total: Optional[Decimal],
+    payment_summary: Dict[str, str],
+) -> List[Tuple[str, str]]:
+    tax_value = str(request_details.get("cost_tax") or "").strip()
+    tax_label = (
+        "IVA inclusa (di cui)"
+        if "inclusa nei prezzi" in tax_value.casefold()
+        else "IVA prodotti"
+    )
+    rows = [
+        ("Totale prodotti (IVA inclusa)", products_subtotal),
+        ("Sconto ricorrente" if order.get("recurring_order") else "Sconto", discount_label),
+        (
+            "Costo consegna",
+            _pdf_currency_label(request_details.get("cost_shipping"), "Non indicato"),
+        ),
+        (tax_label, _pdf_currency_label(tax_value, "Non indicata")),
+    ]
+
+    requested_value = str(request_details.get("cost_total") or "").strip()
+    requested_total = gestionale._parse_money(requested_value) if requested_value else None
+    confirmed_value = order.get("confirmed_total")
+    if confirmed_value in (None, ""):
+        confirmed_value = request_details.get("confirmed_total")
+    confirmed_label = str(confirmed_value).strip() if confirmed_value not in (None, "") else ""
+    confirmed_total = (
+        gestionale._parse_money(confirmed_label)
+        if confirmed_label
+        else None
+    )
+    confirmed_is_registered = confirmed_total is not None
+    total_values = [
+        value
+        for value in (requested_total, calculated_total, confirmed_total)
+        if value is not None
+    ]
+    values_agree = (
+        bool(total_values)
+        and not (requested_value and requested_total is None)
+        and all(abs(value - total_values[0]) <= Decimal("0.01") for value in total_values[1:])
+    )
+
+    if values_agree:
+        if confirmed_total is not None:
+            rows.append(("Totale ordine confermato", _format_pdf_currency(confirmed_total)))
+        elif calculated_total is not None:
+            rows.append(("Totale ordine calcolato", _format_pdf_currency(calculated_total)))
+        else:
+            rows.append((
+                "Totale indicato nella richiesta",
+                _pdf_currency_label(requested_value, "Non indicato"),
+            ))
+    else:
+        if requested_value:
+            rows.append((
+                "Totale indicato nella richiesta",
+                _pdf_currency_label(requested_value, "Non indicato"),
+            ))
+        if calculated_total is not None:
+            rows.append(("Totale ordine calcolato", _format_pdf_currency(calculated_total)))
+        if confirmed_is_registered:
+            rows.append((
+                "Totale confermato",
+                _pdf_currency_label(confirmed_label, "Non registrato"),
+            ))
+        if not requested_value and calculated_total is None and not confirmed_is_registered:
+            rows.append(("Totale ordine", "Non registrato"))
+
+    for key, label in (
+        ("paid_amount", "Già pagato"),
+        ("remaining", "Residuo da incassare"),
+    ):
+        value = str(payment_summary.get(key) or "Non registrato").strip()
+        if value.casefold() != "non registrato":
+            rows.append((label, _pdf_currency_label(value, "Non registrato")))
+    return rows
+
+
+def _pdf_payment_rows(payment_summary: Dict[str, str]) -> List[Tuple[str, str]]:
+    method = payment_summary.get("method", "Non indicata")
+    state = payment_summary.get("state", "Non registrato")
+    if method == "Non indicata" and state == "Non registrato":
+        return [("Pagamento", "Non registrato - verificare prima dell'incasso")]
+    return [("Modalità di pagamento", method), ("Stato incasso", state)]
 
 
 class _NumberedCanvas(Canvas):
@@ -280,6 +475,7 @@ def _vehicle_delivery_pdf(
     delivery_date: str,
     vehicle: Dict[str, Any],
     catalog_products: Optional[Dict[str, Dict[str, Any]]] = None,
+    recurring_discount_percent: Any = None,
 ) -> bytes:
     output = BytesIO()
     document = SimpleDocTemplate(
@@ -439,6 +635,29 @@ def _vehicle_delivery_pdf(
             order,
             catalog_products or {},
         )
+        recurring_discount = order.get("recurring_discount")
+        if not recurring_discount and not order.get("recurring_order"):
+            recurring_discount = "Nessuno"
+        requested_total = gestionale._parse_money(str(request_details.get("cost_total") or ""))
+        shipping_amount = _pdf_shipping_amount(request_details.get("cost_shipping"))
+        discount_amount = _pdf_discount_amount(
+            recurring_discount,
+            product_subtotal,
+            bool(order.get("recurring_order")),
+            requested_total,
+            shipping_amount,
+        )
+        if order.get("recurring_order") and not recurring_discount:
+            recovered_prices = _pdf_recover_net_recurring_prices(
+                order,
+                catalog_products or {},
+                product_subtotal,
+                recurring_discount_percent,
+            )
+            if recovered_prices:
+                product_rows, product_subtotal, discount_amount = recovered_prices
+            else:
+                discount_amount = None
         products_subtotal = (
             _format_pdf_currency(product_subtotal)
             if product_subtotal is not None
@@ -551,15 +770,6 @@ def _vehicle_delivery_pdf(
         block.append(item_table)
 
         payment_summary = _pdf_payment_summary(order, request_details)
-        recurring_discount = order.get("recurring_discount")
-        if not recurring_discount and not order.get("recurring_order"):
-            recurring_discount = "Nessuno"
-        discount_amount = _pdf_discount_amount(
-            recurring_discount,
-            product_subtotal,
-            bool(order.get("recurring_order")),
-        )
-        shipping_amount = _pdf_shipping_amount(request_details.get("cost_shipping"))
         calculated_total = None
         if product_subtotal is not None and discount_amount is not None and shipping_amount is not None:
             calculated_total = max(
@@ -570,7 +780,8 @@ def _vehicle_delivery_pdf(
         missing_financial_data = []
         if missing_product_prices or products_subtotal == "Non registrato":
             missing_financial_data.append("prezzi prodotto")
-        requested_total = gestionale._parse_money(str(request_details.get("cost_total") or ""))
+        if order.get("recurring_order") and discount_amount is None:
+            missing_financial_data.append("sconto ricorrente")
         if calculated_total is not None and requested_total is not None:
             if abs(calculated_total - requested_total) > Decimal("0.01"):
                 missing_financial_data.append("il totale richiesto differisce dal calcolo")
@@ -582,18 +793,26 @@ def _vehicle_delivery_pdf(
                 f"{_pdf_value('; '.join(missing_financial_data))}.",
                 styles["Verify"],
             ))
-        costs = [
-            ("Totale prodotti (IVA inclusa)", products_subtotal),
-            ("Sconto", _pdf_money(recurring_discount, "Non indicato", zero_for_none=True)),
-            ("Costo consegna", _pdf_money(request_details.get("cost_shipping"), "Non indicato", zero_for_none=True)),
-            ("IVA prodotti", _pdf_money(request_details.get("cost_tax"), "Non indicata")),
-            (
-                "Totale indicato nella richiesta",
-                _pdf_money(request_details.get("cost_total"), "Non indicato"),
-            ),
-            ("Totale ordine calcolato", _format_pdf_currency(calculated_total) if calculated_total is not None else "Non registrato"),
-            ("Importo residuo / da incassare", payment_summary["remaining"]),
-        ]
+        if order.get("recurring_order") and discount_amount is not None:
+            discount_label = (
+                f"−{_format_pdf_currency(discount_amount)}"
+                if discount_amount > 0
+                else _format_pdf_currency(discount_amount)
+            )
+        else:
+            discount_label = _pdf_money(
+                recurring_discount,
+                "Non indicato",
+                zero_for_none=not bool(order.get("recurring_order")),
+            )
+        costs = _pdf_cost_summary_rows(
+            order,
+            request_details,
+            products_subtotal,
+            discount_label,
+            calculated_total,
+            payment_summary,
+        )
         cost_rows = []
         for label, value in costs:
             cost_rows.append([paragraph(label, "CellLabel"), paragraph(value)])
@@ -610,8 +829,8 @@ def _vehicle_delivery_pdf(
         ]))
         block.extend([Spacer(1, 2 * mm), cost_table])
         payment_table = Table([
-            [paragraph("Modalità di pagamento", "CellLabel"), paragraph(payment_summary["method"])],
-            [paragraph("Stato incasso", "CellLabel"), paragraph(payment_summary["state"])],
+            [paragraph(label, "CellLabel"), paragraph(value)]
+            for label, value in _pdf_payment_rows(payment_summary)
         ], colWidths=[50 * mm, 134 * mm])
         payment_table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#eef3f1")),
@@ -665,10 +884,17 @@ def _attach_vehicle_delivery_pdfs(
     delivery_date: str,
     vehicles: Sequence[Dict[str, Any]],
     catalog_products: Optional[Dict[str, Dict[str, Any]]] = None,
+    recurring_discount_percent: Any = None,
 ) -> None:
     for vehicle in vehicles:
         if vehicle.get("orders"):
-            pdf_bytes = _vehicle_delivery_pdf(brand, delivery_date, vehicle, catalog_products)
+            pdf_bytes = _vehicle_delivery_pdf(
+                brand,
+                delivery_date,
+                vehicle,
+                catalog_products,
+                recurring_discount_percent,
+            )
             vehicle["delivery_pdf_base64"] = base64.b64encode(pdf_bytes).decode("ascii")
 
 
@@ -1922,9 +2148,17 @@ def create_server(
 
         def _confirm_order(self, payload: Dict[str, Any]) -> Dict[str, Any]:
             order_id = str(payload.get("order_id", "")).strip()
+            voucher_backfill = payload.get("voucher_backfill", False)
+            if not isinstance(voucher_backfill, bool):
+                raise WebRequestError("Il flag di registrazione del Buono Tech non è valido.")
             connection = gestionale.open_database(database)
             try:
-                return gestionale.confirm_order(connection, order_id, site)
+                return gestionale.confirm_order(
+                    connection,
+                    order_id,
+                    site,
+                    voucher_backfill=voucher_backfill,
+                )
             finally:
                 connection.close()
 
@@ -2154,6 +2388,7 @@ def create_server(
                     event_date.isoformat(),
                     result["vehicles"],
                     catalog_products,
+                    (site.get("recurring_order") or {}).get("discount_percent"),
                 )
                 return result
 
@@ -2242,6 +2477,7 @@ def create_server(
                 event_date.isoformat(),
                 result["vehicles"],
                 catalog_products,
+                (site.get("recurring_order") or {}).get("discount_percent"),
             )
             return result
 

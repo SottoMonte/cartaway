@@ -49,8 +49,14 @@ from gestionale.gestionale_web import (
     _group_route_orders_by_city,
     _plan_single_vehicle_tours,
     _pdf_datetime,
+    _pdf_cost_summary_rows,
+    _pdf_currency_label,
+    _pdf_discount_amount,
     _pdf_payment_summary,
+    _pdf_payment_rows,
     _pdf_product_amounts,
+    _pdf_recover_net_recurring_prices,
+    _pdf_shipping_amount,
     _vehicle_tour_sequence_warning,
     _vehicle_delivery_pdf,
     create_server,
@@ -119,6 +125,7 @@ class GestionaleTests(unittest.TestCase):
         unconfirmed_payment = _pdf_payment_summary({}, {})
         self.assertEqual(unconfirmed_payment["method"], "Non indicata")
         self.assertEqual(unconfirmed_payment["confirmed_total"], "Non registrato")
+        self.assertEqual(unconfirmed_payment["paid_amount"], "Non registrato")
         self.assertEqual(unconfirmed_payment["remaining"], "Non registrato")
         self.assertEqual(unconfirmed_payment["state"], "Non registrato")
 
@@ -127,6 +134,7 @@ class GestionaleTests(unittest.TestCase):
             {"payment_information": "Pagamento alla consegna"},
         )
         self.assertEqual(partial_payment["confirmed_total"], "€ 23,00")
+        self.assertEqual(partial_payment["paid_amount"], "€ 10,00")
         self.assertEqual(partial_payment["remaining"], "€ 13,00")
         self.assertEqual(partial_payment["state"], "Importo residuo")
 
@@ -136,8 +144,88 @@ class GestionaleTests(unittest.TestCase):
             Decimal("23.00"),
         )
         self.assertEqual(cash_on_delivery["confirmed_total"], "€ 23,00")
+        self.assertEqual(cash_on_delivery["paid_amount"], "€ 0,00")
         self.assertEqual(cash_on_delivery["remaining"], "€ 23,00")
         self.assertEqual(cash_on_delivery["state"], "Da incassare")
+
+        fully_paid = _pdf_payment_summary(
+            {"confirmed_total": "€ 23,00", "payment_status": "paid"},
+            {},
+        )
+        self.assertEqual(fully_paid["paid_amount"], "€ 23,00")
+        self.assertEqual(fully_paid["remaining"], "€ 0,00")
+        self.assertEqual(fully_paid["state"], "Già pagato")
+
+    def test_pdf_cost_summary_consolidates_matching_totals(self):
+        order = {"recurring_order": True, "confirmed_total": "€ 4,74"}
+        request_details = {
+            "cost_total": "4,74 €",
+            "cost_shipping": "Gratuita",
+            "cost_tax": "Inclusa nei prezzi: 0,85 €",
+        }
+        payment_summary = {
+            "confirmed_total": "€ 4,74",
+            "paid_amount": "Non registrato",
+            "remaining": "Non registrato",
+        }
+
+        rows = _pdf_cost_summary_rows(
+            order,
+            request_details,
+            "€ 4,99",
+            "−€ 0,25",
+            Decimal("4.74"),
+            payment_summary,
+        )
+
+        total_rows = [
+            row for row in rows
+            if row[0].startswith("Totale") and row[0] != "Totale prodotti (IVA inclusa)"
+        ]
+        self.assertEqual(total_rows, [("Totale ordine confermato", "€ 4,74")])
+        self.assertIn(("IVA inclusa (di cui)", "Inclusa nei prezzi: 0,85 €"), rows)
+        self.assertNotIn(("Già pagato", "Non registrato"), rows)
+        self.assertNotIn(("Residuo da incassare", "Non registrato"), rows)
+        self.assertEqual(_pdf_currency_label("4,74 €"), "€ 4,74")
+
+    def test_pdf_cost_summary_does_not_call_matching_inferred_total_confirmed(self):
+        rows = _pdf_cost_summary_rows(
+            {"recurring_order": True},
+            {"cost_total": "€ 4,74"},
+            "€ 4,99",
+            "−€ 0,25",
+            Decimal("4.74"),
+            {
+                "confirmed_total": "€ 4,74",
+                "paid_amount": "Non registrato",
+                "remaining": "Non registrato",
+            },
+        )
+
+        total_rows = [
+            row for row in rows
+            if row[0].startswith("Totale") and row[0] != "Totale prodotti (IVA inclusa)"
+        ]
+        self.assertEqual(total_rows, [("Totale ordine calcolato", "€ 4,74")])
+
+    def test_pdf_cost_summary_shows_totals_when_they_disagree(self):
+        rows = _pdf_cost_summary_rows(
+            {},
+            {"cost_total": "4,74 €", "cost_tax": "0,85 €"},
+            "€ 4,99",
+            "Nessuno",
+            Decimal("4.90"),
+            {"confirmed_total": "Non registrato", "paid_amount": "Non registrato", "remaining": "Non registrato"},
+        )
+
+        self.assertIn(("Totale indicato nella richiesta", "€ 4,74"), rows)
+        self.assertIn(("Totale ordine calcolato", "€ 4,90"), rows)
+
+    def test_pdf_payment_summary_combines_unregistered_payment(self):
+        self.assertEqual(
+            _pdf_payment_rows({"method": "Non indicata", "state": "Non registrato"}),
+            [("Pagamento", "Non registrato - verificare prima dell'incasso")],
+        )
 
     def test_pdf_product_amounts_use_order_price_then_catalog_fallback(self):
         order = {
@@ -164,6 +252,99 @@ class GestionaleTests(unittest.TestCase):
         self.assertEqual([row["line_total"] for row in rows], ["€ 9,98", "€ 12,00"])
         self.assertEqual(subtotal, Decimal("21.98"))
         self.assertFalse(missing_prices)
+
+    def test_pdf_recovers_missing_recurring_discount_from_saved_total(self):
+        order = {
+            "availability": [{"product_id": "carta-igienica", "name": "Carta", "requested": 1}],
+            "request_details": {
+                "product_lines": [{
+                    "product_id": "carta-igienica",
+                    "unit_price": "€ 4,99",
+                    "line_total": "€ 4,99",
+                }],
+                "cost_shipping": "Gratuita",
+                "cost_total": "€ 4,74",
+            },
+            "recurring_order": True,
+            "recurring_discount": "",
+        }
+
+        _, product_subtotal, missing_prices = _pdf_product_amounts(order, {})
+        shipping = _pdf_shipping_amount(order["request_details"]["cost_shipping"])
+        discount = _pdf_discount_amount(
+            order["recurring_discount"],
+            product_subtotal,
+            True,
+            Decimal("4.74"),
+            shipping,
+        )
+
+        self.assertFalse(missing_prices)
+        self.assertEqual(product_subtotal, Decimal("4.99"))
+        self.assertEqual(discount, Decimal("0.25"))
+        self.assertEqual(product_subtotal - discount + shipping, Decimal("4.74"))
+
+    def test_pdf_recovers_configured_discount_from_net_recurring_price(self):
+        order = {
+            "availability": [{"product_id": "rotoloni", "name": "Rotoloni", "requested": 1}],
+            "request_details": {
+                "product_lines": [{
+                    "product_id": "rotoloni",
+                    "unit_price": "€ 4,74",
+                    "line_total": "",
+                }],
+                "cost_shipping": "Gratuita",
+                "cost_total": "€ 4,74",
+            },
+            "recurring_order": True,
+            "recurring_discount": "",
+        }
+        catalog_products = {"rotoloni": {"name": "Rotoloni", "price": 4.99}}
+
+        _, net_subtotal, missing_prices = _pdf_product_amounts(order, {})
+        recovered = _pdf_recover_net_recurring_prices(
+            order,
+            catalog_products,
+            net_subtotal,
+            5,
+        )
+
+        self.assertFalse(missing_prices)
+        self.assertIsNotNone(recovered)
+        rows, product_subtotal, discount = recovered
+        self.assertEqual(rows[0]["unit_price"], "€ 4,99")
+        self.assertEqual(rows[0]["line_total"], "€ 4,99")
+        self.assertEqual(product_subtotal, Decimal("4.99"))
+        self.assertEqual(discount, Decimal("0.25"))
+        self.assertEqual(product_subtotal - discount, Decimal("4.74"))
+        self.assertIsNone(
+            _pdf_recover_net_recurring_prices(
+                order,
+                {"rotoloni": {"name": "Rotoloni", "price": 5.99}},
+                net_subtotal,
+                5,
+            )
+        )
+
+    def test_email_cost_template_uses_flat_checkout_parameters(self):
+        project_root = Path(__file__).resolve().parents[1]
+        template = (project_root / "email" / "order-summary.html").read_text(encoding="utf-8")
+        checkout_source = (project_root / "shop.js").read_text(encoding="utf-8")
+        readme = (project_root / "README.md").read_text(encoding="utf-8")
+
+        for key in (
+            "cost_products",
+            "cost_discount",
+            "cost_shipping",
+            "cost_tax",
+            "cost_total",
+        ):
+            self.assertIn(f"{{{{{key}}}}}", template)
+            self.assertIn(f"{key}:", checkout_source)
+        self.assertIn("email_subject:", checkout_source)
+        self.assertIn("Richiesta ricevuta #{{order_id}}", readme)
+        self.assertIn("{{#cost.products}}", template)
+        self.assertIn("{{#cost.discount}}", template)
 
     def test_initialize_database_migrates_existing_orders_table(self):
         connection = sqlite3.connect(":memory:")
@@ -513,8 +694,76 @@ class GestionaleTests(unittest.TestCase):
             parsed.request_details["payment_information"],
             "Nessun pagamento richiesto; totale e modalità saranno confermati prima dell'ordine.",
         )
+
         self.assertEqual(parsed.request_details["product_lines"][0]["line_total"], "€ 6,00")
         self.assertEqual(parsed.request_details["product_lines"][0]["unit_price"], "€ 3,00")
+
+    def test_parser_recovers_missing_cost_fields_from_email_product_rows(self):
+        email = EmailMessage()
+        email["From"] = "noreply@cartaway.it"
+        email["Subject"] = "Riepilogo richiesta #ORD-COST-RECOVERY"
+        email["Date"] = format_datetime(datetime(2026, 7, 8, 10, 0, tzinfo=ROME))
+        email.add_alternative(
+            """
+            <table><tr>
+              <td><a href="https://cartaway.it/prodotto.html?id=carta-igienica">Carta igienica lavanda</a></td>
+              <td>Carta igienica lavanda<div>Quantità: 1</div></td>
+              <td><strong>€ 4,99</strong><div>€ 4,99 / unità</div></td>
+            </tr></table>
+            <table><tr><td>Attivo</td><td>Sì</td></tr></table>
+            <table>
+              <tr><td></td><td>Prodotti (IVA incl.)</td><td></td></tr>
+              <tr><td></td><td>Sconto ricorrente</td><td></td></tr>
+              <tr><td></td><td>Consegna</td><td>Gratuita</td></tr>
+              <tr><td></td><td>Totale</td><td>€ 4,74</td></tr>
+            </table>
+            """,
+            subtype="html",
+        )
+
+        parsed = parse_order_email(
+            BytesParser(policy=policy.default).parsebytes(email.as_bytes()),
+            self.products,
+        )
+
+        self.assertTrue(parsed.recurring)
+        self.assertEqual(parsed.products_subtotal, "€ 4,99")
+        self.assertEqual(parsed.recurring_discount, "−€ 0,25")
+
+    def test_parser_recovers_gross_prices_for_legacy_recurring_email(self):
+                email = EmailMessage()
+                email["From"] = "noreply@cartaway.it"
+                email["Subject"] = "Riepilogo richiesta #ORD-NET-PRICE"
+                email.add_alternative(
+                        """
+                        <table><tr>
+                            <td><a href="https://cartaway.it/prodotto.html?id=carta-igienica">Carta igienica lavanda</a></td>
+                            <td>Carta igienica lavanda<div>Quantità: 1</div></td>
+                            <td><strong>€ 4,74</strong><div>€ 4,74 / unità</div></td>
+                        </tr></table>
+                        <table>
+                            <tr><td>Attivo</td><td>Sì</td></tr>
+                            <tr><td>Sconto</td><td>5%</td></tr>
+                        </table>
+                        <table>
+                            <tr><td></td><td>Prodotti (IVA incl.)</td><td></td></tr>
+                            <tr><td></td><td>Sconto ricorrente</td><td></td></tr>
+                            <tr><td></td><td>Consegna</td><td>Gratuita</td></tr>
+                            <tr><td></td><td>Totale</td><td>€ 4,74</td></tr>
+                        </table>
+                        """,
+                        subtype="html",
+                )
+
+                parsed = parse_order_email(
+                        BytesParser(policy=policy.default).parsebytes(email.as_bytes()),
+                        self.products,
+                )
+
+                self.assertEqual(parsed.products_subtotal, "€ 4,99")
+                self.assertEqual(parsed.recurring_discount, "−€ 0,25")
+                self.assertEqual(parsed.request_details["product_lines"][0]["unit_price"], "€ 4,99")
+                self.assertEqual(parsed.request_details["product_lines"][0]["line_total"], "€ 4,99")
 
     def test_validates_only_the_first_monthly_order_for_shared_email_or_phone(self):
         set_stock(self.connection, "carta-igienica", 10)
@@ -1195,6 +1444,123 @@ class GestionaleTests(unittest.TestCase):
         self.assertEqual(result["voucher_valid"], 1)
         self.assertEqual(result["voucher_validity_days"], 90)
 
+    def test_recurring_voucher_recovers_net_subtotal_from_order_total(self):
+        set_stock(self.connection, "carta-igienica", 10)
+        order = self._order("ORD-RECOVER-VOUCHER", "cliente@example.org", "+39 333 1234567")
+        order.recurring = True
+        order.voucher_value = "€ 2,37"
+        order.products_subtotal = ""
+        order.recurring_discount = ""
+        order.request_details = {"cost_total": "€ 4,74", "cost_shipping": "Gratis"}
+
+        prepared = prepare_order(self.connection, order, self.site)
+
+        self.assertEqual(prepared["voucher_valid"], 1)
+        with patch(
+            "gestionale.gestionale._recurring_schedule_for_order",
+            return_value=(0, 0, 1, date.today().isoformat(), "", ""),
+        ):
+            with patch("gestionale.gestionale.send_email") as send_email:
+                result = confirm_order(self.connection, order.order_id, self.site)
+                repeated = confirm_order(self.connection, order.order_id, self.site)
+
+        self.assertTrue(result["confirmed"])
+        self.assertFalse(result["recurring_scheduled"])
+        self.assertTrue(repeated["already_confirmed"])
+        self.assertEqual(
+            self.connection.execute(
+                "SELECT voucher_valid FROM orders WHERE order_id = ?",
+                (order.order_id,),
+            ).fetchone()[0],
+            1,
+        )
+        self.assertEqual(
+            [tuple(row) for row in self.connection.execute("SELECT code, order_id FROM valid_vouchers")],
+            [("BT-12345678-ABCD", order.order_id)],
+        )
+        send_email.assert_called_once()
+
+    def test_confirmed_recurring_order_backfills_recovered_voucher_without_email(self):
+        set_stock(self.connection, "carta-igienica", 10)
+        order = self._order("ORD-LEGACY-VOUCHER", "cliente@example.org", "+39 333 1234567")
+        order.recurring = True
+        order.voucher_value = "€ 2,37"
+        order.products_subtotal = ""
+        order.recurring_discount = ""
+        prepared = prepare_order(self.connection, order, self.site)
+        self.assertEqual(prepared["voucher_valid"], 0)
+
+        request_details = {"cost_total": "€ 4,74", "cost_shipping": "€ 0,00"}
+        self.connection.execute(
+            "UPDATE orders SET confirmation_status = 'confirmed', request_details_json = ? "
+            "WHERE order_id = ?",
+            (json.dumps(request_details), order.order_id),
+        )
+        self.connection.commit()
+
+        legacy_row = dict(
+            self.connection.execute(
+                "SELECT * FROM orders WHERE order_id = ?",
+                (order.order_id,),
+            ).fetchone()
+        )
+        voucher_status = voucher_validation_status(self.connection, legacy_row, self.site)
+        self.assertTrue(voucher_status["valid"])
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            first_retry = confirm_order(
+                self.connection,
+                order.order_id,
+                self.site,
+                voucher_backfill=True,
+            )
+            second_retry = confirm_order(
+                self.connection,
+                order.order_id,
+                self.site,
+                voucher_backfill=True,
+            )
+
+        self.assertTrue(first_retry["already_confirmed"])
+        self.assertTrue(second_retry["already_confirmed"])
+        self.assertTrue(first_retry["voucher_registered"])
+        self.assertTrue(second_retry["voucher_registered"])
+        self.assertFalse(first_retry["recurring_scheduled"])
+        self.assertEqual(
+            [tuple(row) for row in self.connection.execute("SELECT code, order_id FROM valid_vouchers")],
+            [("BT-12345678-ABCD", order.order_id)],
+        )
+        self.assertEqual(
+            tuple(self.connection.execute(
+                "SELECT voucher_valid, voucher_code FROM orders WHERE order_id = ?",
+                (order.order_id,),
+            ).fetchone()),
+            (1, "BT-12345678-ABCD"),
+        )
+        send_email.assert_not_called()
+
+    def test_voucher_backfill_rejects_unconfirmed_order_without_side_effects(self):
+        set_stock(self.connection, "carta-igienica", 10)
+        order = self._order("ORD-PENDING-VOUCHER-BACKFILL", "cliente@example.org", "+39 333 1234567")
+        order.recurring = True
+        order.voucher_value = "€ 2,37"
+        order.products_subtotal = ""
+        order.recurring_discount = ""
+        prepared = prepare_order(self.connection, order, self.site)
+        self.assertEqual(prepared["voucher_valid"], 0)
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            with self.assertRaisesRegex(OrderNotReady, "solo su un ordine già confermato"):
+                confirm_order(self.connection, order.order_id, self.site, voucher_backfill=True)
+
+        row = self.connection.execute(
+            "SELECT confirmation_status, recurring_enabled FROM orders WHERE order_id = ?",
+            (order.order_id,),
+        ).fetchone()
+        self.assertEqual(tuple(row), ("pending", 0))
+        self.assertEqual(self.connection.execute("SELECT COUNT(*) FROM valid_vouchers").fetchone()[0], 0)
+        send_email.assert_not_called()
+
     def test_calendar_link_uses_rome_timezone_and_requested_schedule(self):
         url = build_calendar_url(
             "Giro consegne",
@@ -1840,6 +2206,78 @@ class GestionaleWebTests(unittest.TestCase):
         self.assertEqual(archived_order["delivery_status"], "delivered")
         self.assertFalse(dashboard["orders"])
         self.assertEqual(dashboard["stock"][0]["quantity"], 8)
+
+    def test_voucher_backfill_api_requires_confirmed_order_and_registers_without_email(self):
+        self.site["recurring_order"] = {
+            "tech_voucher_percent": 50,
+            "tech_voucher_validity_days": 90,
+        }
+        order_id = "ORD-WEB-VOUCHER-BACKFILL"
+        voucher_code = "BT-87654321-EFGH"
+        connection = open_database(self.database)
+        try:
+            set_stock(connection, "carta-igienica", 10)
+            order = ParsedOrder(
+                order_id=order_id,
+                items=[OrderItem("carta-igienica", "Carta igienica lavanda", 1)],
+                customer_name="Mario Bianchi",
+                customer_email="cliente@example.org",
+                customer_phone="+39 333 1234567",
+                delivery_address="Via Roma 4",
+                delivery_city="Montoro",
+                recurring=True,
+                voucher_candidate=voucher_code,
+                voucher_value="€ 2,37",
+                products_subtotal="",
+                recurring_discount="",
+                order_datetime=datetime.now(ROME),
+                message_id=f"<{order_id.lower()}@example.org>",
+            )
+            prepared = prepare_order(connection, order, self.site)
+            self.assertEqual(prepared["voucher_valid"], 0)
+        finally:
+            connection.close()
+
+        payload = {"order_id": order_id, "voucher_backfill": True}
+        with patch("gestionale.gestionale.send_email") as send_email:
+            with self.assertRaises(HTTPError) as pending_error:
+                with self._post("/api/orders/confirm", payload, self.base_url):
+                    pass
+            self.assertEqual(pending_error.exception.code, 409)
+
+            connection = open_database(self.database)
+            try:
+                request_details = {"cost_total": "€ 4,74", "cost_shipping": "Gratis"}
+                connection.execute(
+                    "UPDATE orders SET confirmation_status = 'confirmed', request_details_json = ? "
+                    "WHERE order_id = ?",
+                    (json.dumps(request_details), order_id),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+
+            with self._post("/api/orders/confirm", payload, self.base_url) as response:
+                result = json.load(response)
+
+        self.assertTrue(result["already_confirmed"])
+        self.assertTrue(result["voucher_registered"])
+        send_email.assert_not_called()
+        connection = open_database(self.database)
+        try:
+            order_row = connection.execute(
+                "SELECT confirmation_status, recurring_enabled, voucher_valid, voucher_code "
+                "FROM orders WHERE order_id = ?",
+                (order_id,),
+            ).fetchone()
+            vouchers = connection.execute(
+                "SELECT code, order_id FROM valid_vouchers WHERE order_id = ?",
+                (order_id,),
+            ).fetchall()
+        finally:
+            connection.close()
+        self.assertEqual(tuple(order_row), ("confirmed", 0, 1, voucher_code))
+        self.assertEqual([tuple(row) for row in vouchers], [(voucher_code, order_id)])
 
     def test_recurring_delivery_api_advances_and_can_be_disabled(self):
         self.site["recurring_order"] = {

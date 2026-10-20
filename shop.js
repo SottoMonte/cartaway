@@ -722,11 +722,31 @@ function updateInvoiceControls() {
 }
 
 function updateCheckoutContactRequirement() {
+  const businessEmailConfigured = Boolean(String(state.site.email || "").trim());
   const hasEmail = Boolean(elements.checkoutEmail.value.trim());
   const hasPhone = Boolean(elements.checkoutPhone.value.trim());
-  const message = hasEmail || hasPhone ? "" : "Inserisci almeno un recapito: email o telefono.";
-  elements.checkoutEmail.setCustomValidity(message);
-  elements.checkoutPhone.setCustomValidity(message);
+  const emailRequired = !businessEmailConfigured;
+  elements.checkoutEmail.required = emailRequired;
+  const emailOptionalLabel = elements.checkoutEmail.closest(".form-field")?.querySelector(".form-field__optional");
+  if (emailOptionalLabel) emailOptionalLabel.textContent = emailRequired ? "obbligatoria" : "facoltativa";
+  const contactRequirement = document.querySelector("#checkout-contact-requirement");
+  if (contactRequirement) {
+    contactRequirement.textContent = emailRequired
+      ? "Inserisci la tua email per ricevere il riepilogo."
+      : "Inserisci almeno un recapito: email o telefono.";
+  }
+  elements.checkoutEmail.setCustomValidity(
+    emailRequired && !hasEmail
+      ? "Inserisci un indirizzo email per ricevere il riepilogo dell'ordine."
+      : !emailRequired && !hasEmail && !hasPhone
+        ? "Inserisci almeno un recapito: email o telefono."
+        : "",
+  );
+  elements.checkoutPhone.setCustomValidity(
+    !emailRequired && !hasEmail && !hasPhone
+      ? "Inserisci almeno un recapito: email o telefono."
+      : "",
+  );
 }
 
 function productImages(product) {
@@ -3103,19 +3123,19 @@ function setupEvents() {
       ? `${deliveryZoneLabel(deliveryZone)} - ${String(deliveryZone.name || "").trim()}`
       : "Da verificare";
     const estimatedDeliveryTime = String(deliveryZone?.delivery_time || "").trim() || "Da confermare";
+    const brand = String(state.site.brand || "Cartaway");
     const templateParams = {
-      brand: String(state.site.brand || "Cartaway"),
+      brand,
+      email_subject: `Riepilogo richiesta #${orderId} - ${brand}`,
       website_url: canonicalSiteOrigin,
       cart_url: buildCartShareUrl(items).href,
       order_id: orderId,
       orders: emailOrders,
-      cost: {
-        products: formatPrice(fullSubtotalCents / 100),
-        discount: savingsCents > 0 ? `−${formatPrice(savingsCents / 100)}` : "Nessuno",
-        shipping: shippingCost,
-        tax: vatSummary,
-        total: totalCost,
-      },
+      cost_products: formatPrice(fullSubtotalCents / 100),
+      cost_discount: savingsCents > 0 ? `−${formatPrice(savingsCents / 100)}` : "Nessuno",
+      cost_shipping: shippingCost,
+      cost_tax: vatSummary,
+      cost_total: totalCost,
       tech_voucher_id: voucherId,
       tech_voucher_value: voucherValueCents > 0
         ? formatPrice(voucherValueCents / 100)
@@ -3235,6 +3255,7 @@ async function initializeShop() {
 
     const [site, catalog] = await Promise.all([siteResponse.json(), productsResponse.json()]);
     state.site = site;
+    updateCheckoutContactRequirement();
     renderProfileFilter();
     configureTechVoucher();
     configureRecurringOrder();

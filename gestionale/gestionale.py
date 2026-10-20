@@ -186,6 +186,12 @@ def _cost_value(rows: Sequence[Dict[str, Any]], label: str) -> str:
     return ""
 
 
+def _format_euro_cents(value: int) -> str:
+    sign = "−" if value < 0 else ""
+    absolute = abs(value)
+    return f"{sign}€ {absolute // 100},{absolute % 100:02d}"
+
+
 def _product_id_from_links(links: Sequence[str]) -> str:
     for link in links:
         values = parse_qs(urlsplit(link).query).get("id", [])
@@ -342,6 +348,49 @@ def parse_order_email(
         ),
         "product_lines": product_lines,
     }
+    if recurring and not products_subtotal and not recurring_discount and product_lines:
+        recovered_costs = _recover_net_recurring_prices(
+            product_lines,
+            _field_value(parser.rows, "Sconto"),
+            request_details["cost_total"],
+            request_details["cost_shipping"],
+        )
+        if recovered_costs:
+            products_subtotal, recurring_discount = recovered_costs
+
+    if not products_subtotal and product_lines:
+        line_total_cents = []
+        for line in product_lines:
+            amount = _parse_money(str(line.get("line_total") or ""))
+            if amount is None:
+                unit_price = _parse_money(str(line.get("unit_price") or ""))
+                try:
+                    quantity = int(line.get("quantity", 0))
+                except (TypeError, ValueError):
+                    quantity = 0
+                if unit_price is not None and quantity > 0:
+                    amount = unit_price * quantity
+            amount_cents = _money_to_cents(amount)
+            if amount_cents is None:
+                line_total_cents = []
+                break
+            line_total_cents.append(amount_cents)
+        if line_total_cents:
+            products_subtotal = _format_euro_cents(sum(line_total_cents))
+
+    if recurring and not recurring_discount and products_subtotal:
+        product_total = _parse_money(products_subtotal)
+        order_total = _parse_money(str(request_details.get("cost_total") or ""))
+        shipping_text = str(request_details.get("cost_shipping") or "").strip()
+        if shipping_text.casefold() in {"gratis", "gratuito", "gratuita", "free", "spedizione gratuita"}:
+            shipping_total = Decimal("0")
+        else:
+            shipping_total = _parse_money(shipping_text)
+        if product_total is not None and order_total is not None and shipping_total is not None:
+            discount_cents = _money_to_cents(product_total + shipping_total - order_total)
+            product_cents = _money_to_cents(product_total)
+            if discount_cents is not None and product_cents is not None and 0 <= discount_cents <= product_cents:
+                recurring_discount = _format_euro_cents(-discount_cents) if discount_cents else "Nessuno"
 
     return ParsedOrder(
         order_id=order_match.group(1).upper(),
@@ -385,6 +434,86 @@ def _money_to_cents(value: Optional[Decimal]) -> Optional[int]:
     if value is None:
         return None
     return int((value * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def _recover_net_recurring_prices(
+    product_lines: List[Dict[str, Any]],
+    discount_text: str,
+    order_total_text: str,
+    shipping_text: str,
+) -> Optional[Tuple[str, str]]:
+    match = re.fullmatch(r"\s*(\d+(?:[.,]\d+)?)\s*%\s*", discount_text)
+    if not match:
+        return None
+    discount_rate = Decimal(match.group(1).replace(",", "."))
+    if discount_rate <= 0 or discount_rate >= 100:
+        return None
+
+    order_total = _money_to_cents(_parse_money(order_total_text))
+    shipping_label = shipping_text.strip().casefold()
+    shipping_amount = (
+        Decimal("0")
+        if shipping_label in {"gratis", "gratuito", "gratuita", "free", "spedizione gratuita"}
+        else _parse_money(shipping_text)
+    )
+    shipping_cents = _money_to_cents(shipping_amount)
+    if order_total is None or shipping_cents is None:
+        return None
+
+    net_total_cents = 0
+    gross_total_cents = 0
+    recovered_lines: List[Tuple[Dict[str, Any], int, int]] = []
+    for line in product_lines:
+        quantity_value = _parse_money(str(line.get("quantity") or ""))
+        unit_price = _parse_money(str(line.get("unit_price") or ""))
+        if (
+            quantity_value is None
+            or quantity_value <= 0
+            or quantity_value != quantity_value.to_integral_value()
+            or unit_price is None
+        ):
+            return None
+        quantity = int(quantity_value)
+        net_unit_cents = _money_to_cents(unit_price)
+        line_total = _parse_money(str(line.get("line_total") or ""))
+        net_line_cents = _money_to_cents(line_total) if line_total is not None else None
+        if net_unit_cents is None:
+            return None
+        if net_line_cents is None:
+            net_line_cents = net_unit_cents * quantity
+        if net_line_cents != net_unit_cents * quantity:
+            return None
+
+        gross_unit_cents = int(
+            (
+                Decimal(net_unit_cents) * Decimal("100")
+                / (Decimal("100") - discount_rate)
+            ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        )
+        expected_net_cents = int(
+            (Decimal(gross_unit_cents) * (Decimal("100") - discount_rate) / Decimal("100"))
+            .quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        )
+        if expected_net_cents != net_unit_cents:
+            return None
+
+        gross_line_cents = gross_unit_cents * quantity
+        net_total_cents += net_line_cents
+        gross_total_cents += gross_line_cents
+        recovered_lines.append((line, gross_unit_cents, gross_line_cents))
+
+    if abs(net_total_cents + shipping_cents - order_total) > 1:
+        return None
+    discount_cents = gross_total_cents - net_total_cents
+    if discount_cents <= 0:
+        return None
+    if abs(gross_total_cents - discount_cents + shipping_cents - order_total) > 1:
+        return None
+
+    for line, gross_unit_cents, gross_line_cents in recovered_lines:
+        line["unit_price"] = _format_euro_cents(gross_unit_cents)
+        line["line_total"] = _format_euro_cents(gross_line_cents)
+    return _format_euro_cents(gross_total_cents), _format_euro_cents(-discount_cents)
 
 
 def _identity_keys(email_address: str, phone: str) -> List[str]:
@@ -996,6 +1125,39 @@ def _voucher_days(site: Dict[str, Any], recurring: bool) -> Optional[int]:
     return days if days > 0 else None
 
 
+def _voucher_amount_inputs(
+    products_subtotal: str,
+    recurring_discount: str,
+    recurring: bool,
+    request_details: Any,
+) -> Tuple[str, str]:
+    subtotal = str(products_subtotal or "").strip()
+    discount = str(recurring_discount or "").strip()
+    if not recurring or (subtotal and discount):
+        return subtotal, discount
+
+    if isinstance(request_details, str):
+        try:
+            request_details = json.loads(request_details)
+        except (json.JSONDecodeError, TypeError):
+            request_details = {}
+    if not isinstance(request_details, dict):
+        return subtotal, discount
+
+    total_cents = _money_to_cents(_parse_money(str(request_details.get("cost_total") or "")))
+    shipping_value = str(request_details.get("cost_shipping") or "").strip()
+    if shipping_value.casefold() in {"gratis", "gratuito", "gratuita", "free", "spedizione gratuita"}:
+        shipping_cents = 0
+    else:
+        shipping_cents = _money_to_cents(_parse_money(shipping_value))
+    if total_cents is None or shipping_cents is None or total_cents < shipping_cents:
+        return subtotal, discount
+
+    net_subtotal_cents = total_cents - shipping_cents
+    recovered_subtotal = f"€ {net_subtotal_cents // 100},{net_subtotal_cents % 100:02d}"
+    return recovered_subtotal, "Nessuno"
+
+
 def _validate_voucher(
     connection: sqlite3.Connection,
     order_id: str,
@@ -1008,7 +1170,14 @@ def _validate_voucher(
     products_subtotal: str,
     recurring_discount: str,
     site: Dict[str, Any],
+    request_details: Any = None,
 ) -> Tuple[bool, bool, Optional[int]]:
+    products_subtotal, recurring_discount = _voucher_amount_inputs(
+        products_subtotal,
+        recurring_discount,
+        recurring,
+        request_details,
+    )
     identities = _identity_keys(customer_email, customer_phone)
     if order_datetime.tzinfo is None:
         order_datetime = order_datetime.replace(tzinfo=ROME)
@@ -1092,6 +1261,15 @@ def voucher_validation_status(
     if not candidate:
         return {"valid": False, "label": "Non presente", "reason": "", "first_month_order": False}
 
+    request_details = order_row.get("request_details")
+    if request_details is None:
+        request_details = order_row.get("request_details_json")
+    products_subtotal, recurring_discount = _voucher_amount_inputs(
+        str(order_row.get("products_subtotal") or ""),
+        str(order_row.get("recurring_discount") or ""),
+        bool(order_row["recurring_order"]),
+        request_details,
+    )
     first_month_order, is_valid, validity_days = _validate_voucher(
         connection,
         str(order_row["order_id"]),
@@ -1101,9 +1279,10 @@ def voucher_validation_status(
         bool(order_row["recurring_order"]),
         candidate,
         str(order_row["voucher_candidate_value"] or ""),
-        str(order_row["products_subtotal"] or ""),
-        str(order_row["recurring_discount"] or ""),
+        products_subtotal,
+        recurring_discount,
         site,
+        request_details,
     )
     if is_valid:
         return {
@@ -1117,11 +1296,9 @@ def voucher_validation_status(
         reason = "Risulta già un altro ordine dello stesso cliente nel mese."
     elif not re.fullmatch(r"BT-[A-Z0-9-]{4,80}", candidate):
         reason = "Il formato del codice non è valido."
-    elif not str(order_row.get("voucher_candidate_value") or "").strip() or not str(
-        order_row.get("products_subtotal") or ""
-    ).strip():
+    elif not str(order_row.get("voucher_candidate_value") or "").strip() or not products_subtotal:
         reason = "Importo del buono o subtotale prodotti non acquisiti dal riepilogo."
-    elif str(order_row.get("recurring_discount") or "").strip() == "":
+    elif not recurring_discount:
         reason = "Sconto ricorrente non acquisito dal riepilogo."
     elif validity_days is None:
         reason = "Validità del Buono Tech non configurata."
@@ -1249,6 +1426,7 @@ def prepare_order(connection: sqlite3.Connection, order: ParsedOrder, site: Dict
             order.products_subtotal,
             order.recurring_discount,
             site,
+            order.request_details,
         )
         problems = [item for item in stock if item["state"] != "disponibile"]
         response_required = voucher_valid or any(
@@ -1571,7 +1749,12 @@ def _recurring_schedule_for_order(
     )
 
 
-def confirm_order(connection: sqlite3.Connection, order_id: str, site: Dict[str, Any]) -> Dict[str, Any]:
+def confirm_order(
+    connection: sqlite3.Connection,
+    order_id: str,
+    site: Dict[str, Any],
+    voucher_backfill: bool = False,
+) -> Dict[str, Any]:
     order_id = order_id.strip()
     if not order_id:
         raise AppError("Selezionare un ordine da confermare.")
@@ -1581,12 +1764,81 @@ def confirm_order(connection: sqlite3.Connection, order_id: str, site: Dict[str,
         if row is None:
             raise AppError(f"Ordine #{order_id} non trovato.")
         order_row = dict(row)
+        if voucher_backfill and order_row["confirmation_status"] != "confirmed":
+            raise OrderNotReady("Il Buono Tech può essere registrato solo su un ordine già confermato.")
         if order_row["confirmation_status"] == "confirmed":
+            voucher_entry = None
+            if order_row["voucher_candidate"]:
+                voucher_entry = connection.execute(
+                    "SELECT value, validity_days FROM valid_vouchers WHERE code = ? AND order_id = ?",
+                    (order_row["voucher_candidate"], order_id),
+                ).fetchone()
+            voucher_registered = voucher_entry is not None
+            if voucher_entry is not None:
+                connection.execute(
+                    """
+                    UPDATE orders SET voucher_valid = 1, voucher_code = ?,
+                        voucher_value = ?, voucher_validity_days = ?
+                    WHERE order_id = ?
+                    """,
+                    (
+                        order_row["voucher_candidate"],
+                        voucher_entry["value"],
+                        voucher_entry["validity_days"],
+                        order_id,
+                    ),
+                )
+            elif order_row["voucher_candidate"]:
+                first_month_order, voucher_valid, validity_days = _validate_voucher(
+                    connection,
+                    order_id,
+                    order_row["customer_email"],
+                    order_row["customer_phone"],
+                    datetime.fromisoformat(order_row["ordered_at"]),
+                    bool(order_row["recurring_order"]),
+                    order_row["voucher_candidate"],
+                    order_row["voucher_candidate_value"],
+                    order_row["products_subtotal"],
+                    order_row["recurring_discount"],
+                    site,
+                    order_row["request_details_json"],
+                )
+                if voucher_valid and validity_days is not None:
+                    validated_at = datetime.now(ROME).isoformat(timespec="seconds")
+                    connection.execute(
+                        """
+                        UPDATE orders SET first_month_order = ?, voucher_valid = 1,
+                            voucher_code = ?, voucher_value = ?, voucher_validity_days = ?
+                        WHERE order_id = ?
+                        """,
+                        (
+                            int(first_month_order),
+                            order_row["voucher_candidate"],
+                            order_row["voucher_candidate_value"],
+                            validity_days,
+                            order_id,
+                        ),
+                    )
+                    connection.execute(
+                        """
+                        INSERT OR IGNORE INTO valid_vouchers (code, order_id, value, validity_days, validated_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            order_row["voucher_candidate"],
+                            order_id,
+                            order_row["voucher_candidate_value"],
+                            validity_days,
+                            validated_at,
+                        ),
+                    )
+                    voucher_registered = True
             connection.commit()
             return {
                 "order_id": order_id,
                 "confirmed": True,
                 "already_confirmed": True,
+                "voucher_registered": voucher_registered,
                 "delivery_date": order_row["delivery_date"],
                 "recurring_scheduled": bool(order_row["recurring_enabled"]),
                 "recurring_frequency_days": int(order_row["recurring_frequency_days"]),
@@ -1610,6 +1862,7 @@ def confirm_order(connection: sqlite3.Connection, order_id: str, site: Dict[str,
             order_row["products_subtotal"],
             order_row["recurring_discount"],
             site,
+            order_row["request_details_json"],
         )
         order_row.update(
             {

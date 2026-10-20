@@ -1,16 +1,16 @@
 {
   "brand": "Cartaway",
   "city": "Montoro (AV)",
-  "phone": "+39 00000",
+  "phone": "",
   "tagline": "La carta che ti serve, consegnata vicino a te.",
-  "whatsapp": "+39 00000",
-  "address": "Via Roma, 1, Torchiati di Montoro (AV)",
+  "whatsapp": "",
+  "address": "",
   "legal": {
-    "holder": "MARIO ROSSI",
-    "legal_form": "Impresa individuale",
-    "registered_office": "Via Roma, 1, CAP 83025, frazione Torchiati, Montoro (AV)",
-    "vat_number": "00000000000",
-    "rea": "AV - 313427"
+    "holder": "",
+    "legal_form": "",
+    "registered_office": "",
+    "vat_number": "",
+    "rea": ""
   },
   "prices_include_vat": true,
   "profiles": [
@@ -195,7 +195,7 @@
     "tech_voucher_validity_days": 90,
     "fixed_delivery_day": true
   },
-  "email": "example@gmail.com",
+  "email": "",
   "emailjs": {
     "public_key": "khfx-WKeKM91KZmnj",
     "service_id": "service_retgqpj",
