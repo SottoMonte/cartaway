@@ -19,7 +19,7 @@ Apri `http://localhost:4173`. La pagina `/admin` va collegata a Decap Turbo prim
 ## Pubblicazione
 
 1. Crea un repository GitHub sul branch `main` e carica il progetto.
-2. Su Netlify importa quel repository. Imposta il comando di build su `node scripts/generate-sitemap.mjs` e la cartella di pubblicazione su `.`; aggiungi poi il dominio personalizzato. Le schede statiche dei prodotti e la sitemap vengono rigenerate dal catalogo a ogni pubblicazione.
+2. Su Netlify importa quel repository e aggiungi il dominio personalizzato. `netlify.toml` configura il comando di build e la cartella di pubblicazione; a ogni pubblicazione vengono rigenerate dal catalogo le schede statiche dei prodotti e la sitemap.
 3. Crea l'organizzazione Decap Turbo con l'account del cliente. Il piano Free include un sito e un utente, quindi l'account cliente deve essere il proprietario. Collega GitHub, installa l'app Turbo sul repository e crea un sito con branch `main`, percorso di configurazione `admin/config.yml` e URL admin `https://IL-TUO-SITO/admin/`.
 4. Copia la Site ID mostrata da Turbo in `admin/config.yml`, al posto di `SOSTITUISCI-CON-LA-SITE-ID-DECAP-TURBO`, e invia la modifica a GitHub. Netlify pubblicherà la configurazione aggiornata.
 5. Accedi da `https://IL-TUO-SITO/admin/` con Decap Turbo. Da lì il cliente può aggiornare i recapiti e i prodotti; ogni salvataggio aggiorna il JSON su GitHub e avvia una nuova pubblicazione.
