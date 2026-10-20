@@ -39,6 +39,7 @@ from gestionale.gestionale import (
     open_database,
     parse_order_email,
     prepare_order,
+    reject_order,
     set_stock,
     save_delivery_load_config,
     save_delivery_settings,
@@ -1269,6 +1270,64 @@ class GestionaleTests(unittest.TestCase):
         ).fetchone()
         self.assertEqual(tuple(row), ("confirmed", "inviata", 1))
 
+    def test_reject_order_sends_one_standard_email_and_blocks_confirmation(self):
+        order = self._order("ORD-REJECT-1", "cliente@example.org", "+39 333 1234567")
+        prepare_order(self.connection, order, self.site)
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            result = reject_order(self.connection, order.order_id, self.site)
+            repeated = reject_order(self.connection, order.order_id, self.site)
+
+        self.assertTrue(result["rejected"])
+        self.assertTrue(result["email_sent"])
+        self.assertFalse(result["already_rejected"])
+        self.assertTrue(repeated["already_rejected"])
+        send_email.assert_called_once()
+        message = send_email.call_args.args[0]
+        self.assertIn("Esito richiesta ordine #ORD-REJECT-1", str(message["Subject"]))
+        rejection_text = message.get_body(preferencelist=("plain",)).get_content()
+        self.assertIn("non possiamo accettare", rejection_text)
+        with self.assertRaisesRegex(OrderNotReady, "già rifiutato"):
+            confirm_order(self.connection, order.order_id, self.site)
+        row = self.connection.execute(
+            "SELECT confirmation_status, email_status, rejected_at FROM orders WHERE order_id = ?",
+            (order.order_id,),
+        ).fetchone()
+        self.assertEqual(row["confirmation_status"], "rejected")
+        self.assertEqual(row["email_status"], "inviata")
+        self.assertTrue(row["rejected_at"])
+
+    def test_reject_order_without_customer_email_records_rejection_without_sending(self):
+        order = self._order("ORD-REJECT-NO-EMAIL", "", "+39 333 1234567")
+        prepare_order(self.connection, order, self.site)
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            result = reject_order(self.connection, order.order_id, self.site)
+
+        self.assertTrue(result["rejected"])
+        self.assertTrue(result["email_missing"])
+        self.assertFalse(result["email_sent"])
+        send_email.assert_not_called()
+        row = self.connection.execute(
+            "SELECT confirmation_status, email_status FROM orders WHERE order_id = ?",
+            (order.order_id,),
+        ).fetchone()
+        self.assertEqual(tuple(row), ("rejected", "email_mancante"))
+
+    def test_reject_order_restores_pending_status_when_email_sending_fails(self):
+        order = self._order("ORD-REJECT-ERROR", "cliente@example.org", "+39 333 1234567")
+        prepare_order(self.connection, order, self.site)
+
+        with patch("gestionale.gestionale.send_email", side_effect=AppError("SMTP non disponibile")):
+            with self.assertRaisesRegex(AppError, "Ordine non rifiutato"):
+                reject_order(self.connection, order.order_id, self.site)
+
+        row = self.connection.execute(
+            "SELECT confirmation_status, email_status FROM orders WHERE order_id = ?",
+            (order.order_id,),
+        ).fetchone()
+        self.assertEqual(tuple(row), ("pending", "errore"))
+
     def test_confirming_recurring_order_activates_its_next_delivery(self):
         set_stock(self.connection, "carta-igienica", 10)
         recurring_settings = dict(self.site["recurring_order"])
@@ -2451,6 +2510,59 @@ class GestionaleWebTests(unittest.TestCase):
             [order["order_id"] for order in history["orders"]],
             ["ORD-HISTORY", "ORD-DISABLED-DELIVERED"],
         )
+
+    def test_rejected_order_leaves_active_dashboard_and_appears_in_history(self):
+        order = ParsedOrder(
+            order_id="ORD-WEB-REJECTED",
+            items=[OrderItem("carta-igienica", "Carta igienica lavanda", 1)],
+            customer_name="Mario Bianchi",
+            customer_email="cliente@example.org",
+            customer_phone="+39 333 1234567",
+            delivery_address="Via Roma 1",
+            delivery_city="Montoro",
+            recurring=False,
+            voucher_candidate="",
+            voucher_value="",
+            products_subtotal="€ 10,00",
+            recurring_discount="Nessuno",
+            order_datetime=datetime.now(ROME),
+            message_id="<ORD-WEB-REJECTED@example.org>",
+        )
+        connection = open_database(self.database)
+        try:
+            prepare_order(connection, order, self.site)
+        finally:
+            connection.close()
+
+        with patch("gestionale.gestionale.send_email") as send_email:
+            with self._post(
+                "/api/orders/reject",
+                {"order_id": order.order_id},
+                self.base_url,
+            ) as response:
+                result = json.load(response)
+        send_email.assert_called_once()
+        self.assertTrue(result["rejected"])
+        self.assertTrue(result["email_sent"])
+
+        with urlopen(self.base_url + "/api/dashboard", timeout=3) as response:
+            dashboard = json.load(response)
+        with urlopen(self.base_url + "/api/orders/history", timeout=3) as response:
+            history = json.load(response)
+        rejected_orders = [
+            item for item in history["orders"]
+            if item["order_id"] == order.order_id
+        ]
+        self.assertNotIn(order.order_id, [item["order_id"] for item in dashboard["orders"]])
+        self.assertEqual(len(rejected_orders), 1)
+        self.assertEqual(rejected_orders[0]["confirmation_status"], "rejected")
+        self.assertEqual(rejected_orders[0]["email_status"], "inviata")
+        self.assertTrue(rejected_orders[0]["rejected_at"])
+
+        with urlopen(self.base_url + "/", timeout=3) as response:
+            page = response.read().decode("utf-8")
+        self.assertIn("Rifiuta ordine", page)
+        self.assertIn("Esito / data", page)
 
     def test_dashboard_and_stock_update_are_available_from_local_web_ui(self):
         with urlopen(self.base_url + "/", timeout=3) as response:

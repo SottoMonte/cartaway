@@ -169,6 +169,9 @@
       .empty-state { padding: 34px 20px; color: var(--muted); text-align: center; }
       .order-ref { min-width: 220px; font-weight: 800; }
       .order-ref > span { display: block; }
+      .order-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+      .button.reject { background: var(--red); color: white; }
+      .button.reject:hover { background: #87372e; }
       .order-contact { min-width: 200px; }
       .order-contact small { display: block; margin-top: 3px; color: var(--muted); }
       .order-details { max-width: 440px; margin-top: 8px; }
@@ -343,8 +346,8 @@
             <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Consegna richiesta</th><th scope="col">Disponibilità</th><th scope="col">Buono Tech</th><th scope="col">Stato</th><th scope="col">Azione</th></tr></thead><tbody id="orders-body"><tr><td class="empty-state" colspan="8">Nessun ordine in corso.</td></tr></tbody></table></div>
           </div>
           <div id="orders-history-view" hidden>
-            <p class="subtle">Ordini consegnati senza altre consegne in programma. I dettagli restano consultabili qui.</p>
-            <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Consegnato</th><th scope="col">Tipologia</th></tr></thead><tbody id="order-history-body"><tr><td class="empty-state" colspan="5">Storico non caricato.</td></tr></tbody></table></div>
+            <p class="subtle">Ordini consegnati o rifiutati. I dettagli restano consultabili qui.</p>
+            <div class="table-wrap"><table><thead><tr><th scope="col">Riferimento</th><th scope="col">Ricevuto</th><th scope="col">Cliente</th><th scope="col">Esito / data</th><th scope="col">Stato / tipologia</th></tr></thead><tbody id="order-history-body"><tr><td class="empty-state" colspan="5">Storico non caricato.</td></tr></tbody></table></div>
           </div>
           <div class="section-head voucher-list-heading">
             <div><h2>Buoni Tech validi</h2><p>Codici verificati e registrati dal gestionale.</p></div>
@@ -715,7 +718,7 @@
             ? `Consegnato · ${deliveredAt.toLocaleString("it-IT")}`
             : "Consegnato";
           statusCell.append(badge(
-            delivered ? deliveredLabel : confirmed ? `Confermato · ${formatDate(order.delivery_date)}` : order.confirmation_status === "sending" ? "Email in invio" : "Da confermare",
+            delivered ? deliveredLabel : confirmed ? `Confermato · ${formatDate(order.delivery_date)}` : order.confirmation_status === "sending" ? "Email in invio" : order.confirmation_status === "rejecting" ? "Rifiuto in invio" : "Da confermare",
             confirmed ? "neutral" : "warning",
           ));
           const actionCell = cell(row, "");
@@ -731,11 +734,20 @@
               actionCell.append(badge("Email inviata", "neutral"));
             }
           } else {
-            const button = element("button", "Verifica e conferma", "button small");
-            button.type = "button";
-            button.dataset.orderId = order.order_id;
-            button.disabled = order.confirmation_status === "sending";
-            actionCell.append(button);
+            const actions = element("div", undefined, "order-actions");
+            const pendingAction = ["sending", "rejecting"].includes(order.confirmation_status);
+            const confirmButton = element("button", "Verifica e conferma", "button small");
+            confirmButton.type = "button";
+            confirmButton.dataset.orderId = order.order_id;
+            confirmButton.dataset.orderAction = "confirm";
+            confirmButton.disabled = pendingAction;
+            const rejectButton = element("button", "Rifiuta ordine", "button small reject");
+            rejectButton.type = "button";
+            rejectButton.dataset.orderId = order.order_id;
+            rejectButton.dataset.orderAction = "reject";
+            rejectButton.disabled = pendingAction;
+            actions.append(confirmButton, rejectButton);
+            actionCell.append(actions);
           }
           body.append(row);
         }
@@ -748,7 +760,7 @@
           const row = element("tr");
           const message = !state.historyLoaded
             ? "Caricamento storico…"
-            : "Nessun ordine archiviato.";
+            : "Nessun ordine nello storico.";
           const empty = cell(row, message, "empty-state");
           empty.colSpan = 5;
           body.append(row);
@@ -782,12 +794,28 @@
           const customerCell = cell(row, "", "order-contact");
           customerCell.append(element("span", order.customer_name || "Cliente"));
           customerCell.append(element("small", order.customer_email || "Email assente"));
-          const deliveredAt = new Date(order.delivered_at);
-          const deliveredTime = Number.isNaN(deliveredAt.getTime())
-            ? ""
-            : deliveredAt.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-          cell(row, [formatDate(order.last_delivered_date || order.delivery_date), deliveredTime].filter(Boolean).join(" · "));
-          cell(row, order.recurring_order ? "Ricorrenza disattivata" : "Ordine singolo");
+          const rejected = order.confirmation_status === "rejected";
+          if (rejected) {
+            cell(row, `Rifiutato · ${formatDeliveryDateTime(order.rejected_at)}`);
+            cell(
+              row,
+              order.email_status === "inviata"
+                ? "Rifiutato · email inviata"
+                : "Rifiutato · email non inviata",
+            );
+          } else {
+            const deliveredAt = new Date(order.delivered_at);
+            const deliveredTime = Number.isNaN(deliveredAt.getTime())
+              ? ""
+              : deliveredAt.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+            cell(
+              row,
+              ["Consegnato", formatDate(order.last_delivered_date || order.delivery_date), deliveredTime]
+                .filter(Boolean)
+                .join(" · "),
+            );
+            cell(row, order.recurring_order ? "Ricorrenza disattivata" : "Ordine singolo");
+          }
           body.append(row);
         }
       }
@@ -1373,25 +1401,45 @@
         if (!button) return;
         const orderId = button.dataset.orderId;
         const voucherBackfill = button.dataset.voucherBackfill === "true";
-        const actionLabel = voucherBackfill ? "Registra buono" : "Verifica e conferma";
+        const reject = button.dataset.orderAction === "reject";
+        const actionLabel = voucherBackfill
+          ? "Registra buono"
+          : reject
+            ? "Rifiuta ordine"
+            : "Verifica e conferma";
         const confirmationMessage = voucherBackfill
           ? `Registrare il Buono Tech dell'ordine #${orderId}? Non verranno inviate email né modificata la programmazione delle consegne.`
-          : `Verificare disponibilità e Buono Tech e confermare l'ordine #${orderId}? Se lo stock basta, verrà inviata un'email al cliente.`;
+          : reject
+            ? `Rifiutare l'ordine #${orderId}? Verrà inviata al cliente un'email standard che comunica il rifiuto.`
+            : `Verificare disponibilità e Buono Tech e confermare l'ordine #${orderId}? Se lo stock basta, verrà inviata un'email al cliente.`;
         if (!window.confirm(confirmationMessage)) return;
-        setButtonBusy(button, true, actionLabel, voucherBackfill ? "Salvataggio…" : "Verifica…");
+        setButtonBusy(
+          button,
+          true,
+          actionLabel,
+          reject ? "Rifiuto…" : voucherBackfill ? "Salvataggio…" : "Verifica…",
+        );
         try {
-          const result = await api("/api/orders/confirm", {
+          const result = await api(reject ? "/api/orders/reject" : "/api/orders/confirm", {
             method: "POST",
             body: JSON.stringify({ order_id: orderId, voucher_backfill: voucherBackfill }),
           });
-          await Promise.all([loadDashboard(), loadDeliveryOrders()]);
-          showNotice(voucherBackfill
-            ? result.voucher_registered
-              ? `Buono Tech dell'ordine #${orderId} registrato; nessuna email inviata.`
-              : `Il Buono Tech dell'ordine #${orderId} non è stato registrato.`
-            : result.already_confirmed
-              ? `Ordine #${orderId} già confermato; nessuna email duplicata.`
-              : `Ordine #${orderId} confermato. Email inviata.`);
+          const refreshes = [loadDashboard(), loadDeliveryOrders()];
+          if (reject && state.historyLoaded) refreshes.push(loadOrderHistory());
+          await Promise.all(refreshes);
+          showNotice(reject
+            ? result.already_rejected
+              ? `Ordine #${orderId} già rifiutato; nessun'altra email inviata.`
+              : result.email_sent
+                ? `Ordine #${orderId} rifiutato. Email inviata al cliente.`
+                : `Ordine #${orderId} rifiutato, ma l'email non è stata inviata perché manca l'indirizzo email.`
+            : voucherBackfill
+              ? result.voucher_registered
+                ? `Buono Tech dell'ordine #${orderId} registrato; nessuna email inviata.`
+                : `Il Buono Tech dell'ordine #${orderId} non è stato registrato.`
+              : result.already_confirmed
+                ? `Ordine #${orderId} già confermato; nessuna email duplicata.`
+                : `Ordine #${orderId} confermato. Email inviata.`);
         } catch (error) {
           showNotice(error.message, "error");
           await loadDashboard();

@@ -598,6 +598,7 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             delivery_date TEXT NOT NULL DEFAULT '',
             confirmation_status TEXT NOT NULL DEFAULT 'pending',
             confirmed_at TEXT NOT NULL DEFAULT '',
+            rejected_at TEXT NOT NULL DEFAULT '',
             delivery_status TEXT NOT NULL DEFAULT 'pending',
             delivered_at TEXT NOT NULL DEFAULT '',
             recurring_enabled INTEGER NOT NULL DEFAULT 0,
@@ -659,6 +660,7 @@ def initialize_database(connection: sqlite3.Connection) -> None:
         ("delivery_date", "TEXT NOT NULL DEFAULT ''"),
         ("confirmation_status", "TEXT NOT NULL DEFAULT 'pending'"),
         ("confirmed_at", "TEXT NOT NULL DEFAULT ''"),
+        ("rejected_at", "TEXT NOT NULL DEFAULT ''"),
         ("delivery_status", "TEXT NOT NULL DEFAULT 'pending'"),
         ("delivered_at", "TEXT NOT NULL DEFAULT ''"),
         ("recurring_enabled", "INTEGER NOT NULL DEFAULT 0"),
@@ -1642,6 +1644,32 @@ def _make_customer_email(order_row: Dict[str, Any], site: Dict[str, Any], sender
     return message
 
 
+def _format_order_rejection(order_row: Dict[str, Any], site: Dict[str, Any]) -> Tuple[str, str]:
+    customer_name = str(order_row.get("customer_name") or "Cliente")
+    order_id = str(order_row["order_id"])
+    brand = str(site.get("brand") or "Cartaway")
+    text = "\n".join(
+        [
+            f"Ciao {customer_name},",
+            "",
+            f"ti informiamo che non possiamo accettare la richiesta d'ordine #{order_id}.",
+            "Per eventuali chiarimenti, puoi rispondere a questa email.",
+            "",
+            brand,
+        ]
+    )
+    markup = (
+        '<!doctype html><html lang="it"><body>'
+        f"<p>Ciao {html.escape(customer_name)},</p>"
+        f"<p>Ti informiamo che non possiamo accettare la richiesta d'ordine "
+        f"<strong>#{html.escape(order_id)}</strong>.</p>"
+        "<p>Per eventuali chiarimenti, puoi rispondere a questa email.</p>"
+        f"<p>{html.escape(brand)}</p>"
+        "</body></html>"
+    )
+    return text, markup
+
+
 def _format_order_confirmation(
     order_row: Dict[str, Any],
     site: Dict[str, Any],
@@ -1967,6 +1995,12 @@ def confirm_order(
                 "recurring_frequency_days": int(order_row["recurring_frequency_days"]),
                 "next_recurring_delivery_date": order_row["next_recurring_delivery_date"],
             }
+        if order_row["confirmation_status"] == "rejected":
+            connection.commit()
+            raise OrderNotReady("Ordine già rifiutato: non può essere confermato.")
+        if order_row["confirmation_status"] == "rejecting":
+            connection.commit()
+            raise OrderNotReady("Rifiuto dell'ordine già in corso.")
         if order_row["confirmation_status"] == "sending":
             connection.commit()
             raise OrderNotReady("Email di conferma già in invio per questo ordine.")
@@ -2128,6 +2162,115 @@ def confirm_order(
         "recurring_scheduled": bool(recurring_enabled),
         "recurring_frequency_days": recurring_frequency_days,
         "next_recurring_delivery_date": next_recurring_delivery_date,
+    }
+
+
+def reject_order(
+    connection: sqlite3.Connection,
+    order_id: str,
+    site: Dict[str, Any],
+) -> Dict[str, Any]:
+    order_id = order_id.strip()
+    if not order_id:
+        raise AppError("Selezionare un ordine da rifiutare.")
+    connection.execute("BEGIN IMMEDIATE")
+    try:
+        row = connection.execute("SELECT * FROM orders WHERE order_id = ?", (order_id,)).fetchone()
+        if row is None:
+            raise AppError(f"Ordine #{order_id} non trovato.")
+        order_row = dict(row)
+        confirmation_status = str(order_row["confirmation_status"])
+        if confirmation_status == "rejected":
+            connection.commit()
+            return {
+                "order_id": order_id,
+                "rejected": True,
+                "already_rejected": True,
+                "email_sent": order_row["email_status"] == "inviata",
+                "email_missing": order_row["email_status"] == "email_mancante",
+                "rejected_at": str(order_row["rejected_at"]),
+            }
+        if confirmation_status == "confirmed":
+            raise OrderNotReady("Un ordine già confermato non può essere rifiutato da questa azione.")
+        if confirmation_status in {"sending", "rejecting"}:
+            raise OrderNotReady("È già in corso un invio email per questo ordine.")
+        if confirmation_status != "pending":
+            raise OrderNotReady("L'ordine non è in uno stato che consente il rifiuto.")
+
+        recipient = _email_address(
+            str(order_row.get("response_to") or order_row.get("customer_email") or "")
+        )
+        subject = f"Esito richiesta ordine #{order_id} - {site.get('brand') or 'Cartaway'}"
+        text, markup = _format_order_rejection(order_row, site)
+        order_row.update({
+            "response_to": recipient,
+            "response_subject": subject,
+            "response_text": text,
+            "response_html": markup,
+        })
+        if not recipient:
+            rejected_at = datetime.now(ROME).isoformat(timespec="seconds")
+            connection.execute(
+                """
+                UPDATE orders SET confirmation_status = 'rejected', rejected_at = ?,
+                    response_subject = ?, response_text = ?, response_html = ?,
+                    email_status = 'email_mancante'
+                WHERE order_id = ?
+                """,
+                (rejected_at, subject, text, markup, order_id),
+            )
+            connection.commit()
+            return {
+                "order_id": order_id,
+                "rejected": True,
+                "already_rejected": False,
+                "email_sent": False,
+                "email_missing": True,
+                "rejected_at": rejected_at,
+            }
+
+        connection.execute(
+            """
+            UPDATE orders SET confirmation_status = 'rejecting', email_status = 'in_corso',
+                response_subject = ?, response_text = ?, response_html = ?
+            WHERE order_id = ?
+            """,
+            (subject, text, markup, order_id),
+        )
+        connection.commit()
+    except Exception:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+
+    sender = os.environ.get("SMTP_FROM", os.environ.get("SMTP_USER", "")).strip()
+    try:
+        send_email(_make_customer_email(order_row, site, sender))
+    except (AppError, OSError, smtplib.SMTPException) as exc:
+        connection.execute(
+            "UPDATE orders SET confirmation_status = 'pending', email_status = 'errore' WHERE order_id = ?",
+            (order_id,),
+        )
+        connection.commit()
+        raise AppError(f"Ordine non rifiutato: email di rifiuto non inviata: {exc}") from exc
+
+    rejected_at = datetime.now(ROME).isoformat(timespec="seconds")
+    connection.execute(
+        """
+        UPDATE orders SET confirmation_status = 'rejected', rejected_at = ?,
+            response_sent = 1, email_status = 'inviata'
+        WHERE order_id = ?
+        """,
+        (rejected_at, order_id),
+    )
+    connection.commit()
+    return {
+        "order_id": order_id,
+        "rejected": True,
+        "already_rejected": False,
+        "email_sent": True,
+        "email_missing": False,
+        "rejected_at": rejected_at,
     }
 
 

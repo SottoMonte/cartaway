@@ -2121,11 +2121,12 @@ def create_server(
                         last_delivered_date,
                         request_details_json, availability_json, response_required, email_status
                     FROM orders
-                    WHERE NOT (
-                        confirmation_status = 'confirmed'
-                        AND delivery_status = 'delivered'
-                        AND recurring_enabled = 0
-                    )
+                    WHERE confirmation_status != 'rejected'
+                        AND NOT (
+                            confirmation_status = 'confirmed'
+                            AND delivery_status = 'delivered'
+                            AND recurring_enabled = 0
+                        )
                     ORDER BY ordered_at DESC LIMIT 100
                     """
                 ).fetchall()
@@ -2133,7 +2134,10 @@ def create_server(
                     "SELECT COUNT(*) FROM orders WHERE confirmation_status = 'confirmed' AND recurring_enabled = 1"
                 ).fetchone()[0]
                 orders_pending_confirmation = connection.execute(
-                    "SELECT COUNT(*) FROM orders WHERE confirmation_status != 'confirmed'"
+                    """
+                    SELECT COUNT(*) FROM orders
+                    WHERE confirmation_status NOT IN ('confirmed', 'rejected')
+                    """
                 ).fetchone()[0]
                 valid_voucher_rows = connection.execute(
                     """
@@ -2195,16 +2199,23 @@ def create_server(
                     """
                     SELECT order_id, customer_name, customer_email, customer_phone,
                         delivery_address, delivery_city, ordered_at, delivery_date,
-                        delivered_at, last_delivered_date, preferred_delivery_time,
+                        delivered_at, rejected_at, email_status, last_delivered_date, preferred_delivery_time,
                         delivery_notes, products_subtotal, recurring_discount, recurring_order,
                         confirmation_status, delivery_status, recurring_enabled,
                         request_details_json, availability_json
                     FROM orders
-                    WHERE confirmation_status = 'confirmed'
+                    WHERE (
+                        confirmation_status = 'confirmed'
                         AND delivery_status = 'delivered'
                         AND recurring_enabled = 0
-                    ORDER BY COALESCE(NULLIF(last_delivered_date, ''), delivery_date) DESC,
-                        delivered_at DESC, ordered_at DESC
+                    ) OR confirmation_status = 'rejected'
+                    ORDER BY COALESCE(
+                        NULLIF(rejected_at, ''),
+                        NULLIF(last_delivered_date, ''),
+                        delivery_date
+                    ) DESC,
+                        COALESCE(NULLIF(rejected_at, ''), delivered_at) DESC,
+                        ordered_at DESC
                     """
                 ).fetchall()
                 orders = []
@@ -2314,6 +2325,8 @@ def create_server(
                     result = self._check_mail(payload)
                 elif path == "/api/orders/confirm":
                     result = self._confirm_order(payload)
+                elif path == "/api/orders/reject":
+                    result = self._reject_order(payload)
                 elif path == "/api/orders/deliver":
                     result = self._mark_order_delivered(payload)
                 elif path == "/api/orders/recurring/disable":
@@ -2398,6 +2411,14 @@ def create_server(
                     site,
                     voucher_backfill=voucher_backfill,
                 )
+            finally:
+                connection.close()
+
+        def _reject_order(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+            order_id = str(payload.get("order_id", "")).strip()
+            connection = gestionale.open_database(database)
+            try:
+                return gestionale.reject_order(connection, order_id, site)
             finally:
                 connection.close()
 
