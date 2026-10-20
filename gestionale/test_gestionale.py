@@ -127,11 +127,19 @@ class GestionaleTests(unittest.TestCase):
             "19/10/2026, ore 09:10",
         )
         unconfirmed_payment = _pdf_payment_summary({}, {})
-        self.assertEqual(unconfirmed_payment["method"], "Non indicata")
+        self.assertEqual(unconfirmed_payment["method"], "Alla consegna")
         self.assertEqual(unconfirmed_payment["confirmed_total"], "Non registrato")
         self.assertEqual(unconfirmed_payment["paid_amount"], "Non registrato")
         self.assertEqual(unconfirmed_payment["remaining"], "Non registrato")
-        self.assertEqual(unconfirmed_payment["state"], "Non registrato")
+        self.assertEqual(unconfirmed_payment["state"], "Da pagare alla consegna")
+
+        electronic_default = _pdf_payment_summary({}, {}, None, "bonifico")
+        self.assertEqual(electronic_default["method"], "Bonifico bancario")
+        self.assertEqual(electronic_default["state"], "Non pagato")
+        explicit_method = _pdf_payment_summary(
+            {}, {"payment_information": "Pagamento alla consegna"}, None, "bonifico"
+        )
+        self.assertEqual(explicit_method["state"], "Da pagare alla consegna")
 
         partial_payment = _pdf_payment_summary(
             {"confirmed_total": "€ 23,00", "paid_amount": "€ 10,00"},
@@ -140,7 +148,7 @@ class GestionaleTests(unittest.TestCase):
         self.assertEqual(partial_payment["confirmed_total"], "€ 23,00")
         self.assertEqual(partial_payment["paid_amount"], "€ 10,00")
         self.assertEqual(partial_payment["remaining"], "€ 13,00")
-        self.assertEqual(partial_payment["state"], "Importo residuo")
+        self.assertEqual(partial_payment["state"], "Pagato in parte")
 
         cash_on_delivery = _pdf_payment_summary(
             {},
@@ -150,7 +158,7 @@ class GestionaleTests(unittest.TestCase):
         self.assertEqual(cash_on_delivery["confirmed_total"], "€ 23,00")
         self.assertEqual(cash_on_delivery["paid_amount"], "€ 0,00")
         self.assertEqual(cash_on_delivery["remaining"], "€ 23,00")
-        self.assertEqual(cash_on_delivery["state"], "Da incassare")
+        self.assertEqual(cash_on_delivery["state"], "Da pagare alla consegna")
 
         fully_paid = _pdf_payment_summary(
             {"confirmed_total": "€ 23,00", "payment_status": "paid"},
@@ -158,7 +166,7 @@ class GestionaleTests(unittest.TestCase):
         )
         self.assertEqual(fully_paid["paid_amount"], "€ 23,00")
         self.assertEqual(fully_paid["remaining"], "€ 0,00")
-        self.assertEqual(fully_paid["state"], "Già pagato")
+        self.assertEqual(fully_paid["state"], "Pagato")
 
     def test_pdf_cost_summary_consolidates_matching_totals(self):
         order = {"recurring_order": True, "confirmed_total": "€ 4,74"}
@@ -227,8 +235,11 @@ class GestionaleTests(unittest.TestCase):
 
     def test_pdf_payment_summary_combines_unregistered_payment(self):
         self.assertEqual(
-            _pdf_payment_rows({"method": "Non indicata", "state": "Non registrato"}),
-            [("Pagamento", "Non registrato - verificare prima dell'incasso")],
+            _pdf_payment_rows({"method": "Alla consegna", "state": "Da pagare alla consegna"}),
+            [
+                ("Modalità di pagamento", "Alla consegna"),
+                ("Stato incasso", "Da pagare alla consegna"),
+            ],
         )
 
     def test_pdf_product_amounts_use_order_price_then_catalog_fallback(self):
@@ -434,10 +445,16 @@ class GestionaleTests(unittest.TestCase):
             "default_origin": "Via Roma 1, Montoro",
             "stop_service_minutes": 35,
             "average_speed_kmh": 45,
+            "default_payment_method": "bonifico",
         }
+        self.assertEqual(defaults["default_payment_method"], "alla_consegna")
         saved = save_delivery_settings(self.connection, settings)
 
         self.assertEqual(saved, settings)
+        with self.assertRaisesRegex(AppError, "pagamento"):
+            save_delivery_settings(
+                self.connection, {**settings, "default_payment_method": "assegno"}
+            )
         self.assertEqual(get_delivery_settings(self.connection), settings)
         invalid_settings = {**settings, "afternoon_start": "10:30"}
         with self.assertRaisesRegex(AppError, "in ordine"):
@@ -2190,6 +2207,7 @@ class GestionaleWebTests(unittest.TestCase):
             "default_origin": "Deposito",
             "stop_service_minutes": 35,
             "average_speed_kmh": 130,
+            "default_payment_method": "carta",
         }
         with self._post(
             "/api/delivery-settings",

@@ -427,6 +427,16 @@
                 <label class="field" for="setting-stop-minutes"><span>Minuti medi per consegna</span><input id="setting-stop-minutes" name="stop_service_minutes" type="number" min="1" max="180" step="1" required /></label>
                 <label class="field" for="setting-average-speed"><span>Velocità media stimata (km/h)</span><input id="setting-average-speed" name="average_speed_kmh" type="number" min="1" max="130" step="0.5" required /></label>
               </div>
+              <div class="route-row schedule">
+                <label class="field" for="setting-payment-method"><span>Modalità di pagamento predefinita</span>
+                  <select id="setting-payment-method" name="default_payment_method" required>
+                    <option value="alla_consegna">Alla consegna</option>
+                    <option value="bonifico">Bonifico bancario</option>
+                    <option value="carta">Carta di pagamento</option>
+                    <option value="online">Pagamento online</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div class="load-config-actions">
               <button class="button" id="save-delivery-settings-button" type="submit">Salva impostazioni</button>
@@ -1061,6 +1071,7 @@
           default_origin: form.elements.default_origin.value.trim(),
           stop_service_minutes: Number(form.elements.stop_service_minutes.value),
           average_speed_kmh: Number(form.elements.average_speed_kmh.value),
+          default_payment_method: form.elements.default_payment_method.value,
         };
       }
 

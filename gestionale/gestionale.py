@@ -564,7 +564,8 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             default_route_end TEXT NOT NULL DEFAULT '18:00',
             default_origin TEXT NOT NULL DEFAULT '',
             stop_service_minutes INTEGER NOT NULL DEFAULT 10,
-            average_speed_kmh REAL NOT NULL DEFAULT 30
+            average_speed_kmh REAL NOT NULL DEFAULT 30,
+            default_payment_method TEXT NOT NULL DEFAULT 'alla_consegna'
         );
         CREATE TABLE IF NOT EXISTS monthly_orders (
             identity_key TEXT NOT NULL,
@@ -635,6 +636,13 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON orders (voucher_code) WHERE voucher_code <> '';
         """
     )
+    if "default_payment_method" not in {
+        row[1] for row in connection.execute("PRAGMA table_info(delivery_settings)").fetchall()
+    }:
+        connection.execute(
+            "ALTER TABLE delivery_settings "
+            "ADD COLUMN default_payment_method TEXT NOT NULL DEFAULT 'alla_consegna'"
+        )
     connection.execute("INSERT OR IGNORE INTO delivery_settings (settings_id) VALUES (1)")
     existing_product_columns = {
         row[1] for row in connection.execute("PRAGMA table_info(products)").fetchall()
@@ -759,6 +767,29 @@ def save_delivery_load_config(
     return get_delivery_load_config(connection)
 
 
+DEFAULT_PAYMENT_METHOD = "alla_consegna"
+PAYMENT_METHODS = {
+    "alla_consegna": "Alla consegna",
+    "bonifico": "Bonifico bancario",
+    "carta": "Carta di pagamento",
+    "online": "Pagamento online",
+}
+_PAYMENT_KEYWORDS = (
+    ("alla_consegna", ("alla consegna", "contrassegno", "contanti", "cash")),
+    ("bonifico", ("bonifico",)),
+    ("carta", ("carta", "bancomat", "pos")),
+    ("online", ("online", "paypal", "stripe")),
+)
+
+
+def payment_method_key(text: str) -> str:
+    normalized = str(text or "").casefold()
+    for key, keywords in _PAYMENT_KEYWORDS:
+        if any(re.search(r"\b" + re.escape(word) + r"\b", normalized) for word in keywords):
+            return key
+    return ""
+
+
 def get_delivery_settings(
     connection: sqlite3.Connection,
     default_origin: str = "",
@@ -778,6 +809,11 @@ def get_delivery_settings(
         "default_origin": str(row["default_origin"] or default_origin).strip(),
         "stop_service_minutes": int(row["stop_service_minutes"]),
         "average_speed_kmh": float(row["average_speed_kmh"]),
+        "default_payment_method": (
+            str(row["default_payment_method"])
+            if row["default_payment_method"] in PAYMENT_METHODS
+            else DEFAULT_PAYMENT_METHOD
+        ),
     }
 
 
@@ -845,13 +881,18 @@ def save_delivery_settings(
     if not math.isfinite(average_speed_kmh) or not 1 <= average_speed_kmh <= 130:
         raise AppError("La velocità media deve essere un numero tra 1 e 130 km/h.")
 
+    payment_method = settings.get("default_payment_method", DEFAULT_PAYMENT_METHOD)
+    if not isinstance(payment_method, str) or payment_method not in PAYMENT_METHODS:
+        raise AppError("Modalità di pagamento predefinita non valida.")
+
     with connection:
         connection.execute(
             """
             UPDATE delivery_settings
             SET morning_start = ?, morning_end = ?, afternoon_start = ?, afternoon_end = ?,
                 default_route_start = ?, default_route_end = ?, default_origin = ?,
-                stop_service_minutes = ?, average_speed_kmh = ?
+                stop_service_minutes = ?, average_speed_kmh = ?,
+                default_payment_method = ?
             WHERE settings_id = 1
             """,
             (
@@ -864,6 +905,7 @@ def save_delivery_settings(
                 default_origin,
                 stop_service_minutes,
                 average_speed_kmh,
+                payment_method,
             ),
         )
     return get_delivery_settings(connection)

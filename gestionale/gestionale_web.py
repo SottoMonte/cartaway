@@ -283,6 +283,7 @@ def _pdf_payment_summary(
     order: Dict[str, Any],
     request_details: Dict[str, Any],
     calculated_total: Optional[Decimal] = None,
+    default_payment_method: str = "alla_consegna",
 ) -> Dict[str, str]:
     confirmed_total_value = order.get("confirmed_total") or request_details.get("confirmed_total")
     paid_amount_value = (
@@ -308,53 +309,49 @@ def _pdf_payment_summary(
         else None
     )
 
+    method_text = str(request_details.get("payment_information") or "").strip()
+    method_key = gestionale.payment_method_key(method_text) or default_payment_method
+    method_label = method_text or gestionale.PAYMENT_METHODS.get(method_key, "Non indicata")
+    is_paid_status = payment_status in {"paid", "pagato", "pagata", "già pagato"}
+    unpaid_state = (
+        "Da pagare alla consegna" if method_key == "alla_consegna" else "Non pagato"
+    )
+
     if confirmed_total is None:
         confirmed_label = "Non registrato"
         remaining_label = "Non registrato"
-        state = {
-            "paid": "Già pagato",
-            "pagato": "Già pagato",
-            "pagata": "Già pagato",
-            "unpaid": "Da incassare",
-            "da incassare": "Da incassare",
-            "partial": "Importo residuo non registrato",
-            "parziale": "Importo residuo non registrato",
-        }.get(payment_status, "Non registrato")
-        if paid_amount is not None and paid_amount > 0 and state == "Non registrato":
-            state = "Importo residuo non registrato"
+        if is_paid_status:
+            state = "Pagato"
+        elif payment_status in {"partial", "parziale"} or (
+            paid_amount is not None and paid_amount > 0
+        ):
+            state = "Pagato in parte - residuo non registrato"
+        else:
+            state = unpaid_state
     else:
         confirmed_label = _format_pdf_currency(confirmed_total)
         zero_amount = confirmed_total - confirmed_total
-        if payment_status in {"paid", "pagato", "pagata", "già pagato"}:
+        if is_paid_status:
             paid_amount = confirmed_total
         remaining = confirmed_total - paid_amount if paid_amount is not None else confirmed_total
         remaining = max(remaining, zero_amount)
-        payment_method = str(request_details.get("payment_information") or "").strip().casefold()
-        if remaining <= 0 or payment_status in {"paid", "pagato", "pagata", "già pagato"}:
-            state = "Già pagato"
+        if remaining <= 0:
+            state = "Pagato"
             remaining_label = _format_pdf_currency(zero_amount)
         elif payment_status in {"partial", "parziale"} and paid_amount is None:
-            state = "Importo residuo non registrato"
+            state = "Pagato in parte - residuo non registrato"
             remaining_label = "Non registrato"
         elif paid_amount is not None and paid_amount > 0:
-            state = "Importo residuo"
+            state = "Pagato in parte"
             remaining_label = _format_pdf_currency(remaining)
-        elif payment_status in {"unpaid", "da incassare"} or any(
-            keyword in payment_method for keyword in ("alla consegna", "contrassegno")
-        ):
-            state = "Da incassare"
+        else:
+            state = unpaid_state
             remaining_label = _format_pdf_currency(remaining)
             if paid_amount is None:
                 paid_amount = zero_amount
-        elif paid_amount == 0:
-            state = "Da incassare"
-            remaining_label = _format_pdf_currency(remaining)
-        else:
-            state = "Non registrato"
-            remaining_label = "Non registrato"
 
     return {
-        "method": _pdf_money(request_details.get("payment_information"), "Non indicata"),
+        "method": method_label,
         "confirmed_total": confirmed_label,
         "paid_amount": _format_pdf_currency(paid_amount) if paid_amount is not None else "Non registrato",
         "remaining": remaining_label,
@@ -459,8 +456,6 @@ def _pdf_cost_summary_rows(
 def _pdf_payment_rows(payment_summary: Dict[str, str]) -> List[Tuple[str, str]]:
     method = payment_summary.get("method", "Non indicata")
     state = payment_summary.get("state", "Non registrato")
-    if method == "Non indicata" and state == "Non registrato":
-        return [("Pagamento", "Non registrato - verificare prima dell'incasso")]
     return [("Modalità di pagamento", method), ("Stato incasso", state)]
 
 
@@ -500,6 +495,7 @@ def _vehicle_delivery_pdf(
     vehicle: Dict[str, Any],
     catalog_products: Optional[Dict[str, Dict[str, Any]]] = None,
     recurring_discount_percent: Any = None,
+    default_payment_method: str = "alla_consegna",
 ) -> bytes:
     output = BytesIO()
     document = SimpleDocTemplate(
@@ -793,14 +789,18 @@ def _vehicle_delivery_pdf(
         ]))
         block.append(item_table)
 
-        payment_summary = _pdf_payment_summary(order, request_details)
+        payment_summary = _pdf_payment_summary(
+            order, request_details, None, default_payment_method
+        )
         calculated_total = None
         if product_subtotal is not None and discount_amount is not None and shipping_amount is not None:
             calculated_total = max(
                 product_subtotal - discount_amount + shipping_amount,
                 Decimal("0"),
             ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            payment_summary = _pdf_payment_summary(order, request_details, calculated_total)
+            payment_summary = _pdf_payment_summary(
+                order, request_details, calculated_total, default_payment_method
+            )
         missing_financial_data = []
         if missing_product_prices or products_subtotal == "Non registrato":
             missing_financial_data.append("prezzi prodotto")
@@ -909,6 +909,7 @@ def _attach_vehicle_delivery_pdfs(
     vehicles: Sequence[Dict[str, Any]],
     catalog_products: Optional[Dict[str, Dict[str, Any]]] = None,
     recurring_discount_percent: Any = None,
+    default_payment_method: str = "alla_consegna",
 ) -> None:
     for vehicle in vehicles:
         if vehicle.get("orders"):
@@ -918,6 +919,7 @@ def _attach_vehicle_delivery_pdfs(
                 vehicle,
                 catalog_products,
                 recurring_discount_percent,
+                default_payment_method,
             )
             vehicle["delivery_pdf_base64"] = base64.b64encode(pdf_bytes).decode("ascii")
 
@@ -2709,6 +2711,7 @@ def create_server(
                     result["vehicles"],
                     catalog_products,
                     (site.get("recurring_order") or {}).get("discount_percent"),
+                    settings["default_payment_method"],
                 )
                 return result
 
@@ -2865,6 +2868,7 @@ def create_server(
                 result["vehicles"],
                 catalog_products,
                 (site.get("recurring_order") or {}).get("discount_percent"),
+                settings["default_payment_method"],
             )
             return result
 
