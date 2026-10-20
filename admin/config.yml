@@ -202,6 +202,14 @@ collections:
                   - { label: Unità di misura, name: measure, widget: string, required: true }
                   - { label: Dettagli formato, name: details, widget: string, required: false }
                   - { label: Prezzo per unità, name: pricePer, widget: string, required: true }
+              - label: Ingombro unitario (litri)
+                name: volume_liters
+                widget: number
+                value_type: float
+                min: 0.001
+                step: 0.001
+                required: false
+                hint: Litri occupati da una confezione/unità venduta. Verifica le stime con l'imballo reale; se vuoto, inserisci il valore manualmente nella scheda Consegne.
               - label: Prezzo in euro
                 name: price
                 widget: number

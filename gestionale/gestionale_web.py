@@ -929,6 +929,27 @@ def _requested_delivery_times(value: str) -> List[time]:
     ]
 
 
+def _catalog_product_volumes(
+    catalog_products: Dict[str, Dict[str, Any]],
+) -> Dict[str, float]:
+    volumes = {}
+    for product_id, product in catalog_products.items():
+        value = product.get("volume_liters")
+        if value is None or value == "":
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise gestionale.AppError(
+                f"L'ingombro in litri del prodotto {product_id} deve essere un numero maggiore di zero."
+            )
+        volume = float(value)
+        if not math.isfinite(volume) or volume <= 0:
+            raise gestionale.AppError(
+                f"L'ingombro in litri del prodotto {product_id} deve essere un numero maggiore di zero."
+            )
+        volumes[product_id] = volume
+    return volumes
+
+
 def _delivery_time_sort_key(
     order: Dict[str, Any],
     work_windows: Sequence[Tuple[int, int]] = DELIVERY_WORK_WINDOWS,
@@ -2036,6 +2057,7 @@ def create_server(
     port: int,
 ) -> ThreadingHTTPServer:
     catalog_products = products
+    _catalog_product_volumes(catalog_products)
 
     class RequestHandler(BaseHTTPRequestHandler):
         server_version = "CartawayGestionale"
@@ -2264,13 +2286,10 @@ def create_server(
                 if not self._origin_is_local():
                     self._send_json(403, {"error": "Origine non autorizzata."})
                     return
-                connection = gestionale.open_database(database)
                 try:
-                    self._send_json(200, gestionale.get_delivery_load_config(connection))
-                except (OSError, sqlite3.Error) as exc:
+                    self._send_json(200, self._load_delivery_load_config())
+                except (OSError, sqlite3.Error, gestionale.AppError) as exc:
                     self._send_json(500, {"error": f"Impossibile leggere la configurazione carichi: {exc}"})
-                finally:
-                    connection.close()
                 return
             if path == "/api/delivery-settings":
                 if not self._origin_is_local():
@@ -2451,9 +2470,20 @@ def create_server(
             vehicles = payload.get("vehicles")
             connection = gestionale.open_database(database)
             try:
-                return gestionale.save_delivery_load_config(connection, product_volumes, vehicles)
+                config = gestionale.save_delivery_load_config(connection, product_volumes, vehicles)
             finally:
                 connection.close()
+            config["catalog_product_volumes"] = _catalog_product_volumes(catalog_products)
+            return config
+
+        def _load_delivery_load_config(self) -> Dict[str, Any]:
+            connection = gestionale.open_database(database)
+            try:
+                config = gestionale.get_delivery_load_config(connection)
+            finally:
+                connection.close()
+            config["catalog_product_volumes"] = _catalog_product_volumes(catalog_products)
+            return config
 
         def _save_delivery_settings(self, payload: Dict[str, Any]) -> Dict[str, Any]:
             connection = gestionale.open_database(database)
@@ -2647,12 +2677,16 @@ def create_server(
                 connection.close()
             if not config["vehicles"]:
                 raise WebRequestError("Aggiungere almeno un furgone con la sua capacità in litri.")
+            product_volumes = {
+                **config["product_volumes"],
+                **_catalog_product_volumes(catalog_products),
+            }
 
             if len(config["vehicles"]) == 1:
                 single_vehicle_plan = _plan_single_vehicle_tours(
                     route_orders,
                     config["vehicles"][0],
-                    config["product_volumes"],
+                    product_volumes,
                     origin,
                     site,
                     event_date,
@@ -2681,7 +2715,7 @@ def create_server(
             allocation = _allocate_vehicle_loads(
                 route_orders,
                 config["vehicles"],
-                config["product_volumes"],
+                product_volumes,
             )
             return_to_origin = payload.get("return_to_origin") is True
             planned_vehicles = []
@@ -2739,7 +2773,7 @@ def create_server(
                 refreshed_vehicle = _allocate_vehicle_loads(
                     assigned_orders,
                     [vehicle],
-                    config["product_volumes"],
+                    product_volumes,
                 )["vehicles"][0]
                 vehicle.update(refreshed_vehicle)
                 vehicle["display_name"] = f"{vehicle['name']} · Giro 1/1"
@@ -2812,7 +2846,7 @@ def create_server(
             planned_summary = _allocate_vehicle_loads(
                 planned_orders,
                 config["vehicles"],
-                config["product_volumes"],
+                product_volumes,
             )
             result = {
                 "date": event_date.isoformat(),

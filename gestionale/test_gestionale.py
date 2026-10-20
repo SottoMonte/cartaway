@@ -2013,6 +2013,75 @@ class GestionaleWebTests(unittest.TestCase):
         maps_query = parse_qs(urlsplit(vehicle["maps_urls"][0]).query)
         self.assertEqual(maps_query["destination"], ["Via Roma 4, Montoro"])
 
+    def test_catalog_volume_overrides_manual_fallback_in_vehicle_route(self):
+        self.products["carta-igienica"]["volume_liters"] = 7.5
+        order = ParsedOrder(
+            order_id="ORD-CATALOG-VOLUME",
+            items=[OrderItem("carta-igienica", "Carta igienica lavanda", 1)],
+            customer_name="Mario Bianchi",
+            customer_email="mario@example.org",
+            customer_phone="+39 333 1234567",
+            delivery_address="Via Roma 4",
+            delivery_city="Montoro",
+            recurring=False,
+            voucher_candidate="",
+            voucher_value="",
+            products_subtotal="€ 3,00",
+            recurring_discount="Nessuno",
+            order_datetime=datetime.now(ROME),
+            message_id="<ord-catalog-volume@example.org>",
+        )
+        connection = open_database(self.database)
+        try:
+            set_stock(connection, "carta-igienica", 1)
+            prepare_order(connection, order, self.site)
+            with patch("gestionale.gestionale.send_email"):
+                confirm_order(connection, order.order_id, self.site)
+        finally:
+            connection.close()
+
+        with self._post(
+            "/api/load-config",
+            {
+                "product_volumes": {"carta-igienica": 2.5},
+                "vehicles": [{"name": "Furgone 1", "capacity_liters": 5}],
+            },
+            origin=self.base_url,
+        ) as response:
+            saved_config = json.load(response)
+        self.assertEqual(saved_config["product_volumes"]["carta-igienica"], 2.5)
+        self.assertEqual(saved_config["catalog_product_volumes"]["carta-igienica"], 7.5)
+
+        with urlopen(self.base_url + "/api/load-config", timeout=3) as response:
+            loaded_config = json.load(response)
+        self.assertEqual(loaded_config["catalog_product_volumes"]["carta-igienica"], 7.5)
+
+        delivery_date = datetime.now(ROME).date().isoformat()
+        with self._post(
+            "/api/vehicle-routes",
+            {
+                "origin": "Piazza Roma, Montoro",
+                "date": delivery_date,
+                "start": "09:00",
+                "end": "13:00",
+            },
+            origin=self.base_url,
+        ) as response:
+            result = json.load(response)
+        self.assertEqual(result["unassigned_orders"][0]["required_volume_liters"], 7.5)
+        self.assertIn("7.500 L", result["unassigned_orders"][0]["reason"])
+
+    def test_catalog_volume_must_be_a_positive_number(self):
+        invalid_products = {
+            "carta-igienica": {
+                "id": "carta-igienica",
+                "name": "Carta igienica lavanda",
+                "volume_liters": 0,
+            }
+        }
+        with self.assertRaisesRegex(AppError, "litri.*maggiore di zero"):
+            create_server(self.database, self.site, invalid_products, 0)
+
     def test_multi_vehicle_route_leaves_afternoon_order_unassigned_before_noon(self):
         order_id = "ORD-AFTERNOON-BEFORE-NOON"
         delivery_date = datetime.now(ROME).date()

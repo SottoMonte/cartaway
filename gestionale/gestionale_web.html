@@ -203,6 +203,7 @@
       .load-panel .section-head p { margin-top: 4px; }
       .settings-form { max-width: 900px; }
       .load-volume-input { width: 112px; min-height: 34px; padding: 5px 8px; border: 1px solid #cbd7cf; border-radius: 4px; }
+      .load-volume-input:read-only { background: #eef3f1; color: #496158; cursor: default; }
       .load-volume-cell { display: flex; align-items: center; gap: 7px; }
       .load-vehicle-list { display: grid; gap: 10px; }
       .load-vehicle-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(140px, .55fr) auto; gap: 12px; align-items: end; }
@@ -362,7 +363,7 @@
           </div>
           <section class="load-panel" aria-labelledby="load-panel-title">
             <div>
-              <div class="section-head"><div><h3 id="load-panel-title">Carico previsto</h3><p id="load-summary">Solo ordini disponibili, con indirizzo e pronti per la data selezionata.</p></div></div>
+              <div class="section-head"><div><h3 id="load-panel-title">Carico previsto</h3><p id="load-summary">I litri per confezione vengono dal catalogo; se mancano, puoi inserirli qui.</p><p class="subtle">Le stime inserite nel catalogo vanno verificate con le confezioni reali prima di affidarsi alla capacità calcolata.</p></div></div>
               <div class="table-wrap">
                 <table>
                   <thead><tr><th scope="col">Prodotto</th><th scope="col">Quantità</th><th scope="col">Ingombro unitario</th><th scope="col">Ingombro totale</th></tr></thead>
@@ -444,7 +445,7 @@
     </div>
 
     <script>
-      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], deliveryLoadConfig: { product_volumes: {}, vehicles: [] }, deliverySettings: null, noticeTimer: null, mailSyncing: false, autoSyncTimer: null, dataRefreshTimer: null, dataRefreshPromise: null };
+      const state = { stock: [], orders: [], historyOrders: [], historyLoaded: false, ordersView: "active", validVouchers: [], deliveryOrders: [], deliveryLoadConfig: { product_volumes: {}, catalog_product_volumes: {}, vehicles: [] }, deliverySettings: null, noticeTimer: null, mailSyncing: false, autoSyncTimer: null, dataRefreshTimer: null, dataRefreshPromise: null };
       const notice = document.querySelector("#notice");
       const noticeMessage = document.querySelector("#notice-message");
 
@@ -915,8 +916,8 @@
         let unmeasuredCount = 0;
         for (const product of rows) {
           totalQuantity += product.quantity;
-          const configuredVolume = Number(state.deliveryLoadConfig.product_volumes[product.product_id]);
-          const hasVolume = Number.isFinite(configuredVolume) && configuredVolume > 0;
+          const { volume: configuredVolume, fromCatalog } = deliveryProductVolume(product.product_id);
+          const hasVolume = configuredVolume !== null;
           if (hasVolume) totalVolume += configuredVolume * product.quantity;
           else unmeasuredCount += 1;
 
@@ -931,13 +932,30 @@
           input.inputMode = "decimal";
           input.className = "load-volume-input";
           input.value = hasVolume ? String(configuredVolume) : "";
-          input.dataset.loadProductId = product.product_id;
+          input.readOnly = fromCatalog;
+          input.title = fromCatalog
+            ? "Valore impostato in data/products.json"
+            : "Inserisci il volume in litri per confezione";
+          if (!fromCatalog) input.dataset.loadProductId = product.product_id;
           input.setAttribute("aria-label", `Ingombro per unità di ${product.name}, in litri`);
           volumeCell.append(input, element("span", "L"));
+          if (fromCatalog) volumeCell.append(element("small", "Da catalogo", "subtle"));
           cell(row, hasVolume ? formatLiters(configuredVolume * product.quantity) : "Da misurare");
           body.append(row);
         }
         summary.textContent = `${readyOrders.length} ${readyOrders.length === 1 ? "ordine" : "ordini"} · ${totalQuantity} unità${unmeasuredCount ? ` · ${unmeasuredCount} prodotti da misurare` : ` · ${formatLiters(totalVolume)} totali`}.`;
+      }
+
+      function deliveryProductVolume(productId) {
+        const catalogVolume = state.deliveryLoadConfig.catalog_product_volumes?.[productId];
+        if (Number.isFinite(catalogVolume) && catalogVolume > 0) {
+          return { volume: catalogVolume, fromCatalog: true };
+        }
+        const manualVolume = Number(state.deliveryLoadConfig.product_volumes[productId]);
+        if (Number.isFinite(manualVolume) && manualVolume > 0) {
+          return { volume: manualVolume, fromCatalog: false };
+        }
+        return { volume: null, fromCatalog: false };
       }
 
       function renderLoadVehicles() {
