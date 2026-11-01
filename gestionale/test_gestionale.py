@@ -539,6 +539,38 @@ class GestionaleTests(unittest.TestCase):
         shortage = prepare_order(self.connection, shortage_order, self.site)
         self.assertEqual(shortage["status"], "disponibilita_insufficiente")
 
+    def test_catalog_slug_migration_preserves_stock_and_delivery_volume(self):
+        old_product_id = "listino-1234"
+        new_product_id = "carta-igienica-12-rotoli"
+        sync_catalog(
+            self.connection,
+            [{"id": old_product_id, "name": "Carta igienica", "unit": {"quantity": 1, "measure": "confezione"}}],
+        )
+        set_stock(self.connection, old_product_id, 7)
+        self.connection.execute(
+            "INSERT INTO delivery_load_volumes (product_id, volume_liters) VALUES (?, ?)",
+            (old_product_id, 2.5),
+        )
+
+        sync_catalog(
+            self.connection,
+            [{
+                "id": new_product_id,
+                "legacy_id": old_product_id,
+                "name": "Carta igienica 12 rotoli",
+                "unit": {"quantity": 1, "measure": "confezione"},
+            }],
+        )
+
+        stock = {row["product_id"]: row for row in list_stock(self.connection)}
+        self.assertNotIn(old_product_id, stock)
+        self.assertEqual(stock[new_product_id]["quantity"], 7)
+        volume = self.connection.execute(
+            "SELECT volume_liters FROM delivery_load_volumes WHERE product_id = ?",
+            (new_product_id,),
+        ).fetchone()
+        self.assertEqual(volume["volume_liters"], 2.5)
+
     def test_delivery_uses_confirmed_package_size_after_catalog_change(self):
         product_variants = [
             {

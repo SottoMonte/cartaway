@@ -1,7 +1,7 @@
 {
   "products": [
     {
-      "id": "listino-0276",
+      "id": "buste-sottovuoto-goffrate-15x30-pz25",
       "supplier_code": "0276",
       "name": "BUSTE SOTTOVUOTO GOFFRATE 15X30 PZ25",
       "category": [
@@ -16,10 +16,11 @@
       },
       "supplier_price": 1.39,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0276"
     },
     {
-      "id": "listino-0277",
+      "id": "buste-sottovuoto-goffrate-15x40-pz25",
       "supplier_code": "0277",
       "name": "BUSTE SOTTOVUOTO GOFFRATE 15X40 PZ25",
       "category": [
@@ -34,10 +35,11 @@
       },
       "supplier_price": 1.89,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0277"
     },
     {
-      "id": "listino-0278",
+      "id": "buste-sottovuoto-goffrate-20x30-pz25",
       "supplier_code": "0278",
       "name": "BUSTE SOTTOVUOTO GOFFRATE 20X30 PZ25",
       "category": [
@@ -52,10 +54,11 @@
       },
       "supplier_price": 1.89,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0278"
     },
     {
-      "id": "listino-0279",
+      "id": "buste-sottovuoto-goffrate-25x40-px25",
       "supplier_code": "0279",
       "name": "BUSTE SOTTOVUOTO GOFFRATE 25X40 PX25",
       "category": [
@@ -70,10 +73,11 @@
       },
       "supplier_price": 2.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0279"
     },
     {
-      "id": "listino-0280",
+      "id": "buste-sottovuoto-goffrate-30x40-pz25",
       "supplier_code": "0280",
       "name": "BUSTE SOTTOVUOTO GOFFRATE 30X40 PZ25",
       "category": [
@@ -88,10 +92,11 @@
       },
       "supplier_price": 3.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0280"
     },
     {
-      "id": "listino-0791",
+      "id": "dealo-zip-bag-mis-26-28cm-10pz-c-cursore",
       "supplier_code": "0791",
       "name": "DEALO ZIP BAG MIS. 26*28CM 10PZ C/CURSORE",
       "category": [
@@ -106,10 +111,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0791"
     },
     {
-      "id": "listino-0792",
+      "id": "dealo-zip-bag-mis-28-40cm-8pz-c-cursore",
       "supplier_code": "0792",
       "name": "DEALO ZIP BAG MIS. 28*40CM 8PZ C/CURSORE",
       "category": [
@@ -124,10 +130,11 @@
       },
       "supplier_price": 1.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0792"
     },
     {
-      "id": "listino-2424",
+      "id": "friggitrice-ad-aria-6-lt-8-funzioni-1500w-con-display-digitale-touch",
       "supplier_code": "2424",
       "name": "FRIGGITRICE AD ARIA 6 LT 8 FUNZIONI 1500W CON DISPLAY DIGITALE TOUCH",
       "category": [
@@ -142,10 +149,11 @@
       },
       "supplier_price": 34.2,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2424"
     },
     {
-      "id": "listino-8011690476091",
+      "id": "cuffie-copri-pietanze-maxi-estendibili-da-14-a-48-36-pezzi",
       "supplier_code": "8011690476091",
       "name": "Cuffie Copri Pietanze Maxi Estendibili da ? 14 a ? 48 - 36 Pezzi",
       "category": [
@@ -160,10 +168,11 @@
       },
       "supplier_price": 0.74,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690476091"
     },
     {
-      "id": "listino-8011690481644",
+      "id": "cuffie-copri-pietanze-rettangolari-varie-misure-s-35x25-25-pezzi",
       "supplier_code": "8011690481644",
       "name": "Cuffie Copri Pietanze Rettangolari Varie Misure (S -35x25, 25 Pezzi)",
       "category": [
@@ -177,10 +186,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690481644"
     },
     {
-      "id": "listino-8011690481651",
+      "id": "cuffie-copri-pietanze-rettangolari-varie-misure-m-50x30-15-pezzi",
       "supplier_code": "8011690481651",
       "name": "Cuffie Copri Pietanze Rettangolari Varie Misure (M-50x30, 15 Pezzi)",
       "category": [
@@ -194,10 +204,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690481651"
     },
     {
-      "id": "listino-8011690481668",
+      "id": "cuffie-copri-pietanze-rettangolari-varie-misure-l-60x40-10-pezzi",
       "supplier_code": "8011690481668",
       "name": "Cuffie Copri Pietanze Rettangolari Varie Misure (L-60x40, 10 Pezzi)",
       "category": [
@@ -211,10 +222,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690481668"
     },
     {
-      "id": "listino-8011690481675",
+      "id": "cuffie-copri-pietanze-rettangolari-varie-misure-xl-70x50-8-pezzi",
       "supplier_code": "8011690481675",
       "name": "Cuffie Copri Pietanze Rettangolari Varie Misure (XL-70x50, 8 Pezzi)",
       "category": [
@@ -228,10 +240,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690481675"
     },
     {
-      "id": "listino-8011690489923",
+      "id": "salviettine-imbevute-bianco-latte-klevenbaby-72-pezzi",
       "supplier_code": "8011690489923",
       "name": "Salviettine Imbevute Bianco Latte KlevenBaby 72 Pezzi",
       "category": [
@@ -246,10 +259,11 @@
       },
       "supplier_price": 0.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690489923"
     },
     {
-      "id": "listino-8053298626478",
+      "id": "setablu-salviette-milleusi-fragranza-araba-yara-80-pezzi",
       "supplier_code": "8053298626478",
       "name": "SetaBlu Salviette Milleusi Fragranza Araba Yara 80 pezzi",
       "category": [
@@ -264,10 +278,11 @@
       },
       "supplier_price": 0.77,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053298626478"
     },
     {
-      "id": "listino-8053298626485",
+      "id": "setablu-salviette-milleusi-fragranza-araba-candy-80-pezzi",
       "supplier_code": "8053298626485",
       "name": "SetaBlu Salviette Milleusi Fragranza Araba Candy 80 pezzi",
       "category": [
@@ -282,10 +297,11 @@
       },
       "supplier_price": 0.77,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053298626485"
     },
     {
-      "id": "listino-8053298627017",
+      "id": "setablu-salviette-baby-72-pezzi-avena",
       "supplier_code": "8053298627017",
       "name": "SetaBlu Salviette Baby 72 pezzi -Avena",
       "category": [
@@ -300,10 +316,11 @@
       },
       "supplier_price": 0.55,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053298627017"
     },
     {
-      "id": "listino-sofysbianco",
+      "id": "salviettine-bianco-latte-72-pezzi-sofy-s",
       "supplier_code": "SOFYSBIANCO",
       "name": "Salviettine Bianco latte 72 pezzi Sofy's",
       "category": [
@@ -318,10 +335,11 @@
       },
       "supplier_price": 0.83,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-sofysbianco"
     },
     {
-      "id": "listino-0175",
+      "id": "wow-asciugatutto-2rt-200-strappi-2veli-x12",
       "supplier_code": "0175",
       "name": "WOW ASCIUGATUTTO 2RT 200 STRAPPI 2VELI X12",
       "category": [
@@ -336,10 +354,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0175"
     },
     {
-      "id": "listino-0176",
+      "id": "wow-bobina-smisurata-1-rt-2v",
       "supplier_code": "0176",
       "name": "WOW BOBINA SMISURATA 1 RT 2V.",
       "category": [
@@ -354,10 +373,11 @@
       },
       "supplier_price": 2.39,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0176"
     },
     {
-      "id": "listino-0177",
+      "id": "wow-bobina-500-strappi",
       "supplier_code": "0177",
       "name": "WOW BOBINA 500 STRAPPI",
       "category": [
@@ -372,10 +392,11 @@
       },
       "supplier_price": 1.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0177"
     },
     {
-      "id": "listino-0179",
+      "id": "wow-igienica-4-rotoli-compatta-2v",
       "supplier_code": "0179",
       "name": "WOW IGIENICA 4 ROTOLI COMPATTA 2V.",
       "category": [
@@ -390,10 +411,11 @@
       },
       "supplier_price": 1.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0179"
     },
     {
-      "id": "listino-0182",
+      "id": "wow-tovagliolo-doppiovelo-40x40-80pz",
       "supplier_code": "0182",
       "name": "WOW TOVAGLIOLO DOPPIOVELO 40X40 80PZ",
       "category": [
@@ -408,10 +430,11 @@
       },
       "supplier_price": 1.03,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0182"
     },
     {
-      "id": "listino-0215",
+      "id": "regina-igienica-4-rotoli-x7",
       "supplier_code": "0215",
       "name": "REGINA IGIENICA 4 ROTOLI x7",
       "category": [
@@ -426,10 +449,11 @@
       },
       "supplier_price": 2.59,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0215"
     },
     {
-      "id": "listino-0322",
+      "id": "vaschetta-in-alluminio-silver-s-c-1-porzione-8-pz",
       "supplier_code": "0322",
       "name": "VASCHETTA IN ALLUMINIO SILVER S/C 1 PORZIONE 8 PZ",
       "category": [
@@ -444,10 +468,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0322"
     },
     {
-      "id": "listino-0323",
+      "id": "vaschetta-in-alluminio-silver-s-c-2-porzioni-6-pz",
       "supplier_code": "0323",
       "name": "VASCHETTA IN ALLUMINIO SILVER S/C 2 PORZIONI 6 PZ",
       "category": [
@@ -462,10 +487,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0323"
     },
     {
-      "id": "listino-0325",
+      "id": "vaschetta-in-alluminio-silver-s-c-6-porzioni-2-pz",
       "supplier_code": "0325",
       "name": "VASCHETTA IN ALLUMINIO SILVER S/C 6 PORZIONI 2 PZ",
       "category": [
@@ -480,10 +506,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0325"
     },
     {
-      "id": "listino-0333",
+      "id": "vaschette-in-alluminio-gold-1-porzioni-5-pz",
       "supplier_code": "0333",
       "name": "VASCHETTE IN ALLUMINIO GOLD 1 PORZIONI 5 PZ",
       "category": [
@@ -498,10 +525,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0333"
     },
     {
-      "id": "listino-0334",
+      "id": "vaschette-in-alluminio-gold-2-porzioni-3-pz",
       "supplier_code": "0334",
       "name": "VASCHETTE IN ALLUMINIO GOLD 2 PORZIONI 3 PZ",
       "category": [
@@ -516,10 +544,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0334"
     },
     {
-      "id": "listino-0335",
+      "id": "vaschette-in-alluminio-gold-4-porzioni-2-pz",
       "supplier_code": "0335",
       "name": "VASCHETTE IN ALLUMINIO GOLD 4 PORZIONI 2 PZ",
       "category": [
@@ -534,10 +563,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0335"
     },
     {
-      "id": "listino-0342",
+      "id": "vaschetta-alluminio-extra-rigida-1-porzione-4-pz",
       "supplier_code": "0342",
       "name": "VASCHETTA ALLUMINIO EXTRA RIGIDA 1 PORZIONE 4 PZ",
       "category": [
@@ -552,10 +582,11 @@
       },
       "supplier_price": 0.66,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0342"
     },
     {
-      "id": "listino-0345",
+      "id": "vaschetta-alluminio-extra-rigida-2-porzioni-3-pz",
       "supplier_code": "0345",
       "name": "VASCHETTA ALLUMINIO EXTRA RIGIDA 2 PORZIONI 3 PZ",
       "category": [
@@ -570,10 +601,11 @@
       },
       "supplier_price": 0.84,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0345"
     },
     {
-      "id": "listino-0349",
+      "id": "vaschetta-alluminio-extra-rigida-12-porzioni-1-pz",
       "supplier_code": "0349",
       "name": "VASCHETTA ALLUMINIO EXTRA RIGIDA 12 PORZIONI 1 PZ",
       "category": [
@@ -588,10 +620,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0349"
     },
     {
-      "id": "listino-0352",
+      "id": "rotolo-alluminio-16-mt",
       "supplier_code": "0352",
       "name": "ROTOLO ALLUMINIO 16 MT",
       "category": [
@@ -606,10 +639,11 @@
       },
       "supplier_price": 1.26,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0352"
     },
     {
-      "id": "listino-0353",
+      "id": "rotolo-alluminio-30-mt",
       "supplier_code": "0353",
       "name": "ROTOLO ALLUMINIO 30 MT",
       "category": [
@@ -624,10 +658,11 @@
       },
       "supplier_price": 2.2,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0353"
     },
     {
-      "id": "listino-0410",
+      "id": "movida-carta-forno-x-friggitrice-ad-aria-50pz-rotonda-d-20xh4-5",
       "supplier_code": "0410",
       "name": "MOVIDA CARTA FORNO X FRIGGITRICE AD ARIA 50PZ ROTONDA D.20XH4,5",
       "category": [
@@ -642,10 +677,11 @@
       },
       "supplier_price": 1.63,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0410"
     },
     {
-      "id": "listino-0556",
+      "id": "corona-tovaglioli-maxi-scorta",
       "supplier_code": "0556",
       "name": "CORONA TOVAGLIOLI MAXI SCORTA",
       "category": [
@@ -660,10 +696,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0556"
     },
     {
-      "id": "listino-0557",
+      "id": "corona-tovagliolo-super-morbido-conf-risparmio",
       "supplier_code": "0557",
       "name": "CORONA TOVAGLIOLO SUPER MORBIDO CONF RISPARMIO",
       "category": [
@@ -678,10 +715,11 @@
       },
       "supplier_price": 0.94,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0557"
     },
     {
-      "id": "listino-0558",
+      "id": "corona-igienica-4-rotoli",
       "supplier_code": "0558",
       "name": "CORONA IGIENICA 4 ROTOLI",
       "category": [
@@ -696,10 +734,11 @@
       },
       "supplier_price": 0.8,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0558"
     },
     {
-      "id": "listino-0559",
+      "id": "corona-bobina-500-strappi",
       "supplier_code": "0559",
       "name": "CORONA BOBINA 500 STRAPPI",
       "category": [
@@ -714,10 +753,11 @@
       },
       "supplier_price": 1.69,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0559"
     },
     {
-      "id": "listino-0754",
+      "id": "wow-tovagliolo-doppiovelo-33x33-80pz",
       "supplier_code": "0754",
       "name": "WOW TOVAGLIOLO DOPPIOVELO 33X33 80PZ",
       "category": [
@@ -732,10 +772,11 @@
       },
       "supplier_price": 0.89,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0754"
     },
     {
-      "id": "listino-0867",
+      "id": "corona-tovaglioli-flash-up-3in1",
       "supplier_code": "0867",
       "name": "CORONA TOVAGLIOLI FLASH UP 3IN1",
       "category": [
@@ -750,10 +791,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0867"
     },
     {
-      "id": "listino-0868",
+      "id": "corona-igienica-10-rotoli",
       "supplier_code": "0868",
       "name": "CORONA IGIENICA 10 ROTOLI",
       "category": [
@@ -768,10 +810,11 @@
       },
       "supplier_price": 1.39,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0868"
     },
     {
-      "id": "listino-0870",
+      "id": "corona-grande-e-bella-igienica-4-rotoli",
       "supplier_code": "0870",
       "name": "CORONA GRANDE&BELLA IGIENICA 4 ROTOLI",
       "category": [
@@ -786,10 +829,11 @@
       },
       "supplier_price": 1.55,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0870"
     },
     {
-      "id": "listino-0871",
+      "id": "corona-asciugatutto-bomber",
       "supplier_code": "0871",
       "name": "CORONA ASCIUGATUTTO BOMBER",
       "category": [
@@ -804,10 +848,11 @@
       },
       "supplier_price": 1.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0871"
     },
     {
-      "id": "listino-0872",
+      "id": "corona-asc-cuor-di-spugna-2-rotoli",
       "supplier_code": "0872",
       "name": "CORONA ASC. CUOR DI SPUGNA 2 ROTOLI",
       "category": [
@@ -822,10 +867,11 @@
       },
       "supplier_price": 1.18,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0872"
     },
     {
-      "id": "listino-0981",
+      "id": "movida-carta-forno-cm-40x60-a-fogli-500pz",
       "supplier_code": "0981",
       "name": "MOVIDA CARTA FORNO CM 40X60 A FOGLI 500PZ",
       "category": [
@@ -840,10 +886,11 @@
       },
       "supplier_price": 21.6,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0981"
     },
     {
-      "id": "listino-1978",
+      "id": "corona-igienica-profumo-di-lavanda-4-rotoli",
       "supplier_code": "1978",
       "name": "CORONA IGIENICA PROFUMO DI LAVANDA 4 ROTOLI",
       "category": [
@@ -858,10 +905,11 @@
       },
       "supplier_price": 0.82,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1978"
     },
     {
-      "id": "listino-1xigienica4plus",
+      "id": "corona-plus-igienica-4-rotoli",
       "supplier_code": "1xIgienica4Plus",
       "name": "Corona Plus + Igienica 4 Rotoli",
       "category": [
@@ -876,10 +924,11 @@
       },
       "supplier_price": 1.12,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1xigienica4plus"
     },
     {
-      "id": "listino-1xigienica9plus",
+      "id": "corona-plus-igienica-9-rotoli",
       "supplier_code": "1xIgienica9Plus",
       "name": "Corona Plus + Igienica 9 Rotoli",
       "category": [
@@ -894,10 +943,11 @@
       },
       "supplier_price": 2.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1xigienica9plus"
     },
     {
-      "id": "listino-1xmonoplus",
+      "id": "corona-plus-asciugatutto-monorotolo",
       "supplier_code": "1xMonoPlus",
       "name": "Corona Plus + Asciugatutto Monorotolo",
       "category": [
@@ -912,10 +962,11 @@
       },
       "supplier_price": 1.12,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1xmonoplus"
     },
     {
-      "id": "listino-1xt-ovaglioloplus",
+      "id": "corona-plus-t-ovaglioli-piu-scorta",
       "supplier_code": "1xT ovaglioloPlus",
       "name": "Corona Plus + T ovaglioli Più Scorta",
       "category": [
@@ -930,10 +981,11 @@
       },
       "supplier_price": 1.12,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1xt-ovaglioloplus"
     },
     {
-      "id": "listino-2132",
+      "id": "corona-igienica-prof-di-lavanda-12-rotoli",
       "supplier_code": "2132",
       "name": "CORONA IGIENICA PROF. DI LAVANDA 12 ROTOLI",
       "category": [
@@ -948,10 +1000,11 @@
       },
       "supplier_price": 2.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2132"
     },
     {
-      "id": "listino-2133",
+      "id": "corona-rotolone-sing-grande-e-grosso",
       "supplier_code": "2133",
       "name": "CORONA ROTOLONE SING. GRANDE&GROSSO",
       "category": [
@@ -966,10 +1019,11 @@
       },
       "supplier_price": 2.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2133"
     },
     {
-      "id": "listino-2135",
+      "id": "in-piu-asciugatutto-cucina-3-rotoli",
       "supplier_code": "2135",
       "name": "IN PIU' ASCIUGATUTTO CUCINA 3 ROTOLI",
       "category": [
@@ -984,10 +1038,11 @@
       },
       "supplier_price": 1.63,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2135"
     },
     {
-      "id": "listino-2357",
+      "id": "corona-happy-color-tov-1v-rosso-33x30",
       "supplier_code": "2357",
       "name": "CORONA HAPPY COLOR TOV. 1V ROSSO 33x30",
       "category": [
@@ -1002,10 +1057,11 @@
       },
       "supplier_price": 1.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2357"
     },
     {
-      "id": "listino-2421",
+      "id": "rotolone-jumbo-professional-1kg-100-cellulosa",
       "supplier_code": "2421",
       "name": "ROTOLONE JUMBO PROFESSIONAL 1Kg 100% cellulosa",
       "category": [
@@ -1020,10 +1076,11 @@
       },
       "supplier_price": 2.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2421"
     },
     {
-      "id": "listino-2433",
+      "id": "wow-igienica-6-rotoli-2v",
       "supplier_code": "2433",
       "name": "WOW IGIENICA 6 ROTOLI 2V",
       "category": [
@@ -1038,10 +1095,11 @@
       },
       "supplier_price": 1.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2433"
     },
     {
-      "id": "listino-2484",
+      "id": "fatigati-klevex-fazzolettini-veline-2-veli",
       "supplier_code": "2484",
       "name": "FATIGATI KLEVEX FAZZOLETTINI VELINE 2 VELI",
       "category": [
@@ -1056,10 +1114,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2484"
     },
     {
-      "id": "listino-2496",
+      "id": "movida-carta-forno-25-fogli-33x38",
       "supplier_code": "2496",
       "name": "MOVIDA CARTA FORNO 25 FOGLI 33X38",
       "category": [
@@ -1074,10 +1133,11 @@
       },
       "supplier_price": 0.74,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2496"
     },
     {
-      "id": "listino-2497",
+      "id": "movida-carta-forno-50-fogli-30x40",
       "supplier_code": "2497",
       "name": "MOVIDA CARTA FORNO 50 FOGLI 30x40",
       "category": [
@@ -1092,10 +1152,11 @@
       },
       "supplier_price": 1.48,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2497"
     },
     {
-      "id": "listino-8011690484881",
+      "id": "pellicola-pe-trasparente-professionale-300-metri-con-taglierina",
       "supplier_code": "8011690484881",
       "name": "Pellicola Pe Trasparente Professionale 300 Metri Con Taglierina",
       "category": [
@@ -1110,10 +1171,11 @@
       },
       "supplier_price": 3.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690484881"
     },
     {
-      "id": "listino-8011690487196",
+      "id": "fazzoletti-naso-klevex-3-veli-6-confezioni",
       "supplier_code": "8011690487196",
       "name": "Fazzoletti Naso Klevex 3 Veli 6 Confezioni",
       "category": [
@@ -1128,10 +1190,11 @@
       },
       "supplier_price": 0.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690487196"
     },
     {
-      "id": "listino-8054529250172",
+      "id": "caress-carta-igienica-argan-4-rotoli-2-veli-in-pura-cellulosa-profumata",
       "supplier_code": "8054529250172",
       "name": "Caress Carta Igienica Argan 4 Rotoli 2 Veli in Pura Cellulosa Profumata",
       "category": [
@@ -1146,10 +1209,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529250172"
     },
     {
-      "id": "listino-8054529250691",
+      "id": "carta-igienica-caress-talco-4-rotoli-2-veli-in-pura-cellulosa-profumata",
       "supplier_code": "8054529250691",
       "name": "Carta Igienica Caress Talco 4 Rotoli 2 Veli in Pura Cellulosa Profumata",
       "category": [
@@ -1164,10 +1228,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529250691"
     },
     {
-      "id": "listino-8054529250707",
+      "id": "caress-carta-igienica-vaniglia-4-rotoli-2-veli-in-pura-cellulosa-profumata",
       "supplier_code": "8054529250707",
       "name": "Caress Carta Igienica Vaniglia 4 Rotoli 2 Veli in Pura Cellulosa Profumata",
       "category": [
@@ -1182,10 +1247,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529250707"
     },
     {
-      "id": "listino-8054529250769",
+      "id": "caress-carta-igienica-3-veli-preziosa-12-rotoli-in-pura-cellulosa-extra-resistente-1kg",
       "supplier_code": "8054529250769",
       "name": "Caress Carta Igienica 3 Veli Preziosa - 12 Rotoli in Pura Cellulosa Extra Resistente 1kg",
       "category": [
@@ -1200,10 +1266,11 @@
       },
       "supplier_price": 2.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529250769"
     },
     {
-      "id": "listino-8054529250912",
+      "id": "caress-immensa-igienica-4-rotoli-all-2-veli-goffrata",
       "supplier_code": "8054529250912",
       "name": "Caress Immensa - Igienica 4 Rotoli + All - 2 Veli Goffrata",
       "category": [
@@ -1218,10 +1285,11 @@
       },
       "supplier_price": null,
       "featured": false,
-      "available": false
+      "available": false,
+      "legacy_id": "listino-8054529250912"
     },
     {
-      "id": "listino-8054529250936",
+      "id": "caress-t-ovaglioli-monovelo-spesa-amica-33x33-cm-1-velo-in-pura-cellulosa",
       "supplier_code": "8054529250936",
       "name": "Caress T ovaglioli Monovelo Spesa Amica 33x33 cm 1 Velo in Pura Cellulosa",
       "category": [
@@ -1236,10 +1304,11 @@
       },
       "supplier_price": 0.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529250936"
     },
     {
-      "id": "listino-8054529250998",
+      "id": "caress-carta-igienica-spesa-amica-4-rotoli-2-veli-in-pura-cellulosa-doppiomicra-godronata",
       "supplier_code": "8054529250998",
       "name": "Caress Carta Igienica Spesa Amica 4 Rotoli 2 Veli in Pura Cellulosa Doppiomicra Godronata",
       "category": [
@@ -1254,10 +1323,11 @@
       },
       "supplier_price": 0.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529250998"
     },
     {
-      "id": "listino-8054529251063",
+      "id": "caress-igienica-4-rotoli-3-veli-golden-lux",
       "supplier_code": "8054529251063",
       "name": "Caress Igienica 4 Rotoli 3 Veli - Golden Lux",
       "category": [
@@ -1272,10 +1342,11 @@
       },
       "supplier_price": 1.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251063"
     },
     {
-      "id": "listino-8054529251070",
+      "id": "caress-maxi-bobina-500-strappi-spesa-amica-2-veli-in-pura-cellulosa-wet-strength-rotolo-mulluso-per-alimenl",
       "supplier_code": "8054529251070",
       "name": "Caress Maxi Bobina 500 Strappi Spesa Amica 2 Veli in Pura Cellulosa Wet-Strength Rotolo Mulluso per Alimenl",
       "category": [
@@ -1290,10 +1361,11 @@
       },
       "supplier_price": 1.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251070"
     },
     {
-      "id": "listino-8054529251087",
+      "id": "caress-t-ovaglioli-di-carta-gran-pois-arancione-33x33-cm-2-veli-decoral",
       "supplier_code": "8054529251087",
       "name": "Caress T ovaglioli di Carta Gran Pois Arancione 33x33 cm 2 Veli Decoral",
       "category": [
@@ -1308,10 +1380,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251087"
     },
     {
-      "id": "listino-8054529251094",
+      "id": "caress-t-ovaglioli-di-carta-gran-pois-viola-33x33-cm-2-veli-decoral",
       "supplier_code": "8054529251094",
       "name": "Caress T ovaglioli di Carta Gran Pois Viola 33x33 cm 2 Veli Decoral",
       "category": [
@@ -1326,10 +1399,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251094"
     },
     {
-      "id": "listino-8054529251100",
+      "id": "caress-t-ovaglioli-di-carta-gran-pois-verdi-33x33-cm-2-veli-decoral",
       "supplier_code": "8054529251100",
       "name": "Caress T ovaglioli di Carta Gran Pois Verdi 33x33 cm 2 Veli Decoral",
       "category": [
@@ -1344,10 +1418,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251100"
     },
     {
-      "id": "listino-8054529251117",
+      "id": "caress-t-ovaglioli-di-carta-gran-pois-blu-33x33-cm-2-veli-decoral",
       "supplier_code": "8054529251117",
       "name": "Caress T ovaglioli di Carta Gran Pois BLU 33x33 cm 2 Veli Decoral",
       "category": [
@@ -1362,10 +1437,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251117"
     },
     {
-      "id": "listino-8054529251186",
+      "id": "caress-carta-igienica-bianco-latte-4-rotoli-2-veli-in-pura-cellulosa-profumata",
       "supplier_code": "8054529251186",
       "name": "Caress Carta Igienica Bianco Latte 4 Rotoli 2 Veli in Pura Cellulosa Profumata",
       "category": [
@@ -1380,10 +1456,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251186"
     },
     {
-      "id": "listino-8054529251193",
+      "id": "rotolone-caress-tutto-fare-2veli-1-300kg-100-cellulosa",
       "supplier_code": "8054529251193",
       "name": "Rotolone Caress Tutto Fare 2veli 1,300Kg 100% Cellulosa",
       "category": [
@@ -1398,10 +1475,11 @@
       },
       "supplier_price": 3.0,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251193"
     },
     {
-      "id": "listino-8054529251209",
+      "id": "caress-carta-igienica-ylang-ylang-4-rotoli-2-veli-in-pura-cellulosa-profumata",
       "supplier_code": "8054529251209",
       "name": "Caress Carta Igienica Ylang Ylang 4 Rotoli 2 Veli in Pura Cellulosa Profumata",
       "category": [
@@ -1416,10 +1494,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251209"
     },
     {
-      "id": "listino-8054529251223",
+      "id": "caress-carta-igienica-sahara-4-rotoli-2-veli-in-pura-cellulosa-morbida",
       "supplier_code": "8054529251223",
       "name": "Caress Carta Igienica Sahara 4 Rotoli 2 Veli in Pura Cellulosa Morbida",
       "category": [
@@ -1434,10 +1513,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529251223"
     },
     {
-      "id": "listino-8054529257003",
+      "id": "dahlia-carta-igienica-4-maxi-rotoli-2-veli-in-pura-cellulosa-extra-morbida",
       "supplier_code": "8054529257003",
       "name": "Dahlia Carta Igienica 4 Maxi Rotoli 2 Veli in Pura Cellulosa Extra Morbida",
       "category": [
@@ -1452,10 +1532,11 @@
       },
       "supplier_price": 0.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054529257003"
     },
     {
-      "id": "listino-dahliax10",
+      "id": "dahlia-carta-igienica-10-rotoli",
       "supplier_code": "Dahliax10",
       "name": "Dahlia Carta Igienica 10 rotoli",
       "category": [
@@ -1470,10 +1551,11 @@
       },
       "supplier_price": 1.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-dahliax10"
     },
     {
-      "id": "listino-0416",
+      "id": "movida-mollette-20-pz-super-jumbo-super-resistenti",
       "supplier_code": "0416",
       "name": "MOVIDA MOLLETTE 20 PZ SUPER JUMBO \"SUPER RESISTENTI\"",
       "category": [
@@ -1488,10 +1570,11 @@
       },
       "supplier_price": 1.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0416"
     },
     {
-      "id": "listino-0441",
+      "id": "ace-wc-tavoletta-freschezza-marina",
       "supplier_code": "0441",
       "name": "ACE WC TAVOLETTA FRESCHEZZA MARINA",
       "category": [
@@ -1506,10 +1589,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0441"
     },
     {
-      "id": "listino-0442",
+      "id": "ace-wc-tavoletta-candeggina",
       "supplier_code": "0442",
       "name": "ACE WC TAVOLETTA CANDEGGINA",
       "category": [
@@ -1524,10 +1608,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0442"
     },
     {
-      "id": "listino-0443",
+      "id": "ace-wc-tavoletta-freschezza-mediterranea",
       "supplier_code": "0443",
       "name": "ACE WC TAVOLETTA FRESCHEZZA MEDITERRANEA",
       "category": [
@@ -1542,10 +1627,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0443"
     },
     {
-      "id": "listino-0664",
+      "id": "pop-lavapavimenti-4-lt-verde",
       "supplier_code": "0664",
       "name": "POP LAVAPAVIMENTI 4 LT VERDE",
       "category": [
@@ -1560,10 +1646,11 @@
       },
       "supplier_price": 2.26,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0664"
     },
     {
-      "id": "listino-0667",
+      "id": "pop-lavapavimenti-4-lt-talco",
       "supplier_code": "0667",
       "name": "POP LAVAPAVIMENTI 4 LT TALCO",
       "category": [
@@ -1578,10 +1665,11 @@
       },
       "supplier_price": 2.26,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0667"
     },
     {
-      "id": "listino-0728",
+      "id": "deo-due-sgrassatore-profumatore-spray-600ml-rosa",
       "supplier_code": "0728",
       "name": "DEO DUE SGRASSATORE PROFUMATORE SPRAY 600ML ROSA",
       "category": [
@@ -1596,10 +1684,11 @@
       },
       "supplier_price": 3.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0728"
     },
     {
-      "id": "listino-0735",
+      "id": "deo-due-cristalli-per-aspirapolvere-500gr-ozonato",
       "supplier_code": "0735",
       "name": "DEO DUE CRISTALLI PER ASPIRAPOLVERE 500GR OZONATO",
       "category": [
@@ -1614,10 +1703,11 @@
       },
       "supplier_price": 3.43,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0735"
     },
     {
-      "id": "listino-0789",
+      "id": "dealo-pilu-spazzola-adesiva-36-12-str",
       "supplier_code": "0789",
       "name": "DEALO PILU' SPAZZOLA ADESIVA 36+12 STR.",
       "category": [
@@ -1632,10 +1722,11 @@
       },
       "supplier_price": 0.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0789"
     },
     {
-      "id": "listino-0811",
+      "id": "dealo-candela-26h-red-xmas",
       "supplier_code": "0811",
       "name": "DEALO CANDELA 26H RED XMAS",
       "category": [
@@ -1650,10 +1741,11 @@
       },
       "supplier_price": 0.92,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0811"
     },
     {
-      "id": "listino-0812",
+      "id": "dealo-candela-grande-26h-red-xmas",
       "supplier_code": "0812",
       "name": "DEALO CANDELA GRANDE 26H RED XMAS",
       "category": [
@@ -1668,10 +1760,11 @@
       },
       "supplier_price": 1.33,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0812"
     },
     {
-      "id": "listino-0833",
+      "id": "ole-deodorante-spray-tessuti-750-ml-ocra-essenza",
       "supplier_code": "0833",
       "name": "OLE' DEODORANTE SPRAY TESSUTI 750 ML OCRA ESSENZA",
       "category": [
@@ -1686,10 +1779,11 @@
       },
       "supplier_price": 4.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0833"
     },
     {
-      "id": "listino-0834",
+      "id": "ole-deodorante-spray-tessuti-750-ml-porpora-essenza",
       "supplier_code": "0834",
       "name": "OLE' DEODORANTE SPRAY TESSUTI 750 ML PORPORA ESSENZA",
       "category": [
@@ -1704,10 +1798,11 @@
       },
       "supplier_price": 4.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0834"
     },
     {
-      "id": "listino-0841",
+      "id": "ajax-spray-crystal-ricarica-750-ml",
       "supplier_code": "0841",
       "name": "AJAX SPRAY CRYSTAL RICARICA 750 ML",
       "category": [
@@ -1722,10 +1817,11 @@
       },
       "supplier_price": 0.99,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0841"
     },
     {
-      "id": "listino-1085",
+      "id": "soft-lavatrice-in-polvere-lavanda-intensa-78-lav",
       "supplier_code": "1085",
       "name": "SOFT LAVATRICE IN POLVERE LAVANDA INTENSA 78 LAV.",
       "category": [
@@ -1740,10 +1836,11 @@
       },
       "supplier_price": 4.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1085"
     },
     {
-      "id": "listino-1086",
+      "id": "soft-lavatrice-in-polvere-bianco-intenso-igienizzante-78-lav",
       "supplier_code": "1086",
       "name": "SOFT LAVATRICE IN POLVERE BIANCO INTENSO IGIENIZZANTE 78 LAV.",
       "category": [
@@ -1758,10 +1855,11 @@
       },
       "supplier_price": 4.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1086"
     },
     {
-      "id": "listino-1087",
+      "id": "soft-lavatrice-in-polvere-blu-oxygen-78-lav",
       "supplier_code": "1087",
       "name": "SOFT LAVATRICE IN POLVERE BLU OXYGEN 78 LAV.",
       "category": [
@@ -1776,10 +1874,11 @@
       },
       "supplier_price": 4.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1087"
     },
     {
-      "id": "listino-1088",
+      "id": "soft-lavatrice-in-polvere-marsiglia-78-lav",
       "supplier_code": "1088",
       "name": "SOFT LAVATRICE IN POLVERE MARSIGLIA 78 LAV.",
       "category": [
@@ -1794,10 +1893,11 @@
       },
       "supplier_price": 4.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1088"
     },
     {
-      "id": "listino-1100",
+      "id": "lenor-ammorbidente-elisir-calabria-525-ml-25-lav",
       "supplier_code": "1100",
       "name": "LENOR AMMORBIDENTE ELISIR CALABRIA 525 ML 25 LAV.",
       "category": [
@@ -1812,10 +1912,11 @@
       },
       "supplier_price": 1.28,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1100"
     },
     {
-      "id": "listino-1143",
+      "id": "deo-due-gocce-aloe-150ml",
       "supplier_code": "1143",
       "name": "DEO DUE GOCCE ALOE 150ML",
       "category": [
@@ -1830,10 +1931,11 @@
       },
       "supplier_price": 3.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1143"
     },
     {
-      "id": "listino-1145",
+      "id": "deo-due-gocce-muschio-bianco-150ml",
       "supplier_code": "1145",
       "name": "DEO DUE GOCCE MUSCHIO BIANCO 150ML",
       "category": [
@@ -1848,10 +1950,11 @@
       },
       "supplier_price": 3.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1145"
     },
     {
-      "id": "listino-1187",
+      "id": "coccolino-lavatrice-37lav-odorprotect-blu-1480-ml",
       "supplier_code": "1187",
       "name": "COCCOLINO LAVATRICE 37LAV.ODORPROTECT BLU 1480 ML",
       "category": [
@@ -1866,10 +1969,11 @@
       },
       "supplier_price": 3.89,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1187"
     },
     {
-      "id": "listino-1203",
+      "id": "coccolino-lavatrice-37lav-ultra-care-rosa-1480-ml",
       "supplier_code": "1203",
       "name": "COCCOLINO LAVATRICE 37LAV.ULTRA Care ROSA 1480 ML",
       "category": [
@@ -1884,10 +1988,11 @@
       },
       "supplier_price": 3.89,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1203"
     },
     {
-      "id": "listino-1292",
+      "id": "ajax-gel-candeggina-classico-950ml",
       "supplier_code": "1292",
       "name": "AJAX GEL CANDEGGINA CLASSICO 950ML",
       "category": [
@@ -1902,10 +2007,11 @@
       },
       "supplier_price": 1.93,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1292"
     },
     {
-      "id": "listino-1293",
+      "id": "ajax-gel-con-candeggina-ultra-sgrassante-igienizzante-limone-950-ml",
       "supplier_code": "1293",
       "name": "AJAX GEL CON CANDEGGINA ULTRA SGRASSANTE IGIENIZZANTE LIMONE 950 ML",
       "category": [
@@ -1920,10 +2026,11 @@
       },
       "supplier_price": 1.93,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1293"
     },
     {
-      "id": "listino-1302",
+      "id": "ajax-spray-sgrassatore-universale-600-ml",
       "supplier_code": "1302",
       "name": "AJAX SPRAY SGRASSATORE UNIVERSALE 600 ML",
       "category": [
@@ -1938,10 +2045,11 @@
       },
       "supplier_price": 1.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1302"
     },
     {
-      "id": "listino-1305",
+      "id": "ajax-spray-con-candeggina-675-ml",
       "supplier_code": "1305",
       "name": "AJAX SPRAY CON CANDEGGINA 675 ML",
       "category": [
@@ -1956,10 +2064,11 @@
       },
       "supplier_price": 1.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1305"
     },
     {
-      "id": "listino-1306",
+      "id": "ajax-spray-wc-power-600-ml",
       "supplier_code": "1306",
       "name": "AJAX SPRAY WC POWER 600 ML",
       "category": [
@@ -1974,10 +2083,11 @@
       },
       "supplier_price": 1.8,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1306"
     },
     {
-      "id": "listino-1307",
+      "id": "ajax-spray-anticalcare-spuma-600-ml",
       "supplier_code": "1307",
       "name": "AJAX SPRAY ANTICALCARE SPUMA 600 ML",
       "category": [
@@ -1992,10 +2102,11 @@
       },
       "supplier_price": 1.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1307"
     },
     {
-      "id": "listino-1313",
+      "id": "fabuloso-ammorbidente-concentrato-blue-1-170-lt-53-lavaggi",
       "supplier_code": "1313",
       "name": "FABULOSO AMMORBIDENTE CONCENTRATO BLUE 1,170 LT 53 LAVAGGI",
       "category": [
@@ -2010,10 +2121,11 @@
       },
       "supplier_price": 2.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1313"
     },
     {
-      "id": "listino-1314",
+      "id": "fabuloso-ammorbidente-concentrato-vaniglia-1-170-lt-53-lavaggi",
       "supplier_code": "1314",
       "name": "FABULOSO AMMORBIDENTE CONCENTRATO VANIGLIA 1,170 LT 53 LAVAGGI",
       "category": [
@@ -2028,10 +2140,11 @@
       },
       "supplier_price": 2.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1314"
     },
     {
-      "id": "listino-1315",
+      "id": "fabuloso-ammorbidente-concentrato-ipoallergenico-1-170-lt-53-lavaggi",
       "supplier_code": "1315",
       "name": "FABULOSO AMMORBIDENTE CONCENTRATO IPOALLERGENICO 1,170 LT 53 LAVAGGI",
       "category": [
@@ -2046,10 +2159,11 @@
       },
       "supplier_price": 2.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1315"
     },
     {
-      "id": "listino-1317",
+      "id": "fabuloso-ammorbidente-concentrato-mandarino-1-170-lt-53-lavaggi",
       "supplier_code": "1317",
       "name": "FABULOSO AMMORBIDENTE CONCENTRATO MANDARINO 1,170 LT 53 LAVAGGI",
       "category": [
@@ -2064,10 +2178,11 @@
       },
       "supplier_price": 2.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1317"
     },
     {
-      "id": "listino-1318",
+      "id": "fabuloso-ammorbidente-concentrato-cocco-1-170-lt-53-lavaggi",
       "supplier_code": "1318",
       "name": "FABULOSO AMMORBIDENTE CONCENTRATO COCCO 1,170 LT 53 LAVAGGI",
       "category": [
@@ -2082,10 +2197,11 @@
       },
       "supplier_price": 2.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1318"
     },
     {
-      "id": "listino-1326",
+      "id": "fabuloso-spray-profumatore-viola-250-ml",
       "supplier_code": "1326",
       "name": "FABULOSO SPRAY PROFUMATORE VIOLA 250 ML",
       "category": [
@@ -2100,10 +2216,11 @@
       },
       "supplier_price": 2.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1326"
     },
     {
-      "id": "listino-1327",
+      "id": "fabuloso-spray-profumatore-cocco-250-ml",
       "supplier_code": "1327",
       "name": "FABULOSO SPRAY PROFUMATORE COCCO 250 ML",
       "category": [
@@ -2118,10 +2235,11 @@
       },
       "supplier_price": 2.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1327"
     },
     {
-      "id": "listino-1379",
+      "id": "smac-gel-candeggina-850-ml",
       "supplier_code": "1379",
       "name": "SMAC GEL CANDEGGINA 850 ML",
       "category": [
@@ -2136,10 +2254,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1379"
     },
     {
-      "id": "listino-1452",
+      "id": "smac-gel-bagno-850-ml",
       "supplier_code": "1452",
       "name": "SMAC GEL BAGNO 850 ML",
       "category": [
@@ -2154,10 +2273,11 @@
       },
       "supplier_price": 0.98,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1452"
     },
     {
-      "id": "listino-2006",
+      "id": "bref-wc-power-activ-tav-pino",
       "supplier_code": "2006",
       "name": "BREF WC POWER ACTIV TAV. PINO",
       "category": [
@@ -2172,10 +2292,11 @@
       },
       "supplier_price": 0.98,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2006"
     },
     {
-      "id": "listino-2007",
+      "id": "bref-wc-power-activ-tav-lavanda",
       "supplier_code": "2007",
       "name": "BREF WC POWER ACTIV TAV. LAVANDA",
       "category": [
@@ -2190,10 +2311,11 @@
       },
       "supplier_price": 0.98,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2007"
     },
     {
-      "id": "listino-2488",
+      "id": "kit-scopa-brilla-pavimenti-cattura-polvere-con-ricambi-cm-33",
       "supplier_code": "2488",
       "name": "KIT SCOPA BRILLA PAVIMENTI CATTURA POLVERE CON RICAMBI CM 33",
       "category": [
@@ -2208,10 +2330,11 @@
       },
       "supplier_price": 3.93,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2488"
     },
     {
-      "id": "listino-2507",
+      "id": "pop-lavapavimenti-4-lt-fruit",
       "supplier_code": "2507",
       "name": "POP LAVAPAVIMENTI 4 LT FRUIT",
       "category": [
@@ -2226,10 +2349,11 @@
       },
       "supplier_price": 2.26,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2507"
     },
     {
-      "id": "listino-2508",
+      "id": "pop-lavatrice-smart-wash-2-litri-varie-prof-anlodore",
       "supplier_code": "2508",
       "name": "POP LAVATRICE SMART WASH 2 LITRI Varie Prof. (Anlodore)",
       "category": [
@@ -2244,10 +2368,11 @@
       },
       "supplier_price": 2.53,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2508"
     },
     {
-      "id": "listino-2511",
+      "id": "up-candeggina-4-lt-classica",
       "supplier_code": "2511",
       "name": "UP CANDEGGINA 4 LT CLASSICA",
       "category": [
@@ -2262,10 +2387,11 @@
       },
       "supplier_price": 1.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2511"
     },
     {
-      "id": "listino-2512",
+      "id": "up-candeggina-gentile-2-lt",
       "supplier_code": "2512",
       "name": "UP CANDEGGINA GENTILE 2 LT",
       "category": [
@@ -2280,10 +2406,11 @@
       },
       "supplier_price": 1.0,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2512"
     },
     {
-      "id": "listino-2513",
+      "id": "up-acqua-demineralizzata-4-lt-classica",
       "supplier_code": "2513",
       "name": "UP ACQUA DEMINERALIZZATA 4 LT CLASSICA",
       "category": [
@@ -2298,10 +2425,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2513"
     },
     {
-      "id": "listino-2514",
+      "id": "up-piatti-limone-1-lt-limone",
       "supplier_code": "2514",
       "name": "UP PIATTI LIMONE 1 LT LIMONE",
       "category": [
@@ -2316,10 +2444,11 @@
       },
       "supplier_price": 0.8,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2514"
     },
     {
-      "id": "listino-2515",
+      "id": "up-piatti-limone-4-lt-limone",
       "supplier_code": "2515",
       "name": "UP PIATTI LIMONE 4 LT LIMONE",
       "category": [
@@ -2334,10 +2463,11 @@
       },
       "supplier_price": 2.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2515"
     },
     {
-      "id": "listino-2516",
+      "id": "up-soda-caustica-scaglie-1000-gr",
       "supplier_code": "2516",
       "name": "UP SODA CAUSTICA SCAGLIE 1000 GR",
       "category": [
@@ -2352,10 +2482,11 @@
       },
       "supplier_price": 2.55,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2516"
     },
     {
-      "id": "listino-8053470852893",
+      "id": "pop-lavatrice-smart-wash-2-litri-varie-prof-ultra-white",
       "supplier_code": "8053470852893",
       "name": "POP LAVATRICE SMART WASH 2 LITRI Varie Prof. (Ultra White)",
       "category": [
@@ -2370,10 +2501,11 @@
       },
       "supplier_price": 2.53,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852893"
     },
     {
-      "id": "listino-8053470852909",
+      "id": "pop-lavatrice-smart-wash-2-litri-varie-prof-ultra-pulito",
       "supplier_code": "8053470852909",
       "name": "POP LAVATRICE SMART WASH 2 LITRI Varie Prof. (Ultra Pulito)",
       "category": [
@@ -2388,10 +2520,11 @@
       },
       "supplier_price": 2.53,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852909"
     },
     {
-      "id": "listino-8053470852916",
+      "id": "pop-lavatrice-smart-wash-2-litri-varie-prof-super-soq",
       "supplier_code": "8053470852916",
       "name": "POP LAVATRICE SMART WASH 2 LITRI Varie Prof. (Super Soq)",
       "category": [
@@ -2406,10 +2539,11 @@
       },
       "supplier_price": 2.53,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852916"
     },
     {
-      "id": "listino-8053470852954",
+      "id": "pop-lavapavimenti-1100-ml-varie-prof-verde",
       "supplier_code": "8053470852954",
       "name": "POP LAVAPAVIMENTI 1100 ML Varie Prof. (Verde)",
       "category": [
@@ -2424,10 +2558,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852954"
     },
     {
-      "id": "listino-8053470852961",
+      "id": "pop-lavapavimenti-1100-ml-varie-prof-elite",
       "supplier_code": "8053470852961",
       "name": "POP LAVAPAVIMENTI 1100 ML Varie Prof. (Elite)",
       "category": [
@@ -2442,10 +2577,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852961"
     },
     {
-      "id": "listino-8053470852978",
+      "id": "pop-lavapavimenti-1100-ml-varie-prof-talco",
       "supplier_code": "8053470852978",
       "name": "POP LAVAPAVIMENTI 1100 ML Varie Prof. (Talco)",
       "category": [
@@ -2460,10 +2596,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852978"
     },
     {
-      "id": "listino-8053470852985",
+      "id": "pop-lavapavimenti-1100-ml-varie-prof-fruit",
       "supplier_code": "8053470852985",
       "name": "POP LAVAPAVIMENTI 1100 ML Varie Prof. (Fruit)",
       "category": [
@@ -2478,10 +2615,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852985"
     },
     {
-      "id": "listino-8053470852992",
+      "id": "pop-lavapavimenti-1100-ml-varie-prof-elegance",
       "supplier_code": "8053470852992",
       "name": "POP LAVAPAVIMENTI 1100 ML Varie Prof. (Elegance)",
       "category": [
@@ -2496,10 +2634,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852992"
     },
     {
-      "id": "listino-8053470853005",
+      "id": "pop-lavapavimenti-1100-ml-varie-prof-mandorlato",
       "supplier_code": "8053470853005",
       "name": "POP LAVAPAVIMENTI 1100 ML Varie Prof. (Mandorlato)",
       "category": [
@@ -2514,10 +2653,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470853005"
     },
     {
-      "id": "listino-8718951600409",
+      "id": "ajax-detersivo-pavimenl-950ml-classico",
       "supplier_code": "8718951600409",
       "name": "Ajax Detersivo Pavimenl 950ml Classico",
       "category": [
@@ -2532,10 +2672,11 @@
       },
       "supplier_price": 1.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8718951600409"
     },
     {
-      "id": "listino-ace5ltx2",
+      "id": "ace-candeggina-classica-5-lt-x-2",
       "supplier_code": "Ace5ltx2",
       "name": "Ace Candeggina Classica 5 lt x 2",
       "category": [
@@ -2550,10 +2691,11 @@
       },
       "supplier_price": 4.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-ace5ltx2"
     },
     {
-      "id": "listino-0239",
+      "id": "nivea-deo-rool-on-50ml-protege-e-cuida",
       "supplier_code": "0239",
       "name": "NIVEA DEO ROOL ON 50ML PROTEGE & CUIDA",
       "category": [
@@ -2568,10 +2710,11 @@
       },
       "supplier_price": 1.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0239"
     },
     {
-      "id": "listino-0240",
+      "id": "nivea-deo-rool-on-50ml-men-protege-e-cuida",
       "supplier_code": "0240",
       "name": "NIVEA DEO ROOL ON 50ML MEN PROTEGE & CUIDA",
       "category": [
@@ -2586,10 +2729,11 @@
       },
       "supplier_price": 1.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0240"
     },
     {
-      "id": "listino-0241",
+      "id": "nivea-deo-rool-on-50ml-men-stress-protect",
       "supplier_code": "0241",
       "name": "NIVEA DEO ROOL ON 50ML MEN STRESS PROTECT",
       "category": [
@@ -2604,10 +2748,11 @@
       },
       "supplier_price": 1.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0241"
     },
     {
-      "id": "listino-0309",
+      "id": "tena-lady-descreet-normal-12pz",
       "supplier_code": "0309",
       "name": "TENA LADY DESCREET NORMAL 12PZ",
       "category": [
@@ -2622,10 +2767,11 @@
       },
       "supplier_price": 2.19,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0309"
     },
     {
-      "id": "listino-0310",
+      "id": "tena-lady-descreet-mini-20pz-x10",
       "supplier_code": "0310",
       "name": "TENA LADY DESCREET MINI 20PZ x10",
       "category": [
@@ -2640,10 +2786,11 @@
       },
       "supplier_price": 2.19,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0310"
     },
     {
-      "id": "listino-0311",
+      "id": "tena-lady-descreet-extra-10-pz",
       "supplier_code": "0311",
       "name": "TENA LADY DESCREET EXTRA 10 pz",
       "category": [
@@ -2658,10 +2805,11 @@
       },
       "supplier_price": 2.19,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0311"
     },
     {
-      "id": "listino-0377",
+      "id": "tulipan-negro-body-lotion-400ml-candy-fantasy",
       "supplier_code": "0377",
       "name": "TULIPAN NEGRO BODY LOTION 400ML CANDY FANTASY",
       "category": [
@@ -2676,10 +2824,11 @@
       },
       "supplier_price": 2.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0377"
     },
     {
-      "id": "listino-0388",
+      "id": "neutroderm-bagno-750ml-oro-del-deserto",
       "supplier_code": "0388",
       "name": "NEUTRODERM BAGNO 750ML ORO DEL DESERTO",
       "category": [
@@ -2694,10 +2843,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0388"
     },
     {
-      "id": "listino-0391",
+      "id": "neutroderm-bagno-750ml-cocco",
       "supplier_code": "0391",
       "name": "NEUTRODERM BAGNO 750ML COCCO",
       "category": [
@@ -2712,10 +2862,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0391"
     },
     {
-      "id": "listino-0421",
+      "id": "felce-azzurra-bagno-classico-ml-650",
       "supplier_code": "0421",
       "name": "FELCE AZZURRA BAGNO CLASSICO ML.650",
       "category": [
@@ -2730,10 +2881,11 @@
       },
       "supplier_price": 1.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0421"
     },
     {
-      "id": "listino-0474",
+      "id": "tulipan-negro-shampoo-micellare-400ml-high-volume",
       "supplier_code": "0474",
       "name": "TULIPAN NEGRO SHAMPOO MICELLARE 400ML HIGH VOLUME",
       "category": [
@@ -2748,10 +2900,11 @@
       },
       "supplier_price": 1.99,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0474"
     },
     {
-      "id": "listino-0476",
+      "id": "tulipan-negro-shampoo-micellare-400ml-ristrutturante",
       "supplier_code": "0476",
       "name": "TULIPAN NEGRO SHAMPOO MICELLARE 400ML RISTRUTTURANTE",
       "category": [
@@ -2766,10 +2919,11 @@
       },
       "supplier_price": 1.99,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0476"
     },
     {
-      "id": "listino-0483",
+      "id": "tulipan-negro-maschera-capelli-400ml-intensiva-hidra",
       "supplier_code": "0483",
       "name": "TULIPAN NEGRO MASCHERA CAPELLI 400ML INTENSIVA HIDRA",
       "category": [
@@ -2784,10 +2938,11 @@
       },
       "supplier_price": 2.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0483"
     },
     {
-      "id": "listino-0509",
+      "id": "nivea-deo-rool-on-50-ml-dry-comfort",
       "supplier_code": "0509",
       "name": "NIVEA DEO ROOL ON 50 ML DRY COMFORT",
       "category": [
@@ -2802,10 +2957,11 @@
       },
       "supplier_price": 1.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0509"
     },
     {
-      "id": "listino-0510",
+      "id": "dove-deo-rool-on-50-ml-new-men-care-invisible-dry",
       "supplier_code": "0510",
       "name": "DOVE DEO ROOL ON 50 ML NEW MEN CARE INVISIBLE DRY",
       "category": [
@@ -2820,10 +2976,11 @@
       },
       "supplier_price": 1.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0510"
     },
     {
-      "id": "listino-0523",
+      "id": "tulipan-negro-deo-rool-on-50-ml-original",
       "supplier_code": "0523",
       "name": "TULIPAN NEGRO DEO ROOL ON 50 ML ORIGINAL",
       "category": [
@@ -2838,10 +2995,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0523"
     },
     {
-      "id": "listino-0524",
+      "id": "tulipan-negro-deo-rool-on-50-ml-aloe-e-jojoba",
       "supplier_code": "0524",
       "name": "TULIPAN NEGRO DEO ROOL ON 50 ML ALOE & JOJOBA",
       "category": [
@@ -2856,10 +3014,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0524"
     },
     {
-      "id": "listino-0530",
+      "id": "tulipan-negro-deo-rool-on-50-ml-sweet-violetta",
       "supplier_code": "0530",
       "name": "TULIPAN NEGRO DEO ROOL ON 50 ML SWEET VIOLETTA",
       "category": [
@@ -2874,10 +3033,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0530"
     },
     {
-      "id": "listino-0532",
+      "id": "tulipan-negro-body-lotion-400ml-aceite-de-olive",
       "supplier_code": "0532",
       "name": "TULIPAN NEGRO BODY LOTION 400ML ACEITE DE OLIVE",
       "category": [
@@ -2892,10 +3052,11 @@
       },
       "supplier_price": 2.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0532"
     },
     {
-      "id": "listino-0533",
+      "id": "tulipan-negro-body-lotion-400-ml-elixir-d-argan",
       "supplier_code": "0533",
       "name": "TULIPAN NEGRO BODY LOTION 400 ML ELIXIR D'ARGAN",
       "category": [
@@ -2910,10 +3071,11 @@
       },
       "supplier_price": 2.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0533"
     },
     {
-      "id": "listino-0534",
+      "id": "tulipan-negro-body-lotion-400ml-aloe-e-algon-y-rosa",
       "supplier_code": "0534",
       "name": "TULIPAN NEGRO BODY LOTION 400ML ALOE & ALGON Y ROSA",
       "category": [
@@ -2928,10 +3090,11 @@
       },
       "supplier_price": 2.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0534"
     },
     {
-      "id": "listino-0535",
+      "id": "tulipan-negro-shampoo-micellare-400ml-revitalizzante",
       "supplier_code": "0535",
       "name": "TULIPAN NEGRO SHAMPOO MICELLARE 400ML REVITALIZZANTE",
       "category": [
@@ -2946,10 +3109,11 @@
       },
       "supplier_price": 1.99,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0535"
     },
     {
-      "id": "listino-0536",
+      "id": "tulipan-negro-maschera-capelli-400-ml-protezione-colore",
       "supplier_code": "0536",
       "name": "TULIPAN NEGRO MASCHERA CAPELLI 400 ML PROTEZIONE COLORE",
       "category": [
@@ -2964,10 +3128,11 @@
       },
       "supplier_price": 2.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0536"
     },
     {
-      "id": "listino-0537",
+      "id": "tulipan-negro-maschera-capelli-400-ml-ripara-e-protegge",
       "supplier_code": "0537",
       "name": "TULIPAN NEGRO MASCHERA CAPELLI 400 ML RIPARA E PROTEGGE",
       "category": [
@@ -2982,10 +3147,11 @@
       },
       "supplier_price": 2.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0537"
     },
     {
-      "id": "listino-0538",
+      "id": "tulipan-negro-maschera-capelli-400-ml-liscio",
       "supplier_code": "0538",
       "name": "TULIPAN NEGRO MASCHERA CAPELLI 400 ML LISCIO",
       "category": [
@@ -3000,10 +3166,11 @@
       },
       "supplier_price": 2.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0538"
     },
     {
-      "id": "listino-0540",
+      "id": "tulipan-negro-deo-rool-on-50-ml-algodon-e-talco",
       "supplier_code": "0540",
       "name": "TULIPAN NEGRO DEO ROOL ON 50 ML ALGODON & TALCO",
       "category": [
@@ -3018,10 +3185,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0540"
     },
     {
-      "id": "listino-0653",
+      "id": "dealo-pharma-15-cerotti-resistenti-all-acqua",
       "supplier_code": "0653",
       "name": "DEALO PHARMA 15 CEROTTI RESISTENTI ALL'ACQUA",
       "category": [
@@ -3036,10 +3204,11 @@
       },
       "supplier_price": 0.83,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0653"
     },
     {
-      "id": "listino-0654",
+      "id": "dealo-pharma-20-cerotti-kids",
       "supplier_code": "0654",
       "name": "DEALO PHARMA 20 CEROTTI KIDS",
       "category": [
@@ -3054,10 +3223,11 @@
       },
       "supplier_price": 0.74,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0654"
     },
     {
-      "id": "listino-0655",
+      "id": "dealo-pharma-cerotto-in-rocchetto-5mtx2-5",
       "supplier_code": "0655",
       "name": "DEALO PHARMA CEROTTO IN ROCCHETTO 5Mtx2,5",
       "category": [
@@ -3072,10 +3242,11 @@
       },
       "supplier_price": 0.83,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0655"
     },
     {
-      "id": "listino-0687",
+      "id": "pino-silvestre-bagnoschiuma-olio-argan-750-ml",
       "supplier_code": "0687",
       "name": "PINO SILVESTRE BAGNOSCHIUMA OLIO ARGAN 750 ML",
       "category": [
@@ -3090,10 +3261,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0687"
     },
     {
-      "id": "listino-0688",
+      "id": "pino-silvestre-bagnoschiuma-soffio-talco-750-ml",
       "supplier_code": "0688",
       "name": "PINO SILVESTRE BAGNOSCHIUMA SOFFIO TALCO 750 ML",
       "category": [
@@ -3108,10 +3280,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0688"
     },
     {
-      "id": "listino-0690",
+      "id": "pino-silvestre-bagnoschiuma-black-musk-750-ml",
       "supplier_code": "0690",
       "name": "PINO SILVESTRE BAGNOSCHIUMA BLACK MUSK 750 ML",
       "category": [
@@ -3126,10 +3299,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0690"
     },
     {
-      "id": "listino-0691",
+      "id": "pino-silvestre-bagnoschiuma-flora-selvatica-750-ml",
       "supplier_code": "0691",
       "name": "PINO SILVESTRE BAGNOSCHIUMA FLORA SELVATICA 750 ML",
       "category": [
@@ -3144,10 +3318,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0691"
     },
     {
-      "id": "listino-0692",
+      "id": "pino-silvestre-bagnoschiuma-risveglio-balsamico-750-ml",
       "supplier_code": "0692",
       "name": "PINO SILVESTRE BAGNOSCHIUMA RISVEGLIO BALSAMICO 750 ML",
       "category": [
@@ -3162,10 +3337,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0692"
     },
     {
-      "id": "listino-0693",
+      "id": "pino-silvestre-bagnoschiuma-rugiada-mattutina-750-ml",
       "supplier_code": "0693",
       "name": "PINO SILVESTRE BAGNOSCHIUMA RUGIADA MATTUTINA 750 ML",
       "category": [
@@ -3180,10 +3356,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0693"
     },
     {
-      "id": "listino-0696",
+      "id": "pino-silvestre-sapone-liquido-muschio-bianco-300-ml",
       "supplier_code": "0696",
       "name": "PINO SILVESTRE SAPONE LIQUIDO MUSCHIO BIANCO 300 ML",
       "category": [
@@ -3198,10 +3375,11 @@
       },
       "supplier_price": 0.69,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0696"
     },
     {
-      "id": "listino-0713",
+      "id": "giardino-dei-sensi-crema-mani-orchidea-40ml",
       "supplier_code": "0713",
       "name": "GIARDINO DEI SENSI CREMA MANI ORCHIDEA 40ML",
       "category": [
@@ -3216,10 +3394,11 @@
       },
       "supplier_price": 0.4,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0713"
     },
     {
-      "id": "listino-0770",
+      "id": "dove-bagnoschiuma-750-ml-seta-preziosa",
       "supplier_code": "0770",
       "name": "DOVE BAGNOSCHIUMA 750 ML SETA PREZIOSA",
       "category": [
@@ -3234,10 +3413,11 @@
       },
       "supplier_price": 2.55,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0770"
     },
     {
-      "id": "listino-0976",
+      "id": "dermaline-crema-di-bagnoschiuma-650-ml-olio-di-argan-e-patchouli",
       "supplier_code": "0976",
       "name": "DERMALINE CREMA DI BAGNOSCHIUMA 650 ML OLIO DI ARGAN E PATCHOULI",
       "category": [
@@ -3252,10 +3432,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0976"
     },
     {
-      "id": "listino-0977",
+      "id": "dermaline-crema-di-bagnoschiuma-650ml-talco-e-muschio-bianco",
       "supplier_code": "0977",
       "name": "DERMALINE CREMA DI BAGNOSCHIUMA 650ML TALCO E MUSCHIO BIANCO",
       "category": [
@@ -3270,10 +3451,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0977"
     },
     {
-      "id": "listino-0978",
+      "id": "dermaline-crema-di-bagnoschiuma-650ml-mandorla-e-karite",
       "supplier_code": "0978",
       "name": "DERMALINE CREMA DI BAGNOSCHIUMA 650ML MANDORLA E KARITE",
       "category": [
@@ -3288,10 +3470,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0978"
     },
     {
-      "id": "listino-0979",
+      "id": "dermaline-crema-di-bagnoschiuma-650ml-ninfea-e-ibisco",
       "supplier_code": "0979",
       "name": "DERMALINE CREMA DI BAGNOSCHIUMA 650ML NINFEA E IBISCO",
       "category": [
@@ -3306,10 +3489,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0979"
     },
     {
-      "id": "listino-1277",
+      "id": "palmolive-saponetta-olive-e-milk-3-1-90-gr",
       "supplier_code": "1277",
       "name": "PALMOLIVE SAPONETTA OLIVE E MILK 3+1 90 GR",
       "category": [
@@ -3324,10 +3508,11 @@
       },
       "supplier_price": 1.8,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1277"
     },
     {
-      "id": "listino-1948",
+      "id": "natural-gel-1-kg",
       "supplier_code": "1948",
       "name": "NATURAL GEL 1 KG",
       "category": [
@@ -3342,10 +3527,11 @@
       },
       "supplier_price": 0.91,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1948"
     },
     {
-      "id": "listino-2009",
+      "id": "gillette-blu-ii-5-1-pz",
       "supplier_code": "2009",
       "name": "GILLETTE BLU II 5+1 PZ",
       "category": [
@@ -3360,10 +3546,11 @@
       },
       "supplier_price": 1.48,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2009"
     },
     {
-      "id": "listino-2010",
+      "id": "fructis-hair-food-districante-350ml-aloe-vera",
       "supplier_code": "2010",
       "name": "FRUCTIS HAIR FOOD DISTRICANTE 350ML ALOE VERA",
       "category": [
@@ -3378,10 +3565,11 @@
       },
       "supplier_price": 2.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2010"
     },
     {
-      "id": "listino-2011",
+      "id": "fructis-hair-food-districante-350ml-banana",
       "supplier_code": "2011",
       "name": "FRUCTIS HAIR FOOD DISTRICANTE 350ML BANANA",
       "category": [
@@ -3396,10 +3584,11 @@
       },
       "supplier_price": 2.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2011"
     },
     {
-      "id": "listino-2012",
+      "id": "fructis-hair-food-shampoo-350ml-papaya",
       "supplier_code": "2012",
       "name": "FRUCTIS HAIR FOOD SHAMPOO 350ML PAPAYA",
       "category": [
@@ -3414,10 +3603,11 @@
       },
       "supplier_price": 2.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2012"
     },
     {
-      "id": "listino-2013",
+      "id": "fructis-hair-food-maschera-320ml-banana",
       "supplier_code": "2013",
       "name": "FRUCTIS HAIR FOOD MASCHERA 320ML BANANA",
       "category": [
@@ -3432,10 +3622,11 @@
       },
       "supplier_price": 4.19,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2013"
     },
     {
-      "id": "listino-2014",
+      "id": "fructis-hair-food-maschera-390ml-papaya",
       "supplier_code": "2014",
       "name": "FRUCTIS HAIR FOOD MASCHERA 390ML PAPAYA",
       "category": [
@@ -3450,10 +3641,11 @@
       },
       "supplier_price": 4.19,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2014"
     },
     {
-      "id": "listino-2517",
+      "id": "dermaline-crema-di-bagnoschiuma-650ml-cocco-e-monoi",
       "supplier_code": "2517",
       "name": "DERMALINE CREMA DI BAGNOSCHIUMA 650ML COCCO & MONOI",
       "category": [
@@ -3468,10 +3660,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2517"
     },
     {
-      "id": "listino-2518",
+      "id": "dermaline-crema-di-bagnoschiuma-650ml-riso-e-frangipane",
       "supplier_code": "2518",
       "name": "DERMALINE CREMA DI BAGNOSCHIUMA 650ML RISO & FRANGIPANE",
       "category": [
@@ -3486,10 +3679,11 @@
       },
       "supplier_price": 1.08,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2518"
     },
     {
-      "id": "listino-8053470852541",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-argan-e-patchouli",
       "supplier_code": "8053470852541",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Argan & Patchouli)",
       "category": [
@@ -3504,10 +3698,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852541"
     },
     {
-      "id": "listino-8053470852565",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-mandorla-e-karite",
       "supplier_code": "8053470852565",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Mandorla & Karitè)",
       "category": [
@@ -3522,10 +3717,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852565"
     },
     {
-      "id": "listino-8053470852572",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-ninfea-e-ibisco",
       "supplier_code": "8053470852572",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Ninfea & Ibisco)",
       "category": [
@@ -3540,10 +3736,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852572"
     },
     {
-      "id": "listino-8053470852589",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-latte-di-riso-e-frangipane",
       "supplier_code": "8053470852589",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Latte di Riso & Frangipane)",
       "category": [
@@ -3558,10 +3755,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852589"
     },
     {
-      "id": "listino-8053470852763",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-cocco-e-monoi",
       "supplier_code": "8053470852763",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Cocco & Monoi)",
       "category": [
@@ -3576,10 +3774,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852763"
     },
     {
-      "id": "listino-8053470852787",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-talco-e-muschio-bianco",
       "supplier_code": "8053470852787",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Talco & Muschio Bianco)",
       "category": [
@@ -3594,10 +3793,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852787"
     },
     {
-      "id": "listino-8053470852794",
+      "id": "dermaline-doccia-shampoo-400ml-varie-prof-sky-blue",
       "supplier_code": "8053470852794",
       "name": "DERMALINE DOCCIA SHAMPOO 400ML Varie Prof. (Sky Blue)",
       "category": [
@@ -3612,10 +3812,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852794"
     },
     {
-      "id": "listino-8053470852800",
+      "id": "dermaline-doccia-shampoo-400ml-varie-prof-energy",
       "supplier_code": "8053470852800",
       "name": "DERMALINE DOCCIA SHAMPOO 400ML Varie Prof. (Energy)",
       "category": [
@@ -3630,10 +3831,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852800"
     },
     {
-      "id": "listino-8053470852947",
+      "id": "dermaline-sapone-liquido-500ml-varie-prof-bianco-latte",
       "supplier_code": "8053470852947",
       "name": "DERMALINE SAPONE LIQUIDO 500ML Varie Prof. (Bianco Latte)",
       "category": [
@@ -3648,10 +3850,11 @@
       },
       "supplier_price": 1.05,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053470852947"
     },
     {
-      "id": "listino-2051",
+      "id": "fumakilla-vape-piastrine-herbal-12-ore-30pz",
       "supplier_code": "2051",
       "name": "FUMAKILLA VAPE PIASTRINE HERBAL 12 ORE 30PZ",
       "category": [
@@ -3665,10 +3868,11 @@
       },
       "supplier_price": 3.86,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2051"
     },
     {
-      "id": "listino-2052",
+      "id": "fumakilla-vape-piastrine-per-zanzare-e-tigre-geranio-12-ore-30pz",
       "supplier_code": "2052",
       "name": "FUMAKILLA VAPE PIASTRINE PER ZANZARE E TIGRE GERANIO 12 ORE 30PZ",
       "category": [
@@ -3682,10 +3886,11 @@
       },
       "supplier_price": 3.86,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2052"
     },
     {
-      "id": "listino-8011690461066",
+      "id": "salviettine-imbevute-alla-citronella-repellenti-15-pezzi-poket",
       "supplier_code": "8011690461066",
       "name": "Salviettine Imbevute alla Citronella Repellenti 15 Pezzi \"Poket\"",
       "category": [
@@ -3699,10 +3904,11 @@
       },
       "supplier_price": 0.66,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8011690461066"
     },
     {
-      "id": "listino-0019",
+      "id": "imb-piatti-riutilizzabili-20-pz-piani",
       "supplier_code": "0019",
       "name": "IMB PIATTI RIUTILIZZABILI 20 PZ PIANI",
       "category": [
@@ -3717,10 +3923,11 @@
       },
       "supplier_price": 1.0,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0019"
     },
     {
-      "id": "listino-0020",
+      "id": "imb-piatti-riutilizzabili-20-pz-fondi",
       "supplier_code": "0020",
       "name": "IMB PIATTI RIUTILIZZABILI 20 PZ FONDI",
       "category": [
@@ -3735,10 +3942,11 @@
       },
       "supplier_price": 1.0,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0020"
     },
     {
-      "id": "listino-0022",
+      "id": "imb-piatti-dessert-25-pz",
       "supplier_code": "0022",
       "name": "IMB PIATTI DESSERT 25 PZ",
       "category": [
@@ -3753,10 +3961,11 @@
       },
       "supplier_price": 0.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0022"
     },
     {
-      "id": "listino-0023",
+      "id": "imb-bicchieri-acqua-200cc-trasparenti-100-pz",
       "supplier_code": "0023",
       "name": "IMB BICCHIERI ACQUA 200CC TRASPARENTI 100 PZ",
       "category": [
@@ -3771,10 +3980,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0023"
     },
     {
-      "id": "listino-0024",
+      "id": "imb-bicchieri-acqua-200cc-bianco-100-pz",
       "supplier_code": "0024",
       "name": "IMB BICCHIERI ACQUA 200CC BIANCO 100 PZ",
       "category": [
@@ -3789,10 +3999,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0024"
     },
     {
-      "id": "listino-0063",
+      "id": "imb-piatti-usa-e-riusa-30-pezzi-fondi",
       "supplier_code": "0063",
       "name": "IMB PIATTI USA E RIUSA 30 PEZZI FONDI",
       "category": [
@@ -3807,10 +4018,11 @@
       },
       "supplier_price": 1.5,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0063"
     },
     {
-      "id": "listino-0064",
+      "id": "imb-piatti-usa-e-riusa-30-pezzi-piani",
       "supplier_code": "0064",
       "name": "IMB PIATTI USA E RIUSA 30 PEZZI PIANI",
       "category": [
@@ -3825,10 +4037,11 @@
       },
       "supplier_price": 1.5,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0064"
     },
     {
-      "id": "listino-0269",
+      "id": "movida-coperchio-per-bicchieri-75-ml-in-ps-50-pz",
       "supplier_code": "0269",
       "name": "MOVIDA COPERCHIO PER BICCHIERI 75 ML IN PS 50 PZ",
       "category": [
@@ -3843,10 +4056,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0269"
     },
     {
-      "id": "listino-0270",
+      "id": "cannucce-bio-nere-250pz-mis-14-5x7",
       "supplier_code": "0270",
       "name": "CANNUCCE BIO NERE 250PZ Mis 14,5X7",
       "category": [
@@ -3861,10 +4075,11 @@
       },
       "supplier_price": 2.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0270"
     },
     {
-      "id": "listino-0272",
+      "id": "cannucce-bio-incartate-bianche-250pz-mis-20x6",
       "supplier_code": "0272",
       "name": "CANNUCCE BIO INCARTATE BIANCHE 250PZ Mis.20x6",
       "category": [
@@ -3879,10 +4094,11 @@
       },
       "supplier_price": 3.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0272"
     },
     {
-      "id": "listino-0275",
+      "id": "movida-bicchieri-bio-acqua-180ml-fantasia-maiolica-50pz",
       "supplier_code": "0275",
       "name": "MOVIDA BICCHIERI BIO ACQUA 180ML \"FANTASIA MAIOLICA\" 50PZ",
       "category": [
@@ -3897,10 +4113,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0275"
     },
     {
-      "id": "listino-0281",
+      "id": "movida-insalatiera-tonda-biodegradabile-4-4-coperchi-750ml",
       "supplier_code": "0281",
       "name": "MOVIDA INSALATIERA TONDA BIODEGRADABILE 4+4 COPERCHI 750ML",
       "category": [
@@ -3915,10 +4132,11 @@
       },
       "supplier_price": 1.04,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0281"
     },
     {
-      "id": "listino-0283",
+      "id": "movida-piatti-biodegradabili-fondi-cm-21-pz50",
       "supplier_code": "0283",
       "name": "MOVIDA PIATTI BIODEGRADABILI FONDI CM 21 PZ50",
       "category": [
@@ -3933,10 +4151,11 @@
       },
       "supplier_price": 3.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0283"
     },
     {
-      "id": "listino-0285",
+      "id": "movida-piatti-biodegradabili-frutta-cm-18-pz50",
       "supplier_code": "0285",
       "name": "MOVIDA PIATTI BIODEGRADABILI FRUTTA CM.18 PZ50",
       "category": [
@@ -3951,10 +4170,11 @@
       },
       "supplier_price": 2.25,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0285"
     },
     {
-      "id": "listino-0286",
+      "id": "movida-palette-in-legno-caffe-cm-9-100pz",
       "supplier_code": "0286",
       "name": "MOVIDA PALETTE IN LEGNO CAFFE' CM 9 100PZ",
       "category": [
@@ -3969,10 +4189,11 @@
       },
       "supplier_price": 0.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0286"
     },
     {
-      "id": "listino-0496",
+      "id": "movida-bicchieri-bio-caffe-75ml-fantasia-maiolica-50pz",
       "supplier_code": "0496",
       "name": "MOVIDA BICCHIERI BIO CAFFE' 75ML \"FANTASIA MAIOLICA\" 50PZ",
       "category": [
@@ -3987,10 +4208,11 @@
       },
       "supplier_price": 0.38,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0496"
     },
     {
-      "id": "listino-0553",
+      "id": "movida-insalatiera-bio-1300ml-18x6-5cm-25-pezzi",
       "supplier_code": "0553",
       "name": "MOVIDA INSALATIERA BIO 1300ML 18x6,5cm 25 PEZZI",
       "category": [
@@ -4005,10 +4227,11 @@
       },
       "supplier_price": 4.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0553"
     },
     {
-      "id": "listino-0554",
+      "id": "movida-insalatiera-bio-1000ml-15x7-5cm-25-pezzi",
       "supplier_code": "0554",
       "name": "MOVIDA INSALATIERA BIO 1000ML 15x7,5cm 25 PEZZI",
       "category": [
@@ -4023,10 +4246,11 @@
       },
       "supplier_price": 3.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0554"
     },
     {
-      "id": "listino-0555",
+      "id": "movida-insalatiera-bio-750ml-15x6cm-25-pezzi",
       "supplier_code": "0555",
       "name": "MOVIDA INSALATIERA BIO 750ML 15x6cm 25 PEZZI",
       "category": [
@@ -4041,10 +4265,11 @@
       },
       "supplier_price": 3.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0555"
     },
     {
-      "id": "listino-0572",
+      "id": "movida-bicchieri-acqua-bio-180-ml-fantasia-natalizia-50-pz",
       "supplier_code": "0572",
       "name": "MOVIDA BICCHIERI ACQUA BIO 180 ML FANTASIA NATALIZIA 50 PZ",
       "category": [
@@ -4059,10 +4284,11 @@
       },
       "supplier_price": 0.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0572"
     },
     {
-      "id": "listino-0574",
+      "id": "sofy-s-piatti-fondi-rossi-15pz",
       "supplier_code": "0574",
       "name": "SOFY'S PIATTI FONDI ROSSI 15PZ",
       "category": [
@@ -4077,10 +4303,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0574"
     },
     {
-      "id": "listino-0575",
+      "id": "sofy-s-piatti-frutta-rossi-25-pz",
       "supplier_code": "0575",
       "name": "SOFY'S PIATTI FRUTTA ROSSI 25 PZ",
       "category": [
@@ -4095,10 +4322,11 @@
       },
       "supplier_price": 0.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0575"
     },
     {
-      "id": "listino-0576",
+      "id": "sofy-s-piatti-piani-rossi-15-pz",
       "supplier_code": "0576",
       "name": "SOFY'S PIATTI PIANI ROSSI 15 PZ",
       "category": [
@@ -4113,10 +4341,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0576"
     },
     {
-      "id": "listino-0715",
+      "id": "movida-bicchieri-bio-75-ml-caffe-fantasia-natalizia-50-pz",
       "supplier_code": "0715",
       "name": "MOVIDA BICCHIERI BIO 75 ML CAFFE' \"FANTASIA NATALIZIA \" 50 PZ",
       "category": [
@@ -4131,10 +4360,11 @@
       },
       "supplier_price": 0.39,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0715"
     },
     {
-      "id": "listino-0805698664196",
+      "id": "bicchieri-in-carta-180ml-50-pezzi-vari-colori-havana",
       "supplier_code": "0805698664196",
       "name": "Bicchieri In Carta 180ml - 50 Pezzi Vari Colori (Havana)",
       "category": [
@@ -4149,10 +4379,11 @@
       },
       "supplier_price": 0.49,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0805698664196"
     },
     {
-      "id": "listino-0805698664202",
+      "id": "bicchieri-in-carta-180ml-50-pezzi-vari-colori-verde",
       "supplier_code": "0805698664202",
       "name": "Bicchieri In Carta 180ml - 50 Pezzi Vari Colori (Verde)",
       "category": [
@@ -4167,10 +4398,11 @@
       },
       "supplier_price": 0.49,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0805698664202"
     },
     {
-      "id": "listino-0805698664226",
+      "id": "bicchieri-in-carta-180ml-50-pezzi-vari-colori-maiolica-mullcolor",
       "supplier_code": "0805698664226",
       "name": "Bicchieri In Carta 180ml - 50 Pezzi Vari Colori (Maiolica Mullcolor)",
       "category": [
@@ -4185,10 +4417,11 @@
       },
       "supplier_price": 0.49,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0805698664226"
     },
     {
-      "id": "listino-0827",
+      "id": "movida-piatti-bio-pizza-cm-33-10pz",
       "supplier_code": "0827",
       "name": "MOVIDA PIATTI BIO PIZZA CM 33 10PZ",
       "category": [
@@ -4203,10 +4436,11 @@
       },
       "supplier_price": 1.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0827"
     },
     {
-      "id": "listino-0983",
+      "id": "movida-insalatiera-coperchio-25pz-15cm-per-poke",
       "supplier_code": "0983",
       "name": "MOVIDA INSALATIERA COPERCHIO 25PZ 15CM PER POKE",
       "category": [
@@ -4221,10 +4455,11 @@
       },
       "supplier_price": 1.83,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0983"
     },
     {
-      "id": "listino-1031",
+      "id": "movida-insalatiera-coperchio-25pz-18cm-per-poke",
       "supplier_code": "1031",
       "name": "MOVIDA INSALATIERA COPERCHIO 25PZ 18CM PER POKE'",
       "category": [
@@ -4239,10 +4474,11 @@
       },
       "supplier_price": 2.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1031"
     },
     {
-      "id": "listino-1678",
+      "id": "elios-piatti-dessert-riutilizzabili-40-pz",
       "supplier_code": "1678",
       "name": "ELIOS PIATTI DESSERT RIUTILIZZABILI 40 PZ",
       "category": [
@@ -4257,10 +4493,11 @@
       },
       "supplier_price": 0.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1678"
     },
     {
-      "id": "listino-2303",
+      "id": "bicchieri-rossi-200cc-50pz",
       "supplier_code": "2303",
       "name": "BICCHIERI ROSSI 200cc 50Pz",
       "category": [
@@ -4275,10 +4512,11 @@
       },
       "supplier_price": 0.53,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2303"
     },
     {
-      "id": "listino-2499",
+      "id": "movida-piatto-fondo-biodegradabile-21cm-20pz",
       "supplier_code": "2499",
       "name": "MOVIDA PIATTO FONDO BIODEGRADABILE 21CM 20PZ",
       "category": [
@@ -4293,10 +4531,11 @@
       },
       "supplier_price": 1.09,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2499"
     },
     {
-      "id": "listino-2500",
+      "id": "movida-piatto-piano-biodegradabile-23-cm-50-pz",
       "supplier_code": "2500",
       "name": "MOVIDA PIATTO PIANO BIODEGRADABILE 23 CM 50 PZ",
       "category": [
@@ -4311,10 +4550,11 @@
       },
       "supplier_price": 2.59,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2500"
     },
     {
-      "id": "listino-2501",
+      "id": "movida-insalatiera-25pz-fantasia-maiolica-bio-750ml-15x6-cm-colori-assortiti",
       "supplier_code": "2501",
       "name": "MOVIDA INSALATIERA 25PZ \"FANTASIA MAIOLICA\" BIO 750ML 15X6 CM COLORI ASSORTITI",
       "category": [
@@ -4329,10 +4569,11 @@
       },
       "supplier_price": 2.7,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2501"
     },
     {
-      "id": "listino-2502",
+      "id": "movida-insalatiera-25pz-fantasia-maiolica-bio-1000ml-15x7-5-cm-colori-assortiti",
       "supplier_code": "2502",
       "name": "MOVIDA INSALATIERA 25PZ \"FANTASIA MAIOLICA\" BIO 1000ML 15X7,5 CM COLORI ASSORTITI",
       "category": [
@@ -4347,10 +4588,11 @@
       },
       "supplier_price": 2.88,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2502"
     },
     {
-      "id": "listino-2503",
+      "id": "movida-bicchieri-bio-250ml-fantasia-maiolica-50pz",
       "supplier_code": "2503",
       "name": "MOVIDA BICCHIERI BIO 250ML \"FANTASIA MAIOLICA\" 50PZ",
       "category": [
@@ -4365,10 +4607,11 @@
       },
       "supplier_price": 1.12,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2503"
     },
     {
-      "id": "listino-2504",
+      "id": "movida-coperchi-per-bicchieri-di-carta-250-300-360-50pz",
       "supplier_code": "2504",
       "name": "MOVIDA COPERCHI PER BICCHIERI DI CARTA 250-300-360 50PZ",
       "category": [
@@ -4383,10 +4626,11 @@
       },
       "supplier_price": 1.43,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2504"
     },
     {
-      "id": "listino-8019210110043",
+      "id": "tim-bicchieri-kristal-ps-100cc-conf-da-50-pezzi",
       "supplier_code": "8019210110043",
       "name": "Tim Bicchieri Kristal PS 100cc Conf da 50 Pezzi",
       "category": [
@@ -4401,10 +4645,11 @@
       },
       "supplier_price": 0.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8019210110043"
     },
     {
-      "id": "listino-8019210401028",
+      "id": "tim-bicchieri-kristal-ps-400cc-conf-da-50-pezzi",
       "supplier_code": "8019210401028",
       "name": "Tim Bicchieri Kristal PS 400cc Conf da 50 pezzi",
       "category": [
@@ -4419,10 +4664,11 @@
       },
       "supplier_price": 2.1,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8019210401028"
     },
     {
-      "id": "listino-8032642590139",
+      "id": "imb-bicchieri-caffe-80cc-100-pz",
       "supplier_code": "8032642590139",
       "name": "IMB BICCHIERI CAFFE' 80CC 100 PZ",
       "category": [
@@ -4437,10 +4683,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8032642590139"
     },
     {
-      "id": "listino-8053830881099",
+      "id": "bicchierini-caffe-di-carta-havana-chicci-di-caffe-75-ml-50-pezzi",
       "supplier_code": "8053830881099",
       "name": "Bicchierini caffe' di carta \"Havana Chicci di Caffe\" 75 ml 50 pezzi",
       "category": [
@@ -4455,10 +4702,11 @@
       },
       "supplier_price": 0.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053830881099"
     },
     {
-      "id": "listino-8053830883376",
+      "id": "bicchieri-acqua-180cc-bianco-100-pezzi",
       "supplier_code": "8053830883376",
       "name": "Bicchieri acqua 180cc Bianco 100 Pezzi",
       "category": [
@@ -4473,10 +4721,11 @@
       },
       "supplier_price": 0.62,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053830883376"
     },
     {
-      "id": "listino-8053830883642",
+      "id": "sofy-s-piatti-piani-riutilizzabili-20-pz",
       "supplier_code": "8053830883642",
       "name": "SOFY'S PIATTI PIANI RIUTILIZZABILI 20 PZ",
       "category": [
@@ -4491,10 +4740,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053830883642"
     },
     {
-      "id": "listino-8053830883659",
+      "id": "sofy-s-piatti-riutilizzabili-20-pz-fondi",
       "supplier_code": "8053830883659",
       "name": "SOFY'S PIATTI RIUTILIZZABILI 20 PZ FONDI",
       "category": [
@@ -4509,10 +4759,11 @@
       },
       "supplier_price": 0.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053830883659"
     },
     {
-      "id": "listino-0198",
+      "id": "busta-salvaspazio-80x130",
       "supplier_code": "0198",
       "name": "BUSTA SALVASPAZIO 80X130",
       "category": [
@@ -4527,10 +4778,11 @@
       },
       "supplier_price": 1.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0198"
     },
     {
-      "id": "listino-0599",
+      "id": "dealo-buste-s-spazio-50x60cm",
       "supplier_code": "0599",
       "name": "DEALO BUSTE S. SPAZIO 50X60cm",
       "category": [
@@ -4545,10 +4797,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0599"
     },
     {
-      "id": "listino-2492",
+      "id": "buste-salvaspazio-profumate-60x80",
       "supplier_code": "2492",
       "name": "BUSTE SALVASPAZIO PROFUMATE 60X80",
       "category": [
@@ -4563,10 +4816,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2492"
     },
     {
-      "id": "listino-2493",
+      "id": "buste-salvaspazio-profumate-70x110",
       "supplier_code": "2493",
       "name": "BUSTE SALVASPAZIO PROFUMATE 70X110",
       "category": [
@@ -4581,10 +4835,11 @@
       },
       "supplier_price": 0.89,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2493"
     },
     {
-      "id": "listino-0193",
+      "id": "duster-ricambio-piumini-10-pz",
       "supplier_code": "0193",
       "name": "DUSTER RICAMBIO PIUMINI 10 PZ",
       "category": [
@@ -4599,10 +4854,11 @@
       },
       "supplier_price": 1.8,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0193"
     },
     {
-      "id": "listino-0492",
+      "id": "movida-panno-in-microfibra-lusso-maxi-power-50x70",
       "supplier_code": "0492",
       "name": "MOVIDA PANNO IN MICROFIBRA LUSSO MAXI POWER 50X70",
       "category": [
@@ -4617,10 +4873,11 @@
       },
       "supplier_price": 1.79,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0492"
     },
     {
-      "id": "listino-0548",
+      "id": "movida-panno-pavimento-48x63-azzurro",
       "supplier_code": "0548",
       "name": "MOVIDA PANNO PAVIMENTO 48X63 AZZURRO",
       "category": [
@@ -4635,10 +4892,11 @@
       },
       "supplier_price": 0.62,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0548"
     },
     {
-      "id": "listino-0549",
+      "id": "movida-panno-pavimento-48x63-verde",
       "supplier_code": "0549",
       "name": "MOVIDA PANNO PAVIMENTO 48X63 VERDE",
       "category": [
@@ -4653,10 +4911,11 @@
       },
       "supplier_price": 0.62,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0549"
     },
     {
-      "id": "listino-0550",
+      "id": "movida-panno-r-scamosciato-38x38-tutto-fare",
       "supplier_code": "0550",
       "name": "MOVIDA PANNO R SCAMOSCIATO 38X38 TUTTO FARE",
       "category": [
@@ -4671,10 +4930,11 @@
       },
       "supplier_price": 0.28,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0550"
     },
     {
-      "id": "listino-0552",
+      "id": "movida-panno-scamosciato-microforato-extra-maxi-pavimenti-50x60",
       "supplier_code": "0552",
       "name": "MOVIDA PANNO SCAMOSCIATO MICROFORATO EXTRA MAXI PAVIMENTI 50X60",
       "category": [
@@ -4689,10 +4949,11 @@
       },
       "supplier_price": 1.93,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0552"
     },
     {
-      "id": "listino-0985",
+      "id": "movida-panno-multiuso-33x38-5",
       "supplier_code": "0985",
       "name": "MOVIDA PANNO MULTIUSO 33X38,5",
       "category": [
@@ -4707,10 +4968,11 @@
       },
       "supplier_price": 1.19,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0985"
     },
     {
-      "id": "listino-0986",
+      "id": "movida-panno-multiuso-49x61",
       "supplier_code": "0986",
       "name": "MOVIDA PANNO MULTIUSO 49X61",
       "category": [
@@ -4725,10 +4987,11 @@
       },
       "supplier_price": 2.58,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0986"
     },
     {
-      "id": "listino-2498",
+      "id": "movida-spugna-cancellina-2pz",
       "supplier_code": "2498",
       "name": "MOVIDA SPUGNA CANCELLINA 2PZ",
       "category": [
@@ -4743,10 +5006,11 @@
       },
       "supplier_price": 0.41,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2498"
     },
     {
-      "id": "listino-0562",
+      "id": "clendy-tappetini-assorbenti-cane-con-clorexidina-60x90cm-10-pezzi",
       "supplier_code": "0562",
       "name": "CLENDY TAPPETINI ASSORBENTI CANE CON CLOREXIDINA 60x90cm 10 PEZZI",
       "category": [
@@ -4761,10 +5025,11 @@
       },
       "supplier_price": 1.9,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0562"
     },
     {
-      "id": "listino-1969",
+      "id": "sofy-s-pet-tappelni-animali-60x90-10-pezzi",
       "supplier_code": "1969",
       "name": "Sofy's Pet Tappelni Animali 60x90 10 Pezzi",
       "category": [
@@ -4779,10 +5044,11 @@
       },
       "supplier_price": 1.68,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1969"
     },
     {
-      "id": "listino-2415",
+      "id": "traversine-assorbenti-pet-60x60-50-pezzi",
       "supplier_code": "2415",
       "name": "TRAVERSINE ASSORBENTI PET 60x60 50 Pezzi",
       "category": [
@@ -4797,10 +5063,11 @@
       },
       "supplier_price": 6.0,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-2415"
     },
     {
-      "id": "listino-8053830883383",
+      "id": "sofy-s-pet-tappetini-animali-60x90-30-pezzi",
       "supplier_code": "8053830883383",
       "name": "SOFY'S PET TAPPETINI ANIMALI 60X90 30 PEZZI",
       "category": [
@@ -4815,10 +5082,11 @@
       },
       "supplier_price": 4.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053830883383"
     },
     {
-      "id": "listino-8053830883390",
+      "id": "sofy-s-pet-tappetini-animali-60x90-30-pezzi-carboni-attivi",
       "supplier_code": "8053830883390",
       "name": "SOFY'S PET TAPPETINI ANIMALI 60X90 30 PEZZI CARBONI ATTIVI",
       "category": [
@@ -4833,10 +5101,11 @@
       },
       "supplier_price": 4.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8053830883390"
     },
     {
-      "id": "listino-0379",
+      "id": "tulipan-negro-box-regalo-sweet-violeta",
       "supplier_code": "0379",
       "name": "TULIPAN NEGRO BOX REGALO SWEET VIOLETA",
       "category": [
@@ -4851,10 +5120,11 @@
       },
       "supplier_price": 8.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0379"
     },
     {
-      "id": "listino-0381",
+      "id": "tulipan-negro-box-regalo-fresa-y-cereza",
       "supplier_code": "0381",
       "name": "TULIPAN NEGRO BOX REGALO FRESA Y CEREZA",
       "category": [
@@ -4869,10 +5139,11 @@
       },
       "supplier_price": 8.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0381"
     },
     {
-      "id": "listino-0382",
+      "id": "tulipan-negro-box-regalo-fresa-y-nata",
       "supplier_code": "0382",
       "name": "TULIPAN NEGRO BOX REGALO FRESA Y NATA",
       "category": [
@@ -4887,10 +5158,11 @@
       },
       "supplier_price": 8.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0382"
     },
     {
-      "id": "listino-0698",
+      "id": "giardino-dei-sensi-profumo-anemone-100ml",
       "supplier_code": "0698",
       "name": "GIARDINO DEI SENSI PROFUMO ANEMONE 100ML",
       "category": [
@@ -4905,10 +5177,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0698"
     },
     {
-      "id": "listino-0699",
+      "id": "giardino-dei-sensi-profumo-gelsomino-sambac-100ml",
       "supplier_code": "0699",
       "name": "GIARDINO DEI SENSI PROFUMO GELSOMINO SAMBAC 100ML",
       "category": [
@@ -4923,10 +5196,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0699"
     },
     {
-      "id": "listino-0700",
+      "id": "giardino-dei-sensi-profumo-rosa-del-deserto-100ml",
       "supplier_code": "0700",
       "name": "GIARDINO DEI SENSI PROFUMO ROSA DEL DESERTO 100ML",
       "category": [
@@ -4941,10 +5215,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0700"
     },
     {
-      "id": "listino-0701",
+      "id": "giardino-dei-sensi-profumo-muschio-bianco-100ml",
       "supplier_code": "0701",
       "name": "GIARDINO DEI SENSI PROFUMO MUSCHIO BIANCO 100ML",
       "category": [
@@ -4959,10 +5234,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0701"
     },
     {
-      "id": "listino-0702",
+      "id": "giardino-dei-sensi-profumo-orchidea-100ml",
       "supplier_code": "0702",
       "name": "GIARDINO DEI SENSI PROFUMO ORCHIDEA 100ML",
       "category": [
@@ -4977,10 +5253,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0702"
     },
     {
-      "id": "listino-0703",
+      "id": "giardino-dei-sensi-profumo-iris-100ml",
       "supplier_code": "0703",
       "name": "GIARDINO DEI SENSI PROFUMO IRIS 100ML",
       "category": [
@@ -4995,10 +5272,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0703"
     },
     {
-      "id": "listino-0704",
+      "id": "giardino-dei-sensi-profumo-fior-di-loto-100ml",
       "supplier_code": "0704",
       "name": "GIARDINO DEI SENSI PROFUMO FIOR DI LOTO 100ML",
       "category": [
@@ -5013,10 +5291,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0704"
     },
     {
-      "id": "listino-0706",
+      "id": "giardino-dei-sensi-profumo-fiordaliso-100ml",
       "supplier_code": "0706",
       "name": "GIARDINO DEI SENSI PROFUMO FIORDALISO 100ML",
       "category": [
@@ -5031,10 +5310,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0706"
     },
     {
-      "id": "listino-0707",
+      "id": "giardino-dei-sensi-profumo-magnolia-100ml",
       "supplier_code": "0707",
       "name": "GIARDINO DEI SENSI PROFUMO MAGNOLIA 100ML",
       "category": [
@@ -5049,10 +5329,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0707"
     },
     {
-      "id": "listino-0708",
+      "id": "giardino-dei-sensi-profumo-peonia-100ml",
       "supplier_code": "0708",
       "name": "GIARDINO DEI SENSI PROFUMO PEONIA 100ML",
       "category": [
@@ -5067,10 +5348,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0708"
     },
     {
-      "id": "listino-0709",
+      "id": "giardino-dei-sensi-profumo-narciso-100ml",
       "supplier_code": "0709",
       "name": "GIARDINO DEI SENSI PROFUMO NARCISO 100ML",
       "category": [
@@ -5085,10 +5367,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0709"
     },
     {
-      "id": "listino-0710",
+      "id": "giardino-dei-sensi-profumo-vaniglia-100-ml",
       "supplier_code": "0710",
       "name": "GIARDINO DEI SENSI PROFUMO VANIGLIA 100 ML",
       "category": [
@@ -5103,10 +5386,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0710"
     },
     {
-      "id": "listino-0712",
+      "id": "giardino-dei-sensi-profumo-for-men-legni-esotici-100ml",
       "supplier_code": "0712",
       "name": "GIARDINO DEI SENSI PROFUMO FOR MEN LEGNI ESOTICI 100ML",
       "category": [
@@ -5121,10 +5405,11 @@
       },
       "supplier_price": 2.78,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0712"
     },
     {
-      "id": "listino-0813",
+      "id": "tulipan-negro-box-regalo-nube-de-algodon",
       "supplier_code": "0813",
       "name": "TULIPAN NEGRO BOX REGALO NUBE DE ALGODON",
       "category": [
@@ -5139,10 +5424,11 @@
       },
       "supplier_price": 8.29,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0813"
     },
     {
-      "id": "listino-0066",
+      "id": "buste-rotolo-manico-grande",
       "supplier_code": "0066",
       "name": "BUSTE ROTOLO MANICO GRANDE",
       "category": [
@@ -5157,10 +5443,11 @@
       },
       "supplier_price": 2.4,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0066"
     },
     {
-      "id": "listino-0189",
+      "id": "t-ovaglioli-monovelo-bar-17x17-per-dispenser",
       "supplier_code": "0189",
       "name": "T ovaglioli Monovelo Bar 17x17 - Per Dispenser",
       "category": [
@@ -5175,10 +5462,11 @@
       },
       "supplier_price": 2.65,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0189"
     },
     {
-      "id": "listino-0893",
+      "id": "paper-lenzuolino-medico-classico-50mt",
       "supplier_code": "0893",
       "name": "PAPER LENZUOLINO MEDICO CLASSICO 50MT",
       "category": [
@@ -5193,10 +5481,11 @@
       },
       "supplier_price": 2.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-0893"
     },
     {
-      "id": "listino-1094",
+      "id": "risma-carta-a4-rcopy-a4-80-gr",
       "supplier_code": "1094",
       "name": "RISMA CARTA A4 RCOPY A4 80 GR",
       "category": [
@@ -5211,10 +5500,11 @@
       },
       "supplier_price": 2.45,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1094"
     },
     {
-      "id": "listino-1979",
+      "id": "paperwall-asciugamani-piegati-a-v-21x20-5cm-2-veli-200-pezzi",
       "supplier_code": "1979",
       "name": "PAPERWALL ASCIUGAMANI PIEGATI A \"V\" 21x20,5cm 2 veli 200 pezzi",
       "category": [
@@ -5229,10 +5519,11 @@
       },
       "supplier_price": 0.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1979"
     },
     {
-      "id": "listino-1980",
+      "id": "paperblu-asciugamani-piegati-a-c-23x33cm-1-velo-150-pezzi",
       "supplier_code": "1980",
       "name": "PAPERBLU ASCIUGAMANI PIEGATI A \"C\" 23x33cm, 1 velo 150 pezzi",
       "category": [
@@ -5247,10 +5538,11 @@
       },
       "supplier_price": 1.15,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-1980"
     },
     {
-      "id": "listino-8001240000005",
+      "id": "gamef-sacchi-spazzatura-extra-strong-70x110-coloral-15-pezzi-arancione",
       "supplier_code": "8001240000005",
       "name": "Gamef Sacchi Spazzatura Extra Strong 70x110 Coloral 15 Pezzi (Arancione)",
       "category": [
@@ -5265,10 +5557,11 @@
       },
       "supplier_price": null,
       "featured": false,
-      "available": false
+      "available": false,
+      "legacy_id": "listino-8001240000005"
     },
     {
-      "id": "listino-8001260000009",
+      "id": "gamef-sacchi-spazzatura-extra-strong-70x110-coloral-15-pezzi-rosa",
       "supplier_code": "8001260000009",
       "name": "Gamef Sacchi Spazzatura Extra Strong 70x110 Coloral 15 Pezzi (Rosa)",
       "category": [
@@ -5283,10 +5576,11 @@
       },
       "supplier_price": 1.85,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8001260000009"
     },
     {
-      "id": "listino-8033100260458",
+      "id": "gamef-prestige-sacchi-spazzatura-90x120-ambra",
       "supplier_code": "8033100260458",
       "name": "Gamef Prestige Sacchi Spazzatura 90x120 Ambra",
       "category": [
@@ -5301,10 +5595,11 @@
       },
       "supplier_price": 1.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8033100260458"
     },
     {
-      "id": "listino-8033100260496",
+      "id": "gamef-prestige-sacchi-spazzatura-90x120-nero",
       "supplier_code": "8033100260496",
       "name": "Gamef Prestige Sacchi Spazzatura 90x120 Nero",
       "category": [
@@ -5319,10 +5614,11 @@
       },
       "supplier_price": 1.2,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8033100260496"
     },
     {
-      "id": "listino-8033100260502",
+      "id": "gamef-prestige-sacchi-spazzatura-70x110-nero",
       "supplier_code": "8033100260502",
       "name": "Gamef Prestige Sacchi Spazzatura 70x110 Nero",
       "category": [
@@ -5337,10 +5633,11 @@
       },
       "supplier_price": 1.2,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8033100260502"
     },
     {
-      "id": "listino-8033100260519",
+      "id": "gamef-prestige-sacchi-spazzatura-55x70-nero",
       "supplier_code": "8033100260519",
       "name": "Gamef Prestige Sacchi Spazzatura 55x70 Nero",
       "category": [
@@ -5355,10 +5652,11 @@
       },
       "supplier_price": 1.2,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8033100260519"
     },
     {
-      "id": "listino-8033100260540",
+      "id": "gamef-prestige-sacchi-spazzatura-55x70-ambra",
       "supplier_code": "8033100260540",
       "name": "Gamef Prestige Sacchi Spazzatura 55x70 Ambra",
       "category": [
@@ -5373,10 +5671,11 @@
       },
       "supplier_price": 1.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8033100260540"
     },
     {
-      "id": "listino-8054342790091",
+      "id": "gamef-prestige-sacchi-spazzatura-55x70-ambra-cartone-da-22-rotoli",
       "supplier_code": "8054342790091",
       "name": "Gamef Prestige Sacchi Spazzatura 55x70 Ambra Cartone da 22 Rotoli",
       "category": [
@@ -5391,10 +5690,11 @@
       },
       "supplier_price": 1.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054342790091"
     },
     {
-      "id": "listino-8054342790107",
+      "id": "gamef-prestige-sacchi-spazzatura-70x110-ambra",
       "supplier_code": "8054342790107",
       "name": "Gamef Prestige Sacchi Spazzatura 70x110 Ambra",
       "category": [
@@ -5409,10 +5709,11 @@
       },
       "supplier_price": 1.35,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054342790107"
     },
     {
-      "id": "listino-8054342790138",
+      "id": "gamef-sacchi-n-u-70x110-ambra-300-grammi-10-pezzi",
       "supplier_code": "8054342790138",
       "name": "Gamef Sacchi N.U. 70x110 Ambra 300 Grammi 10 Pezzi",
       "category": [
@@ -5427,10 +5728,11 @@
       },
       "supplier_price": 0.72,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054342790138"
     },
     {
-      "id": "listino-8054342790558",
+      "id": "gamef-il-prestolego-70x120-azzurro-profumazione-brezza-marina-con-manico-8-pezzi",
       "supplier_code": "8054342790558",
       "name": "Gamef Il Prestolego 70x120 Azzurro Profumazione Brezza Marina- Con Manico 8 Pezzi",
       "category": [
@@ -5445,10 +5747,11 @@
       },
       "supplier_price": 0.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054342790558"
     },
     {
-      "id": "listino-8054342790886",
+      "id": "gamef-extra-forza-linea-professionale-90x120-ambra-7-pezzi",
       "supplier_code": "8054342790886",
       "name": "Gamef Extra Forza Linea Professionale 90x120 Ambra 7 Pezzi",
       "category": [
@@ -5463,10 +5766,11 @@
       },
       "supplier_price": 1.95,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8054342790886"
     },
     {
-      "id": "listino-830003434706",
+      "id": "sacchi-spazzatura-con-legalaccio-per-ceslni-50x65-azzurro-15-pezzi",
       "supplier_code": "830003434706",
       "name": "Sacchi Spazzatura Con Legalaccio Per Ceslni 50x65 Azzurro 15 Pezzi",
       "category": [
@@ -5481,10 +5785,11 @@
       },
       "supplier_price": 0.55,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-830003434706"
     },
     {
-      "id": "listino-8333100260176",
+      "id": "gamef-sacchi-n-u-90x120-colorate-600-grammi-10-pezzi-giallo",
       "supplier_code": "8333100260176",
       "name": "Gamef Sacchi N.U. 90x120 Colorate 600 Grammi 10 Pezzi (Giallo)",
       "category": [
@@ -5499,10 +5804,11 @@
       },
       "supplier_price": null,
       "featured": false,
-      "available": false
+      "available": false,
+      "legacy_id": "listino-8333100260176"
     },
     {
-      "id": "listino-8333100260558",
+      "id": "gamef-sacchi-n-u-90x120-colorate-600-grammi-10-pezzi-verde",
       "supplier_code": "8333100260558",
       "name": "Gamef Sacchi N.U. 90x120 Colorate 600 Grammi 10 Pezzi (Verde)",
       "category": [
@@ -5517,10 +5823,11 @@
       },
       "supplier_price": 1.75,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-8333100260558"
     },
     {
-      "id": "listino-8333100260565",
+      "id": "gamef-sacchi-n-u-90x120-colorate-600-grammi-10-pezzi-azzurro",
       "supplier_code": "8333100260565",
       "name": "Gamef Sacchi N.U. 90x120 Colorate 600 Grammi 10 Pezzi (Azzurro)",
       "category": [
@@ -5535,10 +5842,11 @@
       },
       "supplier_price": null,
       "featured": false,
-      "available": false
+      "available": false,
+      "legacy_id": "listino-8333100260565"
     },
     {
-      "id": "listino-shopperbiomaxi",
+      "id": "gamef-shopper-bio-maxi-35-18x65-250pezzi-4-kg",
       "supplier_code": "ShopperBioMaxi",
       "name": "Gamef Shopper Bio Maxi 35+18x65 250Pezzi 4 kg",
       "category": [
@@ -5553,7 +5861,8 @@
       },
       "supplier_price": 17.53,
       "featured": false,
-      "available": true
+      "available": true,
+      "legacy_id": "listino-shopperbiomaxi"
     }
   ]
 }

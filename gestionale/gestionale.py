@@ -928,8 +928,14 @@ def sync_catalog(connection: sqlite3.Connection, products: Sequence[Dict[str, An
     now = datetime.now(ROME).isoformat(timespec="seconds")
     prepared_products = []
     shared_groups: Dict[str, str] = {}
+    product_ids = {
+        str(product.get("id", "")).strip()
+        for product in products
+        if str(product.get("id", "")).strip()
+    }
     for product in products:
         product_id = str(product.get("id", "")).strip()
+        legacy_id = str(product.get("legacy_id", "")).strip()
         name = str(product.get("name", "")).strip()
         if not product_id or not name:
             continue
@@ -950,7 +956,7 @@ def sync_catalog(connection: sqlite3.Connection, products: Sequence[Dict[str, An
             shared_groups[stock_group] = measure
         catalog_available = 0 if product.get("available", True) is False else 1
         prepared_products.append(
-            (product_id, name, catalog_available, stock_group, stock_units_per_package)
+            (product_id, legacy_id, name, catalog_available, stock_group, stock_units_per_package)
         )
 
     existing_products = {
@@ -968,7 +974,7 @@ def sync_catalog(connection: sqlite3.Connection, products: Sequence[Dict[str, An
     reset_stock_product_ids = set()
     joining_stock_units: Dict[str, int] = {}
     groups_to_mark_unknown = set()
-    for product_id, _, _, stock_group, stock_units_per_package in prepared_products:
+    for product_id, _, _, _, stock_group, stock_units_per_package in prepared_products:
         existing_product = existing_products.get(product_id)
         if existing_product is None or existing_product["stock_group"] == stock_group:
             continue
@@ -1006,11 +1012,37 @@ def sync_catalog(connection: sqlite3.Connection, products: Sequence[Dict[str, An
             )
 
     with connection:
+        for product_id, legacy_id, _, _, _, _ in prepared_products:
+            if not legacy_id or legacy_id == product_id or legacy_id in product_ids:
+                continue
+            if product_id in existing_products or legacy_id not in existing_products:
+                continue
+            connection.execute(
+                "UPDATE products SET product_id = ? WHERE product_id = ?",
+                (product_id, legacy_id),
+            )
+            previous_volume = connection.execute(
+                "SELECT volume_liters FROM delivery_load_volumes WHERE product_id = ?",
+                (legacy_id,),
+            ).fetchone()
+            if previous_volume:
+                connection.execute(
+                    """
+                    INSERT INTO delivery_load_volumes (product_id, volume_liters)
+                    VALUES (?, ?)
+                    ON CONFLICT(product_id) DO NOTHING
+                    """,
+                    (product_id, previous_volume["volume_liters"]),
+                )
+                connection.execute(
+                    "DELETE FROM delivery_load_volumes WHERE product_id = ?", (legacy_id,)
+                )
+            existing_products[product_id] = existing_products.pop(legacy_id)
         for product_id in reset_stock_product_ids:
             connection.execute(
                 "UPDATE products SET quantity = 0 WHERE product_id = ?", (product_id,)
             )
-        for product_id, name, catalog_available, stock_group, stock_units_per_package in prepared_products:
+        for product_id, _, name, catalog_available, stock_group, stock_units_per_package in prepared_products:
             connection.execute(
                 """
                 INSERT INTO products (

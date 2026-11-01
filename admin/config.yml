@@ -175,7 +175,11 @@ collections:
               - label: ID univoco
                 name: id
                 widget: string
-                hint: Breve, univoco e senza spazi; per esempio carta-igienica-12-rotoli.
+                hint: Slug descrittivo, univoco e senza spazi; per esempio cuffie-copri-pietanze-maxi-36-pezzi.
+              - label: ID URL precedente (non modificare)
+                name: legacy_id
+                widget: string
+                required: false
               - { label: Codice prodotto fornitore, name: supplier_code, widget: string, required: false }
               - label: Gruppo giacenza condivisa
                 name: stock_group

@@ -1193,7 +1193,9 @@ function renderProductDetail() {
       return "";
     }
   })();
-  const product = state.products.find((item) => item.id === requestedId && item.available !== false);
+  const product = state.products.find((item) =>
+    (item.id === requestedId || item.legacy_id === requestedId) && item.available !== false,
+  );
   if (!product) {
     elements.productDetail.hidden = true;
     elements.productNotFound.hidden = false;
@@ -1214,6 +1216,9 @@ function renderProductDetail() {
   const productNameForMetadata = productNameWithFormat(product);
   const productUnit = productUnitLabel(product.unit);
   state.detailProduct = product;
+  if (requestedId !== product.id) {
+    window.history.replaceState(window.history.state, "", productPagePath(product.id));
+  }
   state.detailImages = productImages(product);
   if (state.detailImages.length === 0) state.detailImages = [fallbackImage];
   elements.productDetail.hidden = false;
@@ -1406,9 +1411,10 @@ function parseSharedOrder(serializedOrder) {
   const sharedCart = {};
   entries.forEach((entry) => {
     if (!Array.isArray(entry) || entry.length !== 2) return;
-    const [productId, quantity] = entry;
+    const [requestedId, quantity] = entry;
+    const productId = canonicalProductId(requestedId);
     if (
-      typeof productId !== "string"
+      !productId
       || !availableProductIds.has(productId)
       || !Number.isSafeInteger(quantity)
       || quantity < 1
@@ -1449,9 +1455,10 @@ function parseSharedSheet(serializedSheet) {
   const sheetQuantities = {};
   entries.forEach((entry) => {
     if (!Array.isArray(entry) || entry.length !== 2) return;
-    const [productId, quantity] = entry;
+    const [requestedId, quantity] = entry;
+    const productId = canonicalProductId(requestedId);
     if (
-      typeof productId !== "string"
+      !productId
       || !availableProductIds.has(productId)
       || !Number.isSafeInteger(quantity)
       || quantity < 1
@@ -1795,6 +1802,14 @@ const canonicalSiteOrigin = "https://cartaway.it";
 
 function productPagePath(productId) {
   return `/prodotti/${encodeURIComponent(String(productId || ""))}/`;
+}
+
+function canonicalProductId(productId) {
+  if (typeof productId !== "string") return "";
+  const product = state.products.find((item) =>
+    item.id === productId || item.legacy_id === productId,
+  );
+  return product ? String(product.id) : "";
 }
 
 function seoCanonicalUrl(page = state.page, productId = "") {
@@ -3302,6 +3317,11 @@ async function initializeShop() {
     configureQuickMessages();
     updateRecurringControls();
     state.products = Array.isArray(catalog.products) ? catalog.products : [];
+    state.cart = Object.entries(state.cart).reduce((cart, [id, quantity]) => {
+      const currentId = canonicalProductId(id);
+      if (currentId) cart[currentId] = (cart[currentId] || 0) + quantity;
+      return cart;
+    }, {});
     restoreCatalogStateFromUrl();
     state.sheetQuantities = parseSharedSheet(state.sharedSheet);
     const sharedCart = parseSharedOrder(state.sharedOrder);

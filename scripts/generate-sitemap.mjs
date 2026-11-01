@@ -6,6 +6,7 @@ const siteOrigin = "https://cartaway.it";
 const catalogUrl = new URL("../data/products.json", import.meta.url);
 const siteUrl = new URL("../data/site.json", import.meta.url);
 const sitemapUrl = new URL("../sitemap.xml", import.meta.url);
+const redirectsUrl = new URL("../_redirects", import.meta.url);
 const templateUrl = new URL("../prodotto.html", import.meta.url);
 const productPagesDirectory = fileURLToPath(new URL("../prodotti/", import.meta.url));
 const [catalog, site, template] = await Promise.all([
@@ -21,8 +22,8 @@ if (!Array.isArray(catalog.products)) {
 const products = catalog.products.filter((product) => product && product.available !== false);
 const productIds = new Set();
 for (const product of products) {
-  if (typeof product.id !== "string" || !/^[a-zA-Z0-9_-]+$/.test(product.id)) {
-    throw new TypeError(`ID prodotto non valido per la pagina statica: ${product.id}`);
+  if (typeof product.id !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(product.id)) {
+    throw new TypeError(`L'ID prodotto deve essere uno slug SEO minuscolo: ${product.id}`);
   }
   if (productIds.has(product.id)) {
     throw new TypeError(`ID prodotto duplicato: ${product.id}`);
@@ -352,4 +353,12 @@ const sitemap = [
 ].join("\n");
 
 await writeFile(sitemapUrl, sitemap, "utf8");
+const existingRedirects = await readFile(redirectsUrl, "utf8");
+const retainedRedirects = existingRedirects
+  .split(/\r?\n/)
+  .filter((line) => !/^\/prodotti\/\S+\s+\/prodotti\/\S+\s+301(?:\s|$)/.test(line));
+const legacyRedirects = products
+  .filter((product) => typeof product.legacy_id === "string" && product.legacy_id && product.legacy_id !== product.id)
+  .map((product) => `/prodotti/${encodeURIComponent(product.legacy_id)}/ ${productPageUrl(product.id).replace(siteOrigin, "")} 301`);
+await writeFile(redirectsUrl, [...retainedRedirects.filter(Boolean), ...legacyRedirects, ""].join("\n"), "utf8");
 console.log(`Generate ${products.length} pagine prodotto statiche e una sitemap con ${urls.length} URL canonici.`);
