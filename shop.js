@@ -281,6 +281,16 @@ function priceInCents(value) {
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0;
 }
 
+function validPriceInCents(value) {
+  if (value === null || value === undefined || (typeof value === "string" && !value.trim())) return null;
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) : null;
+}
+
+function hasConfiguredValue(value) {
+  return value !== null && value !== undefined && !(typeof value === "string" && !value.trim());
+}
+
 function pricesIncludeVat() {
   return state.site.prices_include_vat !== false;
 }
@@ -314,8 +324,38 @@ function productVatRate(product) {
   return null;
 }
 
+function productMarginPercent(product) {
+  if (hasConfiguredValue(product.margin_percent)) {
+    const margin = Number(product.margin_percent);
+    return Number.isFinite(margin) && margin >= 0 ? margin : null;
+  }
+
+  const categories = configuredCategoryPath(productCategories(product.category));
+  for (let index = categories.length - 1; index >= 0; index -= 1) {
+    const value = categories[index].margin_percent;
+    if (!hasConfiguredValue(value)) continue;
+    const margin = Number(value);
+    return Number.isFinite(margin) && margin >= 0 ? margin : null;
+  }
+  return null;
+}
+
 function productPriceInCents(product) {
-  const price = priceInCents(product.price);
+  const hasSupplierPrice = hasConfiguredValue(product.supplier_price);
+  let price = hasSupplierPrice
+    ? validPriceInCents(product.supplier_price)
+    : validPriceInCents(product.price);
+  if (price === null) return null;
+
+  if (hasSupplierPrice) {
+    const margin = productMarginPercent(product);
+    if (margin === null) return null;
+    price += Math.round(price * margin / 100);
+    if (pricesIncludeVat()) return price;
+    const rate = productVatRate(product);
+    return rate === null ? null : Math.round(price * 100 / (100 + rate));
+  }
+
   if (pricesIncludeVat()) return price;
   const rate = productVatRate(product);
   return rate === null ? null : price + Math.round(price * rate / 100);

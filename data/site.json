@@ -24,114 +24,253 @@
       "name": "Avvolgenti Alimentari",
       "vat_rate": 22,
       "children": [
-        { "name": "Carta e Veline alimentari", "vat_rate": null },
-        { "name": "Carta sovrainvolto", "vat_rate": null },
-        { "name": "Ideabrill", "vat_rate": null },
-        { "name": "Rotoli pellicola, alluminio e carta forno", "vat_rate": null },
-        { "name": "Sacchetti di carta", "vat_rate": null },
-        { "name": "Sacchetti in plastica per alimenti", "vat_rate": null },
-        { "name": "Sacchetti sottovuoto", "vat_rate": null },
-        { "name": "Shoppers Bio-compostabili", "vat_rate": null },
-        { "name": "Shoppers in carta", "vat_rate": null }
-      ]
+        { "name": "Carta e Veline alimentari", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Carta sovrainvolto", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Ideabrill", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Rotoli pellicola, alluminio e carta forno", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sacchetti di carta", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sacchetti in plastica per alimenti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sacchetti sottovuoto", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Shoppers Bio-compostabili", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Shoppers in carta", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Cancelleria e Ufficio",
       "vat_rate": 22,
       "children": [
-        { "name": "Accessori", "vat_rate": null },
-        { "name": "Blocchi e fogli A4", "vat_rate": null },
-        { "name": "Rotoli per cassa", "vat_rate": null },
-        { "name": "Rotoli termici adesivi", "vat_rate": null }
-      ]
+        { "name": "Accessori", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Blocchi e fogli A4", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Rotoli per cassa", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Rotoli termici adesivi", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Contenitori cibo asporto",
       "vat_rate": 22,
       "children": [
-        { "name": "Box fritti e panino", "vat_rate": null },
-        { "name": "Box pizza e Teglie in cartone", "vat_rate": null },
-        { "name": "Contenitori Bio-Compostabili", "vat_rate": null },
-        { "name": "Contenitori alluminio con coperchio bordo G", "vat_rate": null },
-        { "name": "Contenitori alluminio con coperchio bordo L", "vat_rate": null },
-        { "name": "Contenitori fast food con coperchio", "vat_rate": null },
-        { "name": "Contenitori in plastica con coperchio", "vat_rate": null },
-        { "name": "Contenitori laccati con coperchio", "vat_rate": null }
-      ]
+        { "name": "Box fritti e panino", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Box pizza e Teglie in cartone", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori Bio-Compostabili", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori alluminio con coperchio bordo G", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori alluminio con coperchio bordo L", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori fast food con coperchio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori in plastica con coperchio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori laccati con coperchio", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
-    { "name": "Dispenser", "vat_rate": 22 },
+    { "name": "Dispenser", "vat_rate": 22, "margin_percent": 30 },
     {
       "name": "Dispositivi di sicurezza",
       "vat_rate": 22,
       "children": [
-        { "name": "Guanti", "vat_rate": null },
-        { "name": "Scarpe da lavoro", "vat_rate": null }
-      ]
+        { "name": "Guanti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Scarpe da lavoro", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Igiene e Pulizia",
       "vat_rate": 22,
       "children": [
-        { "name": "Detergenti stoviglie", "vat_rate": null },
-        { "name": "Detergenti superfici", "vat_rate": null },
-        { "name": "Materiale per la pulizia", "vat_rate": null },
-        { "name": "Sacchi spazzatura", "vat_rate": null },
-        { "name": "Sapone mani", "vat_rate": null }
-      ]
+        { "name": "Detergenti stoviglie", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Detergenti superfici", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Materiale per la pulizia", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sacchi spazzatura", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sapone mani", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Imballaggi",
       "vat_rate": 22,
       "children": [
-        { "name": "Carta gommata", "vat_rate": null },
-        { "name": "Estensibile", "vat_rate": null },
-        { "name": "Nastri adesivi", "vat_rate": null }
-      ]
+        { "name": "Carta gommata", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Estensibile", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Nastri adesivi", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
-    { "name": "Insetticida", "vat_rate": 22 },
+    { "name": "Insetticida", "vat_rate": 22, "margin_percent": 30 },
     {
       "name": "Monouso in carta",
       "vat_rate": 22,
       "children": [
-        { "name": "Asciugamani piegati", "vat_rate": null },
-        { "name": "Carta igienica", "vat_rate": null },
-        { "name": "EcoNatural", "vat_rate": null },
-        { "name": "Lenzuolino medico", "vat_rate": null },
-        { "name": "Mini jumbo", "vat_rate": null },
-        { "name": "Rotoloni", "vat_rate": null },
-        { "name": "Tovaglioli", "vat_rate": null }
-      ]
+        { "name": "Asciugamani piegati", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Carta igienica", "vat_rate": null, "margin_percent": 30 },
+        { "name": "EcoNatural", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Lenzuolino medico", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Mini jumbo", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Rotoloni", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Tovaglioli", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Pasticceria e Gelateria",
       "vat_rate": 22,
       "children": [
-        { "name": "Basi e Accessori", "vat_rate": null },
-        { "name": "Porta torte", "vat_rate": null },
-        { "name": "Vaschette EPS gelato", "vat_rate": null },
-        { "name": "Vassoi in cartone", "vat_rate": null }
-      ]
+        { "name": "Basi e Accessori", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Porta torte", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Vaschette EPS gelato", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Vassoi in cartone", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Stoviglie monouso",
       "vat_rate": 22,
       "children": [
-        { "name": "Accessori monouso", "vat_rate": null },
-        { "name": "Bicchieri in cartoncino con coperchio", "vat_rate": null },
-        { "name": "Bicchieri in plastica con coperchio", "vat_rate": null },
-        { "name": "Cannucce e Agitatori", "vat_rate": null },
-        { "name": "Piatti e Scodelle", "vat_rate": null },
-        { "name": "Posate e Kit posate", "vat_rate": null }
-      ]
+        { "name": "Accessori monouso", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Bicchieri in cartoncino con coperchio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Bicchieri in plastica con coperchio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Cannucce e Agitatori", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Piatti e Scodelle", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Posate e Kit posate", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
     },
     {
       "name": "Tovaglie e Tovaglioli",
       "vat_rate": 22,
       "children": [
-        { "name": "Porta posate", "vat_rate": null },
-        { "name": "Tovaglia TNT", "vat_rate": null },
-        { "name": "Tovaglietta", "vat_rate": null },
-        { "name": "Tovaglioli colorati", "vat_rate": null }
+        { "name": "Porta posate", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Tovaglia TNT", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Tovaglietta", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Tovaglioli colorati", "vat_rate": null, "margin_percent": 30 }
+      ],
+      "margin_percent": 30
+    },
+    {
+      "name": "Accessori Cucina e Conservazione Alimenti",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Utensili e conservazione", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Baby",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Salviettine Baby", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Carta Casa",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Rotoloni", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Carta Igienica", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Tovaglioli", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Vaschette alluminio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Alluminio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Carta Forno", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Fazzoletti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Pellicola", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Casa e Bucato",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Accessori Pulizia", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Pulizia Bagno", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Pulizia pavimenti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sgrassatori", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Candele e Profumatori Ambiente", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Profumatori e perle bucato", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Pulizia Vetri", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Detersivi Bucato", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Ammorbidenti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Anticalcare", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Candeggine", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Smacchiatori e additivi", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Detergenti multiuso", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Detersivi piatti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Detergenti specifici", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Cura della Persona",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Deodoranti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Igiene intima", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Trattamenti corpo", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Igiene Corpo", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Cura Capelli", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Medicazione", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Monouso e Contenitori",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Piatti e Scodelle", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Bicchieri plastica", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Bicchieri carta", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Posate e accessori", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Contenitori Bio-Compostabili", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Piatti bio", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Organizzazione e Salvaspazio Casa",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Scaffali, box e salvaspazio casa", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Panni Pulizia",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Panni catturapolvere e spolverini", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Panni pavimenti", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Panni superfici", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Pet",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Traversine", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Accessori pet", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Profumeria",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Cofanetti regalo", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Profumi donna", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Profumi uomo", "vat_rate": null, "margin_percent": 30 }
+      ]
+    },
+    {
+      "name": "Settore Ho.Re.Ca. e Medicale",
+      "vat_rate": null,
+      "margin_percent": 30,
+      "children": [
+        { "name": "Shopper e borse", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Articoli monouso", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Lenzuolini e teli", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Carta Ufficio", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Asciugamani monouso", "vat_rate": null, "margin_percent": 30 },
+        { "name": "Sacchi Spazzatura", "vat_rate": null, "margin_percent": 30 }
       ]
     }
   ],

@@ -149,6 +149,7 @@ collections:
             fields:
               - { label: Nome categoria, name: name, widget: string }
               - { label: Aliquota IVA (%), name: vat_rate, widget: number, value_type: float, min: 0, max: 100, step: 0.1, required: false, hint: "Lascia vuoto finché l'aliquota non è stata verificata." }
+              - { label: Margine predefinito (%), name: margin_percent, widget: number, value_type: float, min: 0, max: 1000, step: 0.1, required: false, hint: "Usato se il prodotto e la sottocategoria non hanno un margine specifico." }
               - label: Sottocategorie
                 name: children
                 widget: list
@@ -157,6 +158,7 @@ collections:
                 fields:
                   - { label: Nome sottocategoria, name: name, widget: string }
                   - { label: Aliquota IVA (%), name: vat_rate, widget: number, value_type: float, min: 0, max: 100, step: 0.1, required: false, hint: "Lascia vuoto per ereditare l'aliquota principale; inserisci un valore solo se verificato." }
+                  - { label: Margine predefinito (%), name: margin_percent, widget: number, value_type: float, min: 0, max: 1000, step: 0.1, required: false, hint: "Sovrascrive il margine della categoria principale per i prodotti senza margine specifico." }
 
   - name: catalogo
     label: Catalogo prodotti
@@ -174,6 +176,7 @@ collections:
                 name: id
                 widget: string
                 hint: Breve, univoco e senza spazi; per esempio carta-igienica-12-rotoli.
+              - { label: Codice prodotto fornitore, name: supplier_code, widget: string, required: false }
               - label: Gruppo giacenza condivisa
                 name: stock_group
                 widget: string
@@ -210,12 +213,22 @@ collections:
                 step: 0.001
                 required: false
                 hint: Litri occupati da una confezione/unità venduta. Verifica le stime con l'imballo reale; se vuoto, inserisci il valore manualmente nella scheda Consegne.
-              - label: Prezzo in euro
+              - label: Costo fornitore IVA inclusa (€)
+                name: supplier_price
+                widget: number
+                value_type: float
+                min: 0
+                step: 0.01
+                required: false
+              - { label: Margine sul prodotto (%), name: margin_percent, widget: number, value_type: float, min: 0, max: 1000, step: 0.1, required: false, hint: "Se vuoto, si usa il margine della sottocategoria o della categoria." }
+              - label: Prezzo cliente manuale (€)
                 name: price
                 widget: number
                 value_type: float
                 min: 0
                 step: 0.01
+                required: false
+                hint: Usato solo quando non è impostato il costo fornitore.
               - { label: Descrizione, name: description, widget: text, required: false }
               - { label: Foto prodotto, name: image, widget: image, required: false }
               - label: Foto aggiuntive
